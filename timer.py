@@ -8,13 +8,14 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 #FIND DESKTOP
-desktop = os.path.expanduser("~/Desktop")
-fileName = "Timer Data.xlsx"
+DESKTOP = os.path.expanduser("~/Desktop")
+FILENAME = "Timer Data.xlsx"
 
 #CREATE TKINTER WINDOW
-window = tk.Tk()
-window.geometry("650x765")
-window.title("Timer")
+WINDOW = tk.Tk()
+WINDOW.geometry("650x765")
+WINDOW.title("Timer")
+
 
 #RESET DATA + DUMMY GRAPH
 def ResetAndCreate(wS):
@@ -34,15 +35,19 @@ def ResetAndCreate(wS):
     ax.set_xlabel("Date")
     ax.set_ylabel("Duration in minutes")
     ax.set_title("Time Spent by Date")
+    ax.set_facecolor("#f0f0f0")
+    fig.set_facecolor("#f0f0f0")
 
-    graphFrame = FigureCanvasTkAgg(fig, master=window)
+    graphFrame = FigureCanvasTkAgg(fig, master=WINDOW)
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
-    wB.save(desktop + "\\" + fileName)
+    wB.save(DESKTOP + "\\" + FILENAME)
 
-#TAKE DATA FROM EXCEL FILE AND APPEND TO LIST
+
 dateList = []
 durationList = []
+
+#TAKE DATA FROM EXCEL FILE AND APPEND TO LIST
 def CollectData():
     global dataAmount
     print("Data amount: ", dataAmount)
@@ -54,25 +59,33 @@ def CollectData():
             durationList.append(int(wS["C"+str(data)].value.replace("m", "")))
     print("Date list: ", dateList)
     print("Duration list: ", durationList)
+
     #GROUP DATA AND DRAW GRAPH
     data = {"Date": dateList, "Duration": durationList}
     df = pd.DataFrame(data)
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
     fig, ax = plt.subplots()
-    ax.bar(grouped_data["Date"], grouped_data["Duration"])
+
+    ax.bar(grouped_data["Date"], grouped_data["Duration"], color="black")
     ax.set_xlabel("Date")
     ax.set_ylabel("Duration in minutes")
     ax.set_title("Time Spent by Date")
-    graphFrame = FigureCanvasTkAgg(fig, master=window)
+
+    ax.set_facecolor("#f0f0f0")
+    fig.set_facecolor("#f0f0f0")
+
+    graphFrame = FigureCanvasTkAgg(fig, master=WINDOW)
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
+
     #CLEAR LISTS
     dateList.clear()
     durationList.clear()
 
+
 #LOAD EXCEL FILE
-if os.path.isfile(desktop + "\\" + fileName):
-    wB = op.load_workbook(desktop + "\\" + fileName)
+if os.path.isfile(DESKTOP + "\\" + FILENAME):
+    wB = op.load_workbook(DESKTOP + "\\" + FILENAME)
     wS = wB.active
     dataAmount = wS["Z1"].value
     CollectData()
@@ -87,7 +100,8 @@ else:
     print("New file created")
 
 timerRunning = False
-startTime, stopTime, duration = 0
+startTime, stopTime, duration = 0, 0, 0
+
 
 #SIMPLE STOPWATCH START STOP MECHANISM
 def TimerStartStop():
@@ -128,7 +142,8 @@ def TimerStartStop():
         duration += ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - stopTime.minute) + ((stopTime.second - startTime.second) / 60)
 
 breakRunning = False
-breakStartTime, breakStopTime, breakTimeTotal, breakTimeToDisplay = 0
+breakStartTime, breakStopTime, breakTimeTotal, breakTimeToDisplay = 0, 0, 0, 0
+
 
 #SIMPLE BREAK STOPWATCH MECHANISM
 def BreakStartStop():
@@ -162,6 +177,7 @@ def BreakStartStop():
     else:
         print("Error: Cant break when timer not running")
 
+
 def SaveData():
     global duration, startTime, stopTime
     global breakTimeTotal, breakTimeToDisplay, breakStartTime, breakStopTime
@@ -177,11 +193,11 @@ def SaveData():
         else:
             timeToDisplay = str(int(totalTime*60)) + "s"
         wS.append([startTime.strftime("%d/%m/%Y %H:%M"), stopTime.strftime("%d/%m/%Y %H:%M"), timeToDisplay, breakTimeToDisplay])
-        wB.save(desktop + "\\" + fileName)
+        wB.save(DESKTOP + "\\" + FILENAME)
         print("Duration: ", timeToDisplay)
         print("Break duration: ", breakTimeToDisplay)
         print("Data saved")
-        startTime, stopTime, breakStartTime, breakStopTime, timeToDisplay, duration, breakTimeTotal = 0
+        startTime, stopTime, breakStartTime, breakStopTime, timeToDisplay, duration, breakTimeTotal = 0, 0, 0, 0, 0, 0, 0
         timerStartLabel.config(text="Start: 00:00:00")
         timerStopLabel.config(text="Stop: 00:00:00")
         breakStartLabel.config(text="Start: 00:00:00")
@@ -190,10 +206,13 @@ def SaveData():
     else:
         print("Error: No data to save")
 
+
 #DELETE AND CREATE NEW SHEET
 def ResetData():
     global dataAmount
     global timerStartLabel, timerStopLabel, breakStartLabel, breakStopLabel
+    global startTime, stopTime
+    startTime, stopTime = 0, 0
     timerStartLabel.config(text="Start: 00:00:00")
     timerStopLabel.config(text="Stop: 00:00:00")
     breakStartLabel.config(text="Start: 00:00:00")
@@ -204,8 +223,9 @@ def ResetData():
     wS = wB.active
     ResetAndCreate(wS)
 
+
 #TIMER UI ROW
-timerFrame = tk.Frame(window, highlightbackground="black", highlightthickness=2)
+timerFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
 timerFrame.grid(row=0, column=0, padx=10, pady=10)
 timerLabel = tk.Label(timerFrame, text="Timer: ", font="Calibri 16")
 timerLabel.grid(row=0, column=0, padx=5, pady=10)
@@ -218,7 +238,7 @@ timerStopLabel = tk.Label(timerFrame, text="Stop: 00:00:00", font="Calibri 16")
 timerStopLabel.grid(row=0, column=3, padx=5, pady=10)
 
 #BREAK TIMER UI ROW
-breakFrame = tk.Frame(window, highlightbackground="black", highlightthickness=2)
+breakFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
 breakFrame.grid(row=1, column=0, padx=10, pady=10)
 breakLabel = tk.Label(breakFrame, text="Break: ", font="Calibri 16")
 breakLabel.grid(row=0, column=0, padx=5, pady=10)
@@ -231,11 +251,11 @@ breakStopLabel = tk.Label(breakFrame, text="Stop: 00:00:00", font="Calibri 16")
 breakStopLabel.grid(row=0, column=3, padx=5, pady=10)
 
 #DATA UI ROW
-dataFrame = tk.Frame(window, highlightbackground="black", highlightthickness=2)
+dataFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
 dataFrame.grid(row=3, column=0, padx=10, pady=10)
 saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16")
 saveDataBtn.grid(row=0, column=0, padx=5, pady=10)
 resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16")
 resetDataBtn.grid(row=0, column=1, padx=5, pady=10)
 
-window.mainloop()
+WINDOW.mainloop()
