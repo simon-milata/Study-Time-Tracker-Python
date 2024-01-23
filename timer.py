@@ -87,27 +87,13 @@ else:
     print("New file created")
 
 timerRunning = False
-
-startTime = 0
-stopTime = 0
-duration = 0
+startTime, stopTime, duration = 0
 
 #SIMPLE STOPWATCH START STOP MECHANISM
 def TimerStartStop():
-    global timerRunning
-    global startTime
-    global stopTime
-    global duration
-
-    global breakRunning
-    global breakStopTime
-    global breakTimeTotal
-    global breakStopLabel
-    global breakStartLabel
-    global breakTimeToDisplay
-
-    global timerFrame
-    global breakFrame
+    global timerRunning, startTime, stopTime, duration
+    global breakRunning, breakStopTime, breakTimeTotal, breakStopLabel, breakStartLabel, breakTimeToDisplay
+    global timerFrame, breakFrame
 
 #IF TIMER IS NOT RUNNING RUN IT
     if timerRunning == False:
@@ -117,7 +103,6 @@ def TimerStartStop():
         timerStartLabel.config(text="Start: " + str(startTime.strftime("%H:%M:%S")))
         stopTime = 0
         timerStopLabel.config(text="Stop: 00:00:00")
-
         breakStartLabel.config(text="Start: 00:00:00")
         breakStopLabel.config(text="Stop: 00:00:00")
         print("Timer Start:", startTime)
@@ -143,22 +128,12 @@ def TimerStartStop():
         duration += ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - stopTime.minute) + ((stopTime.second - startTime.second) / 60)
 
 breakRunning = False
-
-breakStartTime = 0
-breakStopTime = 0
-breakTimeTotal = 0
-breakTimeToDisplay = 0
+breakStartTime, breakStopTime, breakTimeTotal, breakTimeToDisplay = 0
 
 #SIMPLE BREAK STOPWATCH MECHANISM
 def BreakStartStop():
-    global breakRunning
-    global breakTimeTotal
-    global breakStartTime
-    global breakStopTime
-    global breakTimeToDisplay
-
-    global timerFrame
-    global breakFrame
+    global breakRunning, breakTimeTotal, breakStartTime, breakStopTime, breakTimeToDisplay
+    global timerFrame, breakFrame
 
     if timerRunning == True:
         #IF BREAK NOT RUNNING START BREAK
@@ -188,14 +163,9 @@ def BreakStartStop():
         print("Error: Cant break when timer not running")
 
 def SaveData():
-    global duration
-    global breakTimeTotal
-    global startTime
-    global stopTime
-    global breakTimeToDisplay
+    global duration, startTime, stopTime
+    global breakTimeTotal, breakTimeToDisplay, breakStartTime, breakStopTime
     global dataAmount
-    global breakStartTime
-    global breakStopTime
     
     #IF THERE IS START AND STOP DATA SAVE INTO EXCEL
     if startTime != 0 and stopTime != 0:
@@ -211,17 +181,11 @@ def SaveData():
         print("Duration: ", timeToDisplay)
         print("Break duration: ", breakTimeToDisplay)
         print("Data saved")
-        startTime = 0
-        stopTime = 0
-        breakStartTime = 0
-        breakStopTime = 0
+        startTime, stopTime, breakStartTime, breakStopTime, timeToDisplay, duration, breakTimeTotal = 0
         timerStartLabel.config(text="Start: 00:00:00")
         timerStopLabel.config(text="Stop: 00:00:00")
         breakStartLabel.config(text="Start: 00:00:00")
         breakStopLabel.config(text="Stop: 00:00:00")
-        timeToDisplay = 0
-        duration = 0
-        breakTimeTotal = 0
         CollectData()
     else:
         print("Error: No data to save")
@@ -229,10 +193,7 @@ def SaveData():
 #DELETE AND CREATE NEW SHEET
 def ResetData():
     global dataAmount
-    global timerStartLabel
-    global timerStopLabel
-    global breakStartLabel
-    global breakStopLabel
+    global timerStartLabel, timerStopLabel, breakStartLabel, breakStopLabel
     timerStartLabel.config(text="Start: 00:00:00")
     timerStopLabel.config(text="Stop: 00:00:00")
     breakStartLabel.config(text="Start: 00:00:00")
