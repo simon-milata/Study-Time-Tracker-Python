@@ -7,15 +7,54 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
+plt.rc("text", color='white')
+
 #FIND DESKTOP
 DESKTOP = os.path.expanduser("~/Desktop")
 FILENAME = "Timer Data.xlsx"
 
-#CREATE TKINTER WINDOW
-WINDOW = tk.Tk()
-WINDOW.geometry("650x765")
-WINDOW.title("Timer")
+mainFramePadx = 25
+mainFramePady = 25
 
+#CREATE TKINTER WINDOW
+windowColor = "#272727"
+BORDERWIDTH = 3
+WIDTH = 975
+HEIGHT = 765
+WINDOW = tk.Tk()
+WINDOW.geometry(str(WIDTH + BORDERWIDTH+mainFramePadx) + "x" + str(HEIGHT))
+WINDOW.title("Timer")
+WINDOW.config(background=windowColor)
+
+defaultColor = "SystemButtonFace"
+
+tabFrameColor = "#202020"
+borderFrameColor = "#5b5b5b"
+mainFrameColor = "#272727"
+
+framePadding = 10
+frameColor = "#323232"
+widgetColor = "#323232"
+widgetPadding = 10
+buttonColor = "#f38064"
+frameBorderColor = "#5b5b5b"
+
+fontColor = "white"
+buttonFontColor = "black"
+
+tabFrame = tk.Frame(WINDOW, width=300, height=HEIGHT+widgetPadding, background=tabFrameColor)
+tabFrame.grid(column=0, row=0)
+
+borderFrame = tk.Frame(WINDOW, width=BORDERWIDTH, height=HEIGHT+widgetPadding, background=borderFrameColor)
+borderFrame.grid(column=1, row=0)
+
+mainFrame = tk.Frame(WINDOW, background=mainFrameColor)
+mainFrame.grid(column=2, row=0, padx=mainFramePadx)
+
+graphBgColor = "#323232"
+graphFgColor = "#323232"
+graphColor = "#f38064"
+spineColor = "#5b5b5b"
 
 #RESET DATA + DUMMY GRAPH
 def ResetAndCreate(wS):
@@ -32,13 +71,18 @@ def ResetAndCreate(wS):
     fig, ax = plt.subplots()
 
     ax.bar(datetime.datetime.now().strftime("%d/%m/%Y"), 0)
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Duration in minutes")
-    ax.set_title("Time Spent by Date")
-    ax.set_facecolor("#f0f0f0")
-    fig.set_facecolor("#f0f0f0")
+    ax.set_xlabel("Date", color=fontColor)
+    ax.set_ylabel("Duration in minutes", color=fontColor)
+    ax.set_title("Time Spent by Date", color=fontColor)
+    ax.tick_params(colors="white")
+    ax.set_facecolor(graphFgColor)
+    fig.set_facecolor(graphBgColor)
+    ax.spines["top"].set_color(spineColor)
+    ax.spines["bottom"].set_color(spineColor)
+    ax.spines["left"].set_color(spineColor)
+    ax.spines["right"].set_color(spineColor)
 
-    graphFrame = FigureCanvasTkAgg(fig, master=WINDOW)
+    graphFrame = FigureCanvasTkAgg(fig, master=mainFrame)
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
     wB.save(DESKTOP + "\\" + FILENAME)
@@ -66,15 +110,19 @@ def CollectData():
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
     fig, ax = plt.subplots()
 
-    ax.bar(grouped_data["Date"], grouped_data["Duration"], color="black")
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Duration in minutes")
-    ax.set_title("Time Spent by Date")
+    ax.bar(grouped_data["Date"], grouped_data["Duration"], color=graphColor)
+    ax.set_xlabel("Date", color=fontColor)
+    ax.set_ylabel("Duration in minutes", color=fontColor)
+    ax.set_title("Time Spent by Date", color=fontColor)
+    ax.tick_params(colors="white")
+    ax.set_facecolor(graphFgColor)
+    fig.set_facecolor(graphBgColor)
+    ax.spines["top"].set_color(spineColor)
+    ax.spines["bottom"].set_color(spineColor)
+    ax.spines["left"].set_color(spineColor)
+    ax.spines["right"].set_color(spineColor)
 
-    ax.set_facecolor("#f0f0f0")
-    fig.set_facecolor("#f0f0f0")
-
-    graphFrame = FigureCanvasTkAgg(fig, master=WINDOW)
+    graphFrame = FigureCanvasTkAgg(fig, master=mainFrame)
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
 
@@ -239,37 +287,37 @@ def SaveOnQuit():
 WINDOW.protocol("WM_DELETE_WINDOW", SaveOnQuit)
 
 #TIMER UI ROW
-timerFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
-timerFrame.grid(row=0, column=0, padx=10, pady=10)
-timerLabel = tk.Label(timerFrame, text="Timer: ", font="Calibri 16")
-timerLabel.grid(row=0, column=0, padx=5, pady=10)
-timerStartBtn = tk.Button(timerFrame, text="Start/Stop", command=TimerStartStop, font="Calibri 16")
-timerStartBtn.grid(row=0, column=1, padx=5, pady=10)
+timerFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
+timerFrame.grid(row=0, column=0, padx=framePadding, pady=framePadding)
+timerLabel = tk.Label(timerFrame, text="Timer: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
+timerLabel.grid(row=0, column=0, padx=widgetPadding, pady=widgetPadding)
+timerStartBtn = tk.Button(timerFrame, text="Start/Stop", command=TimerStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+timerStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
 
-timerStartLabel = tk.Label(timerFrame, text="Start: 00:00:00", font="Calibri 16")
-timerStartLabel.grid(row=0, column=2, padx=5, pady=10)
-timerStopLabel = tk.Label(timerFrame, text="Stop: 00:00:00", font="Calibri 16")
-timerStopLabel.grid(row=0, column=3, padx=5, pady=10)
+timerStartLabel = tk.Label(timerFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
+timerStartLabel.grid(row=0, column=2, padx=widgetPadding, pady=widgetPadding)
+timerStopLabel = tk.Label(timerFrame, text="Stop: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
+timerStopLabel.grid(row=0, column=3, padx=widgetPadding, pady=widgetPadding)
 
 #BREAK TIMER UI ROW
-breakFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
-breakFrame.grid(row=1, column=0, padx=10, pady=10)
-breakLabel = tk.Label(breakFrame, text="Break: ", font="Calibri 16")
-breakLabel.grid(row=0, column=0, padx=5, pady=10)
-breakStartBtn = tk.Button(breakFrame, text="Start/Stop", command=BreakStartStop, font="Calibri 16")
-breakStartBtn.grid(row=0, column=1, padx=5, pady=10)
+breakFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
+breakFrame.grid(row=1, column=0, padx=framePadding, pady=framePadding)
+breakLabel = tk.Label(breakFrame, text="Break: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
+breakLabel.grid(row=0, column=0, padx=widgetPadding, pady=widgetPadding)
+breakStartBtn = tk.Button(breakFrame, text="Start/Stop", command=BreakStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+breakStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
 
-breakStartLabel = tk.Label(breakFrame, text="Start: 00:00:00", font="Calibri 16")
-breakStartLabel.grid(row=0, column=2, padx=5, pady=10)
-breakStopLabel = tk.Label(breakFrame, text="Stop: 00:00:00", font="Calibri 16")
-breakStopLabel.grid(row=0, column=3, padx=5, pady=10)
+breakStartLabel = tk.Label(breakFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
+breakStartLabel.grid(row=0, column=2, padx=widgetPadding, pady=widgetPadding)
+breakStopLabel = tk.Label(breakFrame, text="Stop: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
+breakStopLabel.grid(row=0, column=3, padx=widgetPadding, pady=widgetPadding)
 
 #DATA UI ROW
-dataFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
-dataFrame.grid(row=3, column=0, padx=10, pady=10)
-saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16")
-saveDataBtn.grid(row=0, column=0, padx=5, pady=10)
-resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16")
-resetDataBtn.grid(row=0, column=1, padx=5, pady=10)
+dataFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
+dataFrame.grid(row=3, column=0, padx=framePadding, pady=framePadding)
+saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+saveDataBtn.grid(row=0, column=0, padx=widgetPadding, pady=widgetPadding)
+resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+resetDataBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
 
 WINDOW.mainloop()
