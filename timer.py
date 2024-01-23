@@ -139,7 +139,8 @@ def TimerStartStop():
             else:
                 breakTimeToDisplay = str(int(breakTimeTotal*60)) + "s"
 
-        duration += ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - stopTime.minute) + ((stopTime.second - startTime.second) / 60)
+        duration = ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - startTime.minute) + ((stopTime.second - startTime.second) / 60)
+        
 
 breakRunning = False
 breakStartTime, breakStopTime, breakTimeTotal, breakTimeToDisplay = 0, 0, 0, 0
@@ -229,7 +230,7 @@ def SaveOnQuit():
     global startTime, stopTime, timerRunning, duration
     if timerRunning:
         stopTime = datetime.datetime.now()
-        duration += ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - stopTime.minute) + ((stopTime.second - startTime.second) / 60)
+        duration = ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - startTime.minute) + ((stopTime.second - startTime.second) / 60)
         SaveData()
         print("Data saved on exit")
     else: print("Quit")
