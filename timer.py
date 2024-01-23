@@ -5,6 +5,7 @@ import tkinter as tk
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 plt.rc("text", color='white')
@@ -96,7 +97,10 @@ def CollectData():
     global dataAmount
     print("Data amount: ", dataAmount)
     for data in range(2,dataAmount+2):
-        dateList.append(str(wS["B"+str(data)].value).split(" ")[0])
+        if "/" in str(wS["B"+str(data)].value):
+            dateList.append(datetime.datetime.strptime(str(wS["B"+str(data)].value).split(" ")[0], "%d/%m/%Y").date())
+        elif "-" in str(wS["B"+str(data)].value):
+            dateList.append(datetime.datetime.strptime(str(wS["B"+str(data)].value).split(" ")[0], "%Y-%m-%d").date())
         if "s" in wS["C"+str(data)].value:
             durationList.append(int(wS["C"+str(data)].value.replace("s", "")) / 60)
         else:
@@ -109,7 +113,6 @@ def CollectData():
     df = pd.DataFrame(data)
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
     fig, ax = plt.subplots()
-
     ax.bar(grouped_data["Date"], grouped_data["Duration"], color=graphColor)
     ax.set_xlabel("Date", color=fontColor)
     ax.set_ylabel("Duration in minutes", color=fontColor)
@@ -122,7 +125,11 @@ def CollectData():
     ax.spines["left"].set_color(spineColor)
     ax.spines["right"].set_color(spineColor)
 
+    #FORMAT X AXIS DAY/MONTH
+    dateFormat = mdates.DateFormatter("%d/%m")
+    ax.xaxis.set_major_formatter(dateFormat)
     graphFrame = FigureCanvasTkAgg(fig, master=mainFrame)
+
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
     canvas_widget.config(highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
