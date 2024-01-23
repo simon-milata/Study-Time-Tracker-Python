@@ -224,6 +224,19 @@ def ResetData():
     ResetAndCreate(wS)
 
 
+#SAVE DATA ON APP EXIT
+def SaveOnQuit():
+    global startTime, stopTime, timerRunning, duration
+    if timerRunning:
+        stopTime = datetime.datetime.now()
+        duration += ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - stopTime.minute) + ((stopTime.second - startTime.second) / 60)
+        SaveData()
+        print("Data saved on exit")
+    else: print("Quit")
+    WINDOW.destroy()
+
+WINDOW.protocol("WM_DELETE_WINDOW", SaveOnQuit)
+
 #TIMER UI ROW
 timerFrame = tk.Frame(WINDOW, highlightbackground="black", highlightthickness=2)
 timerFrame.grid(row=0, column=0, padx=10, pady=10)
