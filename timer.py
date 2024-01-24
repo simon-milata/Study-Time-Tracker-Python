@@ -38,13 +38,16 @@ mainFrameColor = "#272727"
 frameColor = "#323232"
 widgetColor = "#323232"
 buttonColor = "#f38064"
+buttonClickColor = "#f5937a"
 frameBorderColor = "#5b5b5b"
 
 fontColor = "white"
 buttonFontColor = "black"
 
-tabFrame = tk.Frame(WINDOW, width=300, height=HEIGHT+((widgetPadding+framePadding)*2), background=tabFrameColor)
+tabFrameWidth = 300
+tabFrame = tk.Frame(WINDOW, width=tabFrameWidth, height=HEIGHT+((widgetPadding+framePadding)*2), background=tabFrameColor)
 tabFrame.grid(column=0, row=0)
+tabFrame.pack_propagate(False)
 
 borderFrame = tk.Frame(WINDOW, width=BORDERWIDTH, height=HEIGHT+((widgetPadding+framePadding)*2), background=borderFrameColor)
 borderFrame.grid(column=1, row=0)
@@ -168,7 +171,6 @@ def TimerStartStop():
 #IF TIMER IS NOT RUNNING RUN IT
     if timerRunning == False:
         timerRunning = True
-        timerFrame.config(background="OliveDrab2")
         startTime = datetime.datetime.now()
         timerStartLabel.config(text="Start: " + str(startTime.strftime("%H:%M:%S")))
         stopTime = 0
@@ -179,13 +181,11 @@ def TimerStartStop():
 #IF TIMER IS RUNNING STOP IT
     else:
         timerRunning = False
-        timerFrame.config(background="SystemButtonFace")
         stopTime = datetime.datetime.now()
         timerStopLabel.config(text="Stop: " + str(stopTime.strftime("%H:%M:%S")))
         print("Timer Stop:", stopTime)
         if breakRunning == True:
             breakRunning = False
-            breakFrame.config(background="SystemButtonFace")
             breakStopTime = datetime.datetime.now()
             print("Break Stop:", breakStopTime)
             breakStopLabel.config(text="Stop: " + str(breakStopTime.strftime("%H:%M:%S")))
@@ -211,8 +211,6 @@ def BreakStartStop():
         #IF BREAK NOT RUNNING START BREAK
         if breakRunning == False:
             breakRunning = True
-            breakFrame.config(background="OliveDrab2")
-            timerFrame.config(background="yellow2")
             breakStartTime = datetime.datetime.now()
             breakStartLabel.config(text="Start: " + str(breakStartTime.strftime("%H:%M:%S")))
             breakStopTime = 0
@@ -221,8 +219,6 @@ def BreakStartStop():
             #IF BREAK RUNNING STOP BREAK
         else:
             breakRunning = False
-            breakFrame.config(background="SystemButtonFace")
-            timerFrame.config(background="OliveDrab2")
             breakStopTime = datetime.datetime.now()
             breakStopLabel.config(text="Stop: " + str(breakStopTime.strftime("%H:%M:%S")))
             print("Break Stop:", breakStopTime)
@@ -294,12 +290,19 @@ def SaveOnQuit():
 
 WINDOW.protocol("WM_DELETE_WINDOW", SaveOnQuit)
 
+
+def SwitchToSettings():
+    mainFrame.grid_forget()
+
+def SwitchToMain():
+    mainFrame.grid(column=2, row=0, padx=mainFramePadx)
+
 #TIMER UI ROW
 timerFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
 timerFrame.grid(row=0, column=0, padx=framePadding, pady=framePadding)
 timerLabel = tk.Label(timerFrame, text="Timer: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
 timerLabel.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-timerStartBtn = tk.Button(timerFrame, text="Start/Stop", command=TimerStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+timerStartBtn = tk.Button(timerFrame, text="Start/Stop", command=TimerStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
 timerStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
 
 timerStartLabel = tk.Label(timerFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
@@ -312,7 +315,7 @@ breakFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlight
 breakFrame.grid(row=1, column=0, padx=framePadding, pady=framePadding)
 breakLabel = tk.Label(breakFrame, text="Break: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
 breakLabel.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-breakStartBtn = tk.Button(breakFrame, text="Start/Stop", command=BreakStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+breakStartBtn = tk.Button(breakFrame, text="Start/Stop", command=BreakStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
 breakStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
 
 breakStartLabel = tk.Label(breakFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
@@ -323,9 +326,33 @@ breakStopLabel.grid(row=0, column=3, padx=(widgetPadding, widgetPadding*2), pady
 #DATA UI ROW
 dataFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
 dataFrame.grid(row=3, column=0, padx=framePadding, pady=framePadding)
-saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
 saveDataBtn.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightthickness=0, bd=0)
+resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
 resetDataBtn.grid(row=0, column=1, padx=(widgetPadding, widgetPadding*2), pady=widgetPadding*2)
+
+#TABS
+tabWidth = tabFrameWidth - (tabFrameWidth * 0.2)
+tabHeight = HEIGHT * 0.1
+tabColor = "#292929"
+#-----------------------
+#MAIN TAB (TIMER)
+mainTabFrame = tk.Frame(tabFrame, width=tabFrameWidth, height=tabHeight*1.2, background=tabColor)
+mainTabFrame.pack()
+mainTabBtn = tk.Button(mainTabFrame, text="Timer", font="Calibri 30", foreground=fontColor, background=tabColor, width=int(tabWidth), 
+                           height=int(tabHeight*1.2), activebackground="#333333", activeforeground=fontColor, command=SwitchToMain)
+mainTabBtn.place(relx=0.5, rely=0.5, anchor="center")
+#DIVIDER
+Line1 = tk.Frame(mainTabFrame, width=tabFrameWidth, height=3, background=frameBorderColor)
+Line1.place(relx=0.5, rely=1, anchor="s")
+#-----------------------
+settingsTab = tk.Frame(tabFrame, width=tabFrameWidth, height=tabHeight*1.2, background=tabColor)
+settingsTab.place(relx=0.5, rely=1, anchor="s")
+settingsBtn = tk.Button(settingsTab, text="Settings", font="Calibri 27", foreground=fontColor, background=tabColor, width=int(tabWidth), 
+                           height=int(tabHeight*1.2), activebackground="#333333", activeforeground=fontColor, command=SwitchToSettings)
+settingsBtn.place(relx=0.5, rely=0.5, anchor="center")
+#DIVIDER
+Line2 = tk.Frame(settingsTab, width=tabFrameWidth, height=3, background=frameBorderColor)
+Line2.place(relx=0.5, rely=0, anchor="n")
 
 WINDOW.mainloop()
