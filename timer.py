@@ -1,358 +1,291 @@
 import datetime
 import openpyxl as op
 from openpyxl.styles import Font
-import tkinter as tk
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import customtkinter as ctk
+from styles import *
 
-plt.rc("text", color='white')
-
-#FIND DESKTOP
-DESKTOP = os.path.expanduser("~/Desktop")
+APPNAME = "Timer App"
 FILENAME = "Timer Data.xlsx"
 
-mainFramePadx = 25
-mainFramePady = 25
+local_folder = os.path.expandvars(rf"%APPDATA%\{APPNAME}")
+data_file = os.path.expandvars(rf"%APPDATA%\{APPNAME}\{FILENAME}")
 
-#CREATE TKINTER WINDOW
-windowColor = "#272727"
-BORDERWIDTH = 3
-WIDTH = 975
-HEIGHT = 765
-WINDOW = tk.Tk()
-widgetPadding = 10
-framePadding = 10
-WINDOW.geometry(str(WIDTH + BORDERWIDTH+mainFramePadx) + "x" + str(HEIGHT+((widgetPadding+framePadding)*2)))
-WINDOW.title("Timer")
-WINDOW.config(background=windowColor)
-
-defaultColor = "SystemButtonFace"
-
-tabFrameColor = "#202020"
-borderFrameColor = "#5b5b5b"
-mainFrameColor = "#272727"
-
-frameColor = "#323232"
-widgetColor = "#323232"
-buttonColor = "#f38064"
-buttonClickColor = "#f5937a"
-frameBorderColor = "#5b5b5b"
-
-fontColor = "white"
-buttonFontColor = "black"
-
-tabFrameWidth = 300
-tabFrame = tk.Frame(WINDOW, width=tabFrameWidth, height=HEIGHT+((widgetPadding+framePadding)*2), background=tabFrameColor)
-tabFrame.grid(column=0, row=0)
-tabFrame.pack_propagate(False)
-
-borderFrame = tk.Frame(WINDOW, width=BORDERWIDTH, height=HEIGHT+((widgetPadding+framePadding)*2), background=borderFrameColor)
-borderFrame.grid(column=1, row=0)
-
-mainFrame = tk.Frame(WINDOW, background=mainFrameColor)
-mainFrame.grid(column=2, row=0, padx=mainFramePadx)
-
-graphBgColor = "#323232"
-graphFgColor = "#323232"
-graphColor = "#f38064"
-spineColor = "#5b5b5b"
-
-#RESET DATA + DUMMY GRAPH
-def ResetAndCreate(wS):
-    global dataAmount
-    wS.append(["Start Time: ", "End Time: ", "Duration: ", "Break Duration: "])
-    wS["X1"].value = "Data amount: "
-    wS["A1"].font = Font(bold=True, size=14)
-    wS["B1"].font = Font(bold=True, size=14)
-    wS["C1"].font = Font(bold=True, size=14)
-    wS["D1"].font = Font(bold=True, size=14)
-    wS["X1"].font = Font(bold=True, size=14)
-    wS["Z1"].value = dataAmount
-
-    fig, ax = plt.subplots()
-
-    ax.bar(datetime.datetime.now().strftime("%d/%m/%Y"), 0)
-    ax.set_xlabel("Date", color=fontColor)
-    ax.set_ylabel("Duration in minutes", color=fontColor)
-    ax.set_title("Time Spent by Date", color=fontColor)
-    ax.tick_params(colors="white")
-    ax.set_facecolor(graphFgColor)
-    fig.set_facecolor(graphBgColor)
-    ax.spines["top"].set_color(spineColor)
-    ax.spines["bottom"].set_color(spineColor)
-    ax.spines["left"].set_color(spineColor)
-    ax.spines["right"].set_color(spineColor)
-
-    graphFrame = FigureCanvasTkAgg(fig, master=mainFrame)
-    canvas_widget = graphFrame.get_tk_widget()
-    canvas_widget.grid(row=4, column=0, padx=5, pady=10)
-    wB.save(DESKTOP + "\\" + FILENAME)
+os.makedirs(local_folder, exist_ok=True)
 
 
-dateList = []
-durationList = []
+WINDOW = ctk.CTk()
+WINDOW.geometry(str(WIDTH + BORDER_WIDTH + main_frame_pad_x) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
+WINDOW.title(APPNAME)
+WINDOW.configure(background=window_color)
 
-#TAKE DATA FROM EXCEL FILE AND APPEND TO LIST
-def CollectData():
-    global dataAmount
-    print("Data amount: ", dataAmount)
-    for data in range(2,dataAmount+2):
-        if "/" in str(wS["B"+str(data)].value):
-            dateList.append(datetime.datetime.strptime(str(wS["B"+str(data)].value).split(" ")[0], "%d/%m/%Y").date())
-        elif "-" in str(wS["B"+str(data)].value):
-            dateList.append(datetime.datetime.strptime(str(wS["B"+str(data)].value).split(" ")[0], "%Y-%m-%d").date())
-        if "s" in wS["C"+str(data)].value:
-            durationList.append(int(wS["C"+str(data)].value.replace("s", "")) / 60)
-        else:
-            durationList.append(int(wS["C"+str(data)].value.replace("m", "")))
-    print("Date list: ", dateList)
-    print("Duration list: ", durationList)
+main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color)
+main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-    #GROUP DATA AND DRAW GRAPH
-    data = {"Date": dateList, "Duration": durationList}
+def customize_excel(worksheet):
+    worksheet["A1"].value = "Start:"
+    worksheet["B1"].value = "End:"
+    worksheet["C1"].value = "Duration:"
+    worksheet["D1"].value = "Break:"
+
+    worksheet["A1"].font = Font(bold=True, size=14)
+    worksheet["B1"].font = Font(bold=True, size=14)
+    worksheet["C1"].font = Font(bold=True, size=14)
+    worksheet["D1"].font = Font(bold=True, size=14)
+
+    worksheet["X1"].value = "Data amount: "
+    worksheet["X1"].font = Font(bold=True, size=14)
+    worksheet["Z1"].value = data_amount
+    workbook.save(data_file)
+    print("Excel customized.")
+
+date_list = []
+duration_list = []
+
+
+def create_graph(date_list, duration_list):
+    data = {"Date": date_list, "Duration": duration_list}
     df = pd.DataFrame(data)
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
     fig, ax = plt.subplots()
-    ax.bar(grouped_data["Date"], grouped_data["Duration"], color=graphColor)
-    ax.set_xlabel("Date", color=fontColor)
-    ax.set_ylabel("Duration in minutes", color=fontColor)
-    ax.set_title("Time Spent by Date", color=fontColor)
+    ax.bar(grouped_data["Date"], grouped_data["Duration"], color=graph_color)
+    ax.set_xlabel("Date", color=font_color)
+    ax.set_ylabel("Duration in minutes", color=font_color)
+    ax.set_title("Time Spent by Date", color=font_color)
     ax.tick_params(colors="white")
-    ax.set_facecolor(graphFgColor)
-    fig.set_facecolor(graphBgColor)
-    ax.spines["top"].set_color(spineColor)
-    ax.spines["bottom"].set_color(spineColor)
-    ax.spines["left"].set_color(spineColor)
-    ax.spines["right"].set_color(spineColor)
+    ax.set_facecolor(graph_fg_color)
+    fig.set_facecolor(graph_bg_color)
+    ax.spines["top"].set_color(spine_color)
+    ax.spines["bottom"].set_color(spine_color)
+    ax.spines["left"].set_color(spine_color)
+    ax.spines["right"].set_color(spine_color)
 
-    #FORMAT X AXIS DAY/MONTH
     dateFormat = mdates.DateFormatter("%d/%m")
     ax.xaxis.set_major_formatter(dateFormat)
-    graphFrame = FigureCanvasTkAgg(fig, master=mainFrame)
+    graphFrame = FigureCanvasTkAgg(fig, master=main_frame)
 
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
-    canvas_widget.config(highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
+    canvas_widget.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
-    #CLEAR LISTS
-    dateList.clear()
-    durationList.clear()
+    date_list.clear()
+    duration_list.clear()
 
 
-#LOAD EXCEL FILE
-if os.path.isfile(DESKTOP + "\\" + FILENAME):
-    wB = op.load_workbook(DESKTOP + "\\" + FILENAME)
-    wS = wB.active
-    dataAmount = wS["Z1"].value
-    CollectData()
+def collect_data():
+    global data_amount, date_list, duration_list
+    for data in range(2, data_amount + 2):
+        if "/" in str(worksheet["B" + str(data)].value):
+            date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%d/%m/%Y").date())
+        elif "-" in str(worksheet["B" + str(data)].value):
+            date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
+        duration_list.append(worksheet["C" + str(data)].value)
+    create_graph(date_list, duration_list)
+    
+if os.path.isfile(data_file):
+    workbook = op.load_workbook(data_file)
+    worksheet = workbook.active
+
+    data_amount = int(worksheet["Z1"].value)
+
+    collect_data()
     print("File loaded")
-    
-#CREATE EXCEL FILE WITH HEADLINES
 else:
-    dataAmount = 0
-    wB = op.Workbook()
-    wS = wB.active
-    ResetAndCreate(wS)
+    workbook = op.Workbook()
+    worksheet = workbook.active
+
+    data_amount = 0
+
+    workbook.save(data_file)
     print("New file created")
-
-timerRunning = False
-startTime, stopTime, duration = 0, 0, 0
+    customize_excel(worksheet)
 
 
-#SIMPLE STOPWATCH START STOP MECHANISM
-def TimerStartStop():
-    global timerRunning, startTime, stopTime, duration
-    global breakRunning, breakStopTime, breakTimeTotal, breakStopLabel, breakStartLabel, breakTimeToDisplay
-    global timerFrame, breakFrame
+#------------------------------------------------------------------------------VARIABLES------------------------------------------------------------------------#
+timer_running = False
+break_running = False
+timer_time = 0
+break_time = 0
+start_time = ""
 
-#IF TIMER IS NOT RUNNING RUN IT
-    if timerRunning == False:
-        timerRunning = True
-        startTime = datetime.datetime.now()
-        timerStartLabel.config(text="Start: " + str(startTime.strftime("%H:%M:%S")))
-        stopTime = 0
-        timerStopLabel.config(text="Stop: 00:00:00")
-        breakStartLabel.config(text="Start: 00:00:00")
-        breakStopLabel.config(text="Stop: 00:00:00")
-        print("Timer Start:", startTime)
-#IF TIMER IS RUNNING STOP IT
+#------------------------------------------------------------------------------TIMER----------------------------------------------------------------------------#
+def timer_mechanism():
+    global timer_running, break_running, start_time
+    if not timer_running:
+        timer_running = True
+        break_running = False
+        update_time()
+    elif timer_running:
+        timer_running = False
+
+    if start_time == "":
+        start_time = datetime.datetime.now()
+
+def update_time():
+    global timer_running, timer_time, time_display_label
+
+    if timer_running:
+        timer_time += 1
+        time_display_label.configure(text=str(datetime.timedelta(seconds=timer_time)))
+        WINDOW.after(1000, update_time)
+
+def break_mechanism():
+    global break_running, timer_running
+    if not break_running:
+        break_running = True
+        timer_running = False
+        update_break_time()
+    elif break_running:
+        break_running = False
+
+def update_break_time():
+    global break_running, break_time, break_display_label
+
+    if break_running:
+        break_time += 1
+        break_display_label.configure(text=str(datetime.timedelta(seconds=break_time)))
+        WINDOW.after(1000, update_break_time)
+
+
+#------------------------------------------------------------------------------DATA-----------------------------------------------------------------------------#
+def calculate_duration(timer_time, break_time):
+    duration = timer_time - break_time
+    if duration < 0: 
+        duration = 0
     else:
-        timerRunning = False
-        stopTime = datetime.datetime.now()
-        timerStopLabel.config(text="Stop: " + str(stopTime.strftime("%H:%M:%S")))
-        print("Timer Stop:", stopTime)
-        if breakRunning == True:
-            breakRunning = False
-            breakStopTime = datetime.datetime.now()
-            print("Break Stop:", breakStopTime)
-            breakStopLabel.config(text="Stop: " + str(breakStopTime.strftime("%H:%M:%S")))
-            breakTimeTotal += ((breakStopTime.hour - breakStartTime.hour) * 60) + (breakStopTime.minute - breakStartTime.minute) + ((breakStopTime.second - breakStartTime.second) / 60)
-            if breakTimeTotal > 1:
-                breakTimeToDisplay = str(int(round(breakTimeTotal))) + "m"
-            else:
-                breakTimeToDisplay = str(int(breakTimeTotal*60)) + "s"
+        duration /= 60
+    return duration
 
-        duration = ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - startTime.minute) + ((stopTime.second - startTime.second) / 60)
-        
+def save_data():
+    global data_amount, duration_list, date_list
+    global timer_running, timer_time, start_time
+    global break_running, break_time
 
-breakRunning = False
-breakStartTime, breakStopTime, breakTimeTotal, breakTimeToDisplay = 0, 0, 0, 0
+    if timer_time == 0:
+        print("No data to save.")
+        return
+    timer_running, break_running = False, False
 
+    duration = calculate_duration(timer_time, break_time)
 
-#SIMPLE BREAK STOPWATCH MECHANISM
-def BreakStartStop():
-    global breakRunning, breakTimeTotal, breakStartTime, breakStopTime, breakTimeToDisplay
-    global timerFrame, breakFrame
+    data_amount += 1
+    worksheet["Z1"].value = int(data_amount)
 
-    if timerRunning == True:
-        #IF BREAK NOT RUNNING START BREAK
-        if breakRunning == False:
-            breakRunning = True
-            breakStartTime = datetime.datetime.now()
-            breakStartLabel.config(text="Start: " + str(breakStartTime.strftime("%H:%M:%S")))
-            breakStopTime = 0
-            breakStopLabel.config(text="Stop: 00:00:00")
-            print("Break Start:", breakStartTime) 
-            #IF BREAK RUNNING STOP BREAK
-        else:
-            breakRunning = False
-            breakStopTime = datetime.datetime.now()
-            breakStopLabel.config(text="Stop: " + str(breakStopTime.strftime("%H:%M:%S")))
-            print("Break Stop:", breakStopTime)
-            breakTimeTotal += ((breakStopTime.hour - breakStartTime.hour) * 60) + (breakStopTime.minute - breakStartTime.minute) + ((breakStopTime.second - breakStartTime.second) / 60)
-            if breakTimeTotal > 1:
-                breakTimeToDisplay = str(int(round(breakTimeTotal))) + "m"
-            else:
-                breakTimeToDisplay = str(int(breakTimeTotal*60)) + "s"
-    else:
-        print("Error: Cant break when timer not running")
+    stop_time = datetime.datetime.now()
+
+    worksheet["A" + str((data_amount + 1))].value = start_time.strftime("%d/%m/%Y %H:%M")
+    worksheet["B" + str((data_amount + 1))].value = stop_time.strftime("%d/%m/%Y %H:%M")
+    worksheet["C" + str((data_amount + 1))].value = duration
+    worksheet["D" + str((data_amount + 1))].value = break_time/60
+
+    timer_time, break_time = 0, 0
+    start_time = ""
+    workbook.save(data_file)
+    print("Data saved.")
+    collect_data()
 
 
-def SaveData():
-    global duration, startTime, stopTime
-    global breakTimeTotal, breakTimeToDisplay, breakStartTime, breakStopTime
-    global dataAmount
-    
-    #IF THERE IS START AND STOP DATA SAVE INTO EXCEL
-    if startTime != 0 and stopTime != 0:
-        dataAmount += 1
-        wS["Z1"].value = dataAmount
-        totalTime = duration - breakTimeTotal
-        if totalTime > 1:
-            timeToDisplay = str(int(round(totalTime))) + "m"
-        else:
-            timeToDisplay = str(int(totalTime*60)) + "s"
-        wS.append([startTime.strftime("%d/%m/%Y %H:%M"), stopTime.strftime("%d/%m/%Y %H:%M"), timeToDisplay, breakTimeToDisplay])
-        wB.save(DESKTOP + "\\" + FILENAME)
-        print("Duration: ", timeToDisplay)
-        print("Break duration: ", breakTimeToDisplay)
-        print("Data saved")
-        startTime, stopTime, breakStartTime, breakStopTime, timeToDisplay, duration, breakTimeTotal = 0, 0, 0, 0, 0, 0, 0
-        timerStartLabel.config(text="Start: 00:00:00")
-        timerStopLabel.config(text="Stop: 00:00:00")
-        breakStartLabel.config(text="Start: 00:00:00")
-        breakStopLabel.config(text="Stop: 00:00:00")
-        CollectData()
-    else:
-        print("Error: No data to save")
+def reset_data():
+    global data_amount, duration_list, date_list
+    global timer_time, timer_running, time_display_label
+    global break_time, break_running, break_display_label
+
+    data_amount = 0
+    del workbook[workbook.active.title]
+    workbook.create_sheet()
+    worksheet = workbook.active
+
+    timer_running, break_running = False, False
+    timer_time, break_time = 0, 0
+    time_display_label.configure(text="0:00:00")
+    break_display_label.configure(text="0:00:00")
+
+    worksheet["Z1"].value = int(data_amount)
+    workbook.save(data_file)
+
+    duration_list.clear()
+    date_list.clear()
+
+    print("Data reset.")
+    create_graph(date_list, duration_list)
+    customize_excel(worksheet)
 
 
-#DELETE AND CREATE NEW SHEET
-def ResetData():
-    global dataAmount
-    global timerStartLabel, timerStopLabel, breakStartLabel, breakStopLabel
-    global startTime, stopTime
-    startTime, stopTime = 0, 0
-    timerStartLabel.config(text="Start: 00:00:00")
-    timerStopLabel.config(text="Stop: 00:00:00")
-    breakStartLabel.config(text="Start: 00:00:00")
-    breakStopLabel.config(text="Stop: 00:00:00")
-    dataAmount = 0
-    del wB[wB.active.title]
-    wB.create_sheet()
-    wS = wB.active
-    ResetAndCreate(wS)
-
-
-#SAVE DATA ON APP EXIT
-def SaveOnQuit():
-    global startTime, stopTime, timerRunning, duration
-    if timerRunning:
-        stopTime = datetime.datetime.now()
-        duration = ((stopTime.hour - startTime.hour) * 60) + (stopTime.minute - startTime.minute) + ((stopTime.second - startTime.second) / 60)
-        SaveData()
-        print("Data saved on exit")
-    else: print("Quit")
+def save_on_quit():
+    global timer_time
+    if timer_time > 0:
+        save_data()
+        print("Data saved on exit.")
+    else: print("Quit.")
+    workbook.save(data_file)
     WINDOW.destroy()
 
-WINDOW.protocol("WM_DELETE_WINDOW", SaveOnQuit)
 
+#------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
+tab_frame = ctk.CTkFrame(WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=tab_frame_color)
+tab_frame.grid(column=0, row=0)
+tab_frame.pack_propagate(False)
 
-def SwitchToSettings():
-    mainFrame.grid_forget()
+border_frame = ctk.CTkFrame(WINDOW, width=BORDER_WIDTH, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=border_frame_color)
+border_frame.grid(column=1, row=0)
 
-def SwitchToMain():
-    mainFrame.grid(column=2, row=0, padx=mainFramePadx)
+timer_frame = ctk.CTkFrame(main_frame, border_color=frame_border_color, border_width=2, fg_color=frame_color)
+timer_frame.grid(row=0, column=0, padx=frame_padding, pady=frame_padding)
 
-#TIMER UI ROW
-timerFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
-timerFrame.grid(row=0, column=0, padx=framePadding, pady=framePadding)
-timerLabel = tk.Label(timerFrame, text="Timer: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
-timerLabel.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-timerStartBtn = tk.Button(timerFrame, text="Start/Stop", command=TimerStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
-timerStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
-
-timerStartLabel = tk.Label(timerFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
-timerStartLabel.grid(row=0, column=2, padx=widgetPadding, pady=widgetPadding)
-timerStopLabel = tk.Label(timerFrame, text="Stop: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
-timerStopLabel.grid(row=0, column=3, padx=(widgetPadding, widgetPadding*2), pady=widgetPadding*2)
+timer_label = ctk.CTkLabel(timer_frame, text="Timer: ", font=(font_family, 16), text_color=font_color)
+timer_label.grid(row=0, column=0, padx=(widget_padding_x*2, widget_padding_x), pady=widget_padding_y*2)
+time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, 16), text_color=font_color)
+time_display_label.grid(row=0, column=2, padx=(widget_padding_x, widget_padding_x*2), pady=widget_padding_y)
+timer_btn = ctk.CTkButton(timer_frame, text="Start/Stop", font=(font_family, 16), fg_color=button_color, text_color=button_font_color,
+                                 border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=timer_mechanism)
+timer_btn.grid(row=0, column=1, padx=widget_padding_x, pady=widget_padding_y)
 
 #BREAK TIMER UI ROW
-breakFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
-breakFrame.grid(row=1, column=0, padx=framePadding, pady=framePadding)
-breakLabel = tk.Label(breakFrame, text="Break: ", font="Calibri 16", background=widgetColor, foreground=fontColor)
-breakLabel.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-breakStartBtn = tk.Button(breakFrame, text="Start/Stop", command=BreakStartStop, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
-breakStartBtn.grid(row=0, column=1, padx=widgetPadding, pady=widgetPadding)
-
-breakStartLabel = tk.Label(breakFrame, text="Start: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
-breakStartLabel.grid(row=0, column=2, padx=widgetPadding, pady=widgetPadding)
-breakStopLabel = tk.Label(breakFrame, text="Stop: 00:00:00", font="Calibri 16", background=widgetColor, foreground=fontColor)
-breakStopLabel.grid(row=0, column=3, padx=(widgetPadding, widgetPadding*2), pady=widgetPadding*2)
+break_label = ctk.CTkLabel(timer_frame, text="Break: ", font=(font_family, 16), text_color=font_color)
+break_label.grid(row=1, column=0, padx=(widget_padding_x*2, widget_padding_x), pady=widget_padding_y*2)
+break_btn = ctk.CTkButton(timer_frame, text="Start/Stop", font=(font_family, 16), fg_color=button_color, text_color=button_font_color,
+                                 border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=break_mechanism)
+break_btn.grid(row=1, column=1, padx=widget_padding_x, pady=widget_padding_y)
+break_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, 16), text_color=font_color)
+break_display_label.grid(row=1, column=2, padx=(widget_padding_x, widget_padding_x*2), pady=widget_padding_y)
 
 #DATA UI ROW
-dataFrame = tk.Frame(mainFrame, highlightbackground=frameBorderColor, highlightthickness=2, background=frameColor)
-dataFrame.grid(row=3, column=0, padx=framePadding, pady=framePadding)
-saveDataBtn = tk.Button(dataFrame, text="Save Data", command=SaveData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
-saveDataBtn.grid(row=0, column=0, padx=(widgetPadding*2, widgetPadding), pady=widgetPadding*2)
-resetDataBtn = tk.Button(dataFrame, text="Reset Data", command=ResetData, font="Calibri 16", background=buttonColor, foreground=buttonFontColor, highlightbackground=frameBorderColor, activebackground=buttonClickColor)
-resetDataBtn.grid(row=0, column=1, padx=(widgetPadding, widgetPadding*2), pady=widgetPadding*2)
+data_frame = ctk.CTkFrame(main_frame, border_color=frame_border_color, border_width=2, fg_color=frame_color)
+data_frame.grid(row=3, column=0, padx=frame_padding, pady=frame_padding)
+save_data_btn = ctk.CTkButton(data_frame, text="Save Data", font=(font_family, 16), fg_color=button_color, text_color=button_font_color,
+                               border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=save_data)
+save_data_btn.grid(row=0, column=0, padx=(widget_padding_x*2, widget_padding_x), pady=widget_padding_y*2)
+reset_data_btn = ctk.CTkButton(data_frame, text="Reset Data", font=(font_family, 16), fg_color=button_color, text_color=button_font_color,
+                                border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=reset_data)
+reset_data_btn.grid(row=0, column=1, padx=(widget_padding_x, widget_padding_x*2), pady=widget_padding_y*2)
 
 #TABS
-tabWidth = tabFrameWidth - (tabFrameWidth * 0.2)
-tabHeight = HEIGHT * 0.1
-tabColor = "#292929"
-#-----------------------
-#MAIN TAB (TIMER)
-mainTabFrame = tk.Frame(tabFrame, width=tabFrameWidth, height=tabHeight*1.2, background=tabColor)
-mainTabFrame.pack()
-mainTabBtn = tk.Button(mainTabFrame, text="Timer", font="Calibri 30", foreground=fontColor, background=tabColor, width=int(tabWidth), 
-                           height=int(tabHeight*1.2), activebackground="#333333", activeforeground=fontColor, command=SwitchToMain)
-mainTabBtn.place(relx=0.5, rely=0.5, anchor="center")
-#DIVIDER
-Line1 = tk.Frame(mainTabFrame, width=tabFrameWidth, height=3, background=frameBorderColor)
-Line1.place(relx=0.5, rely=1, anchor="s")
-#-----------------------
-settingsTab = tk.Frame(tabFrame, width=tabFrameWidth, height=tabHeight*1.2, background=tabColor)
-settingsTab.place(relx=0.5, rely=1, anchor="s")
-settingsBtn = tk.Button(settingsTab, text="Settings", font="Calibri 27", foreground=fontColor, background=tabColor, width=int(tabWidth), 
-                           height=int(tabHeight*1.2), activebackground="#333333", activeforeground=fontColor, command=SwitchToSettings)
-settingsBtn.place(relx=0.5, rely=0.5, anchor="center")
-#DIVIDER
-Line2 = tk.Frame(settingsTab, width=tabFrameWidth, height=3, background=frameBorderColor)
-Line2.place(relx=0.5, rely=0, anchor="n")
+main_tab_frame = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*1.2, fg_color=tab_color)
+main_tab_frame.pack()
+main_tab_btn = ctk.CTkButton(main_tab_frame, text="Timer", font=(font_family, 36*tab_height/60, tab_font_weight), text_color=font_color,
+                              fg_color=tab_color, width=int(tab_frame_width*0.97), 
+                           height=int(tab_height*0.9), hover_color=tab_highlight_color, anchor="w")
+main_tab_btn.place(relx=0.5, rely=0.5, anchor="center")
+
+#BORDER LINE UNDER MAIN TAB
+line_1 = ctk.CTkFrame(main_tab_frame, width=tab_frame_width, height=3, fg_color=frame_border_color)
+line_1.place(relx=0.5, rely=1, anchor="s")
+
+settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*1.2, fg_color=tab_color)
+settings_tab.place(relx=0.5, rely=1, anchor="s")
+settings_button = ctk.CTkButton(settings_tab, text="Settings", font=(font_family, 32*tab_height/60, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.97), 
+                           height=int(tab_height*0.8), hover_color=tab_highlight_color, anchor="w")
+settings_button.place(relx=0.5, rely=0.5, anchor="center")
+#BORDER LINE ABOVE SETTINGS TAB
+line_2 = ctk.CTkFrame(settings_tab, width=tab_frame_width, height=3, fg_color=frame_border_color)
+line_2.place(relx=0.5, rely=0, anchor="n")
+
+
+WINDOW.protocol("WM_DELETE_WINDOW", save_on_quit)
 
 WINDOW.mainloop()
