@@ -26,6 +26,10 @@ WINDOW.configure(background=window_color)
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color)
 main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
+statistics_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color)
+statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+statistics_frame.grid_forget()
+
 def customize_excel(worksheet):
     worksheet["A1"].value = "Start:"
     worksheet["B1"].value = "End:"
@@ -58,15 +62,19 @@ def create_graph(date_list, duration_list):
     ax.set_title("Time Spent by Date", color=font_color)
     ax.tick_params(colors="white")
     ax.set_facecolor(graph_fg_color)
+    ax.set_xticks(grouped_data["Date"])
+    ax.set_yticks(grouped_data["Duration"])
     fig.set_facecolor(graph_bg_color)
     ax.spines["top"].set_color(spine_color)
     ax.spines["bottom"].set_color(spine_color)
     ax.spines["left"].set_color(spine_color)
     ax.spines["right"].set_color(spine_color)
+    fig.set_size_inches(5, 4, forward=True)
 
     dateFormat = mdates.DateFormatter("%d/%m")
     ax.xaxis.set_major_formatter(dateFormat)
-    graphFrame = FigureCanvasTkAgg(fig, master=main_frame)
+    graphFrame = FigureCanvasTkAgg(fig, master=statistics_frame)
+
 
     canvas_widget = graphFrame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
@@ -83,7 +91,7 @@ def collect_data():
             date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%d/%m/%Y").date())
         elif "-" in str(worksheet["B" + str(data)].value):
             date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
-        duration_list.append(worksheet["C" + str(data)].value)
+        duration_list.append(round(worksheet["C" + str(data)].value))
     create_graph(date_list, duration_list)
     
 if os.path.isfile(data_file):
@@ -224,6 +232,12 @@ def save_on_quit():
     workbook.save(data_file)
     WINDOW.destroy()
 
+def to_timer():
+    main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+    statistics_frame.grid_forget()
+def to_statistics():
+    statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+    main_frame.grid_forget()
 
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 tab_frame = ctk.CTkFrame(WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=tab_frame_color)
@@ -264,27 +278,23 @@ reset_data_btn = ctk.CTkButton(data_frame, text="Reset Data", font=(font_family,
 reset_data_btn.grid(row=0, column=1, padx=(widget_padding_x, widget_padding_x*2), pady=widget_padding_y*2)
 
 #TABS
-main_tab_frame = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*1.2, fg_color=tab_color)
-main_tab_frame.pack()
-main_tab_btn = ctk.CTkButton(main_tab_frame, text="Timer", font=(font_family, 36*tab_height/60, tab_font_weight), text_color=font_color,
-                              fg_color=tab_color, width=int(tab_frame_width*0.97), 
-                           height=int(tab_height*0.9), hover_color=tab_highlight_color, anchor="w")
-main_tab_btn.place(relx=0.5, rely=0.5, anchor="center")
+timer_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+timer_tab.pack(pady=tab_padding_y)
+timer_tab_btn = ctk.CTkButton(timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_timer)
+timer_tab_btn.place(relx=0.5, rely=0.5, anchor="center")
 
-#BORDER LINE UNDER MAIN TAB
-line_1 = ctk.CTkFrame(main_tab_frame, width=tab_frame_width, height=3, fg_color=frame_border_color)
-line_1.place(relx=0.5, rely=1, anchor="s")
+statistics_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+statistics_tab.pack(pady=tab_padding_y)
+statistics_btn = ctk.CTkButton(statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_statistics)
+statistics_btn.place(relx=0.5, rely=0.5, anchor="center")
 
-settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*1.2, fg_color=tab_color)
+settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
-settings_button = ctk.CTkButton(settings_tab, text="Settings", font=(font_family, 32*tab_height/60, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.97), 
-                           height=int(tab_height*0.8), hover_color=tab_highlight_color, anchor="w")
-settings_button.place(relx=0.5, rely=0.5, anchor="center")
-#BORDER LINE ABOVE SETTINGS TAB
-line_2 = ctk.CTkFrame(settings_tab, width=tab_frame_width, height=3, fg_color=frame_border_color)
-line_2.place(relx=0.5, rely=0, anchor="n")
-
+settings_btn = ctk.CTkButton(settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w")
+settings_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 WINDOW.protocol("WM_DELETE_WINDOW", save_on_quit)
 
