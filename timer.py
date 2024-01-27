@@ -121,17 +121,21 @@ break_running = False
 timer_time = 0
 break_time = 0
 start_time = ""
+goal = ""
 
 #------------------------------------------------------------------------------TIMER----------------------------------------------------------------------------#
 def timer_mechanism():
     global timer_running, break_running, start_time
+    global timer_btn, break_btn
     if not timer_running:
         timer_running = True
         break_running = False
+        timer_btn.configure(text="Stop")
+        break_btn.configure(text="Start")
         update_time()
     elif timer_running:
         timer_running = False
-
+        timer_btn.configure(text="Start")
     if start_time == "":
         start_time = datetime.datetime.now()
 
@@ -141,16 +145,21 @@ def update_time():
     if timer_running:
         timer_time += 1
         time_display_label.configure(text=str(datetime.timedelta(seconds=timer_time)))
+        update_slider()
         WINDOW.after(1000, update_time)
 
 def break_mechanism():
     global break_running, timer_running
+    global break_btn, timer_btn
     if not break_running:
         break_running = True
         timer_running = False
+        break_btn.configure(text="Stop")
+        timer_btn.configure(text="Start")
         update_break_time()
     elif break_running:
         break_running = False
+        break_btn.configure(text="Start")
 
 def update_break_time():
     global break_running, break_time, break_display_label
@@ -236,10 +245,28 @@ def save_on_quit():
 
 def to_timer():
     main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+    main_frame.grid_propagate(False)
     statistics_frame.grid_forget()
+
+
 def to_statistics():
     statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
     main_frame.grid_forget()
+
+
+def get_goal():
+    global goal
+    try:
+        goal = int(goal_input.get())
+        update_slider()
+    except ValueError:
+        print("Goal must be a number.")
+        pass
+
+def update_slider():
+    global timer_time, progressbar, goal
+    if goal != "":
+        progressbar.set((timer_time/60)/goal)
 
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 def change_focus(event):
@@ -265,7 +292,7 @@ goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 goal_input = ctk.CTkEntry(goal_frame, placeholder_text=30, font=(font_family, int(font_size*2.5)), text_color=font_color, height=70, width=90, justify="center")
 goal_input.place(anchor="center", relx=0.5, rely=0.45)
 goal_btn = ctk.CTkButton(goal_frame, text="Set", font=(font_family, int(font_size)), fg_color=button_color, text_color=button_font_color, width=80, height=40,
-                          hover_color=button_highlight_color)
+                          hover_color=button_highlight_color, command=get_goal)
 goal_btn.place(anchor="s", relx=0.5, rely=0.9)
 
 progress_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=90)
@@ -295,7 +322,7 @@ timer_label = ctk.CTkLabel(timer_frame, text="Timer", font=(font_family, font_si
 timer_label.place(anchor="nw", relx=0.05, rely=0.05)
 time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
 time_display_label.place(anchor="center", relx=0.5, rely=0.45)
-timer_btn = ctk.CTkButton(timer_frame, text="Start/Stop", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+timer_btn = ctk.CTkButton(timer_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                  border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=timer_mechanism)
 timer_btn.place(anchor="s", relx=0.5, rely=0.9)
 
@@ -308,7 +335,7 @@ break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_si
 break_label.place(anchor="nw", relx=0.05, rely=0.05)
 break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
 break_display_label.place(anchor="center", relx=0.5, rely=0.45)
-break_btn = ctk.CTkButton(break_frame, text="Start/Stop", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+break_btn = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                  border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=break_mechanism)
 break_btn.place(anchor="s", relx=0.5, rely=0.9)
 
