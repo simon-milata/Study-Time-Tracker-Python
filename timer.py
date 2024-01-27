@@ -22,6 +22,7 @@ WINDOW = ctk.CTk()
 WINDOW.geometry(str(WIDTH + BORDER_WIDTH + main_frame_pad_x + tab_frame_width) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
 WINDOW.title(APPNAME)
 WINDOW.configure(background=window_color)
+WINDOW.resizable(False, False)
 
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
 main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
@@ -255,52 +256,61 @@ goal_progress_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5)
 goal_progress_frame.grid(row=0, column=0)
 goal_progress_frame.pack_propagate(False)
 
-goal_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, height=250, width=frame_width, corner_radius=10)
+goal_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, height=225, width=frame_width, corner_radius=10)
 goal_frame.pack(padx=frame_padding, pady=frame_padding)
 goal_frame.pack_propagate(False)
 
-goal_label = ctk.CTkLabel(goal_frame, text="Set a goal:", font=(font_family, int(font_size*2)), text_color=font_color)
-goal_label.pack(padx=widget_padding_x*2, pady=widget_padding_y*2)
-
-goal_input = ctk.CTkEntry(goal_frame, placeholder_text=30, font=(font_family, int(font_size*2)), text_color=font_color, height=80, width=100, justify="center")
-goal_input.pack(padx=widget_padding_x*2, pady=widget_padding_y)
-
+goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=font_color)
+goal_label.place(anchor="nw", relx=0.05, rely=0.05)
+goal_input = ctk.CTkEntry(goal_frame, placeholder_text=30, font=(font_family, int(font_size*2.5)), text_color=font_color, height=70, width=90, justify="center")
+goal_input.place(anchor="center", relx=0.5, rely=0.45)
 goal_btn = ctk.CTkButton(goal_frame, text="Set", font=(font_family, int(font_size)), fg_color=button_color, text_color=button_font_color, width=80, height=40,
                           hover_color=button_highlight_color)
-goal_btn.pack(padx=widget_padding_x*2, pady=(widget_padding_y, widget_padding_y*2))
+goal_btn.place(anchor="s", relx=0.5, rely=0.9)
 
-progress_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10)
+progress_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=90)
 progress_frame.pack(padx=frame_padding, pady=frame_padding)
 progress_frame.pack_propagate(False)
+progress_label = ctk.CTkLabel(progress_frame, text="Progress", font=(font_family, int(font_size)), text_color=font_color)
+progress_label.place(anchor="nw", relx=0.05, rely=0.05)
+progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_color=button_color, fg_color=border_frame_color, corner_radius=10)
+progressbar.place(anchor="center", relx=0.5, rely=0.7)
+progressbar.set(0)
+
+streak_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=120)
+streak_frame.pack(padx=frame_padding, pady=frame_padding)
+streak_label = ctk.CTkLabel(streak_frame, text="Streak", font=(font_family, int(font_size)), text_color=font_color)
+streak_label.place(anchor="nw", relx=0.05, rely=0.05)
+
 
 timer_break_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
 timer_break_frame.grid(row=0, column=1)
 timer_break_frame.propagate(False)
 
-timer_frame = ctk.CTkFrame(timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width)
+timer_frame = ctk.CTkFrame(timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
 timer_frame.pack(padx=frame_padding, pady=frame_padding)
 timer_frame.pack_propagate(False)
 
-timer_label = ctk.CTkLabel(timer_frame, text="Timer:", font=(font_family, int(font_size*2)), text_color=font_color)
-timer_label.pack(pady=widget_padding_y)
-time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*1.5)), text_color=font_color)
-time_display_label.pack(pady=widget_padding_y)
+timer_label = ctk.CTkLabel(timer_frame, text="Timer", font=(font_family, font_size), text_color=font_color)
+timer_label.place(anchor="nw", relx=0.05, rely=0.05)
+time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
+time_display_label.place(anchor="center", relx=0.5, rely=0.45)
 timer_btn = ctk.CTkButton(timer_frame, text="Start/Stop", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                  border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=timer_mechanism)
-timer_btn.pack(pady=widget_padding_y)
+timer_btn.place(anchor="s", relx=0.5, rely=0.9)
 
 #BREAK TIMER UI ROW
-break_frame = ctk.CTkFrame(timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width)
+break_frame = ctk.CTkFrame(timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
 break_frame.pack(padx=frame_padding, pady=frame_padding)
 break_frame.pack_propagate(False)
 
-break_label = ctk.CTkLabel(break_frame, text="Break:", font=(font_family, int(font_size*2)), text_color=font_color)
-break_label.pack(pady=widget_padding_y)
-break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*1.5)), text_color=font_color)
-break_display_label.pack(pady=widget_padding_y)
+break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=font_color)
+break_label.place(anchor="nw", relx=0.05, rely=0.05)
+break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
+break_display_label.place(anchor="center", relx=0.5, rely=0.45)
 break_btn = ctk.CTkButton(break_frame, text="Start/Stop", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                  border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=break_mechanism)
-break_btn.pack(pady=widget_padding_y)
+break_btn.place(anchor="s", relx=0.5, rely=0.9)
 
 #DATA UI ROW
 data_frame = ctk.CTkFrame(main_frame, fg_color=frame_color, corner_radius=10, width=WIDTH-10, height=button_height*2)
