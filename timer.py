@@ -37,6 +37,7 @@ def customize_excel(worksheet):
     worksheet["B1"].value = "End:"
     worksheet["C1"].value = "Duration:"
     worksheet["D1"].value = "Break:"
+    worksheet["E1"].value = "Streak:"
 
     worksheet["U1"].value = "Monday:"
     worksheet["U2"].value = "Tuesday:"
@@ -54,10 +55,19 @@ def customize_excel(worksheet):
     worksheet["V6"].value = saturday_amount
     worksheet["V7"].value = sunday_amount
 
+    worksheet["W1"].value = monday_duration
+    worksheet["W2"].value = tuesday_duration
+    worksheet["W3"].value = wednesday_duration
+    worksheet["W4"].value = thursday_duration
+    worksheet["W5"].value = friday_duration
+    worksheet["W6"].value = saturday_duration
+    worksheet["W7"].value = sunday_duration
+
     worksheet["A1"].font = Font(bold=True, size=14)
     worksheet["B1"].font = Font(bold=True, size=14)
     worksheet["C1"].font = Font(bold=True, size=14)
     worksheet["D1"].font = Font(bold=True, size=14)
+    worksheet["E1"].font = Font(bold=True, size=14)
 
     worksheet["X1"].value = "Data amount: "
     worksheet["X1"].font = Font(bold=True, size=14)
@@ -89,12 +99,12 @@ def create_time_spent_graph(date_list, duration_list):
     ax.spines["right"].set_color(spine_color)
     fig.set_size_inches(5, 4, forward=True)
 
-    dateFormat = mdates.DateFormatter("%d/%m")
-    ax.xaxis.set_major_formatter(dateFormat)
-    graphFrame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    date_format = mdates.date_formatter("%d/%m")
+    ax.xaxis.set_major_formatter(date_format)
+    graph_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    graph_frame.grid_propagate(False)
 
-
-    canvas_widget = graphFrame.get_tk_widget()
+    canvas_widget = graph_frame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
     canvas_widget.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
@@ -111,6 +121,7 @@ def create_weekday_graph(day_amount_list, day_name_list):
 def collect_data():
     global data_amount, date_list, duration_list
     global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
+    global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
 
     data_amount = int(worksheet["Z1"].value)
 
@@ -122,11 +133,19 @@ def collect_data():
     saturday_amount = int(worksheet["V6"].value)
     sunday_amount = int(worksheet["V7"].value)
 
-    day_amount_list = [monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount]
+    monday_duration = int(worksheet["W1"].value)
+    tuesday_duration = int(worksheet["W2"].value)
+    wednesday_duration = int(worksheet["W3"].value)
+    thursday_duration = int(worksheet["W4"].value)
+    friday_duration = int(worksheet["W5"].value)
+    saturday_duration = int(worksheet["W6"].value)
+    sunday_duration = int(worksheet["W7"].value)
+
+    day_amount_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-    if data_amount > 0:
-        create_weekday_graph(day_amount_list, day_name_list)
+    #if data_amount > 0:
+        #create_weekday_graph(day_amount_list, day_name_list)
 
     for data in range(2, data_amount + 2):
         if "/" in str(worksheet["B" + str(data)].value):
@@ -135,6 +154,8 @@ def collect_data():
             date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
         duration_list.append(round(worksheet["C" + str(data)].value))
     create_time_spent_graph(date_list, duration_list)
+    save_weekday()
+    print("Data collected.")
     
 if os.path.isfile(data_file):
     workbook = op.load_workbook(data_file)
@@ -148,13 +169,9 @@ else:
 
     data_amount = 0
 
-    monday_amount = 0
-    tuesday_amount = 0
-    wednesday_amount = 0
-    thursday_amount = 0
-    friday_amount = 0
-    saturday_amount = 0
-    sunday_amount = 0
+    monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount = 0, 0, 0, 0, 0, 0, 0
+
+    monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration = 0, 0, 0, 0, 0, 0, 0
 
     workbook.save(data_file)
     print("New file created")
@@ -192,7 +209,7 @@ def update_time():
     if timer_running:
         timer_time += 1
         time_display_label.configure(text=str(datetime.timedelta(seconds=timer_time)))
-        update_slider()
+        update_slider(timer_time)
         WINDOW.after(1000, update_time)
 
 def break_mechanism():
@@ -226,11 +243,60 @@ def calculate_duration(timer_time, break_time):
         duration /= 60
     return duration
 
+def save_weekday():
+    global timer_time, break_time
+    global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
+    global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
+
+    duration = calculate_duration(timer_time, break_time)
+    print("AAAAA")
+    print(duration)
+
+    match datetime.datetime.now().weekday():
+        case 0:
+            print("Case 0")
+            monday_amount += 1
+            worksheet["V1"].value = monday_amount
+            monday_duration += duration
+            worksheet["W1"].value = monday_duration
+        case 1:
+            tuesday_amount += 1
+            worksheet["V2"].value = tuesday_amount
+            tuesday_duration += duration
+            worksheet["W2"].value = tuesday_duration
+        case 2:
+            wednesday_amount += 1
+            worksheet["V3"].value = wednesday_amount
+            wednesday_duration += duration
+            worksheet["W3"].value = wednesday_duration
+        case 3:
+            thursday_amount += 1
+            worksheet["V4"].value = thursday_amount
+            thursday_duration += duration
+            worksheet["W4"].value = thursday_duration
+        case 4:
+            friday_amount += 1
+            worksheet["V5"].value = friday_amount
+            friday_duration += duration
+            worksheet["W5"].value = friday_duration
+        case 5:
+            saturday_amount += 1
+            worksheet["V6"].value = saturday_amount
+            saturday_duration += duration
+            worksheet["W6"].value = saturday_duration
+        case 6:
+            sunday_amount += 1
+            worksheet["V7"].value = sunday_amount
+            sunday_duration += duration
+            worksheet["W7"].value = sunday_duration
+
+    workbook.save(data_file)
+    print("Weekday saved.")
+
 def save_data():
     global data_amount, duration_list, date_list
     global timer_running, timer_time, start_time, timer_btn, timer_label
     global break_running, break_time, break_btn, break_label
-    global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
 
     if timer_time < 60:
         print("No data to save.")
@@ -249,41 +315,10 @@ def save_data():
     worksheet["C" + str((data_amount + 1))].value = duration
     worksheet["D" + str((data_amount + 1))].value = break_time/60
 
-    match datetime.datetime.now().weekday():
-        case 0:
-            print("Case 0")
-            monday_amount += 1
-            worksheet["V1"].value = monday_amount
-        case 1:
-            print("Case 1")
-            tuesday_amount += 1
-            worksheet["V2"].value = tuesday_amount
-        case 2:
-            print("Case 2")
-            wednesday_amount += 1
-            worksheet["V3"].value = wednesday_amount
-        case 3:
-            print("Case 3")
-            thursday_amount += 1
-            worksheet["V4"].value = thursday_amount
-        case 4:
-            print("Case 4")
-            friday_amount += 1
-            worksheet["V5"].value = friday_amount
-        case 5:
-            print("Case 5")
-            saturday_amount += 1
-            worksheet["V6"].value = saturday_amount
-        case 6:
-            print("Case 6")
-            sunday_amount += 1
-            worksheet["V7"].value = sunday_amount
-
-
     timer_btn.configure(text="Start")
     break_btn.configure(text="Start")
-    timer_label.configure(text="0:00:00")
-    break_label.configure(text="0:00:00")
+    time_display_label.configure(text="0:00:00")
+    break_display_label.configure(text="0:00:00")
     timer_time, break_time = 0, 0
     start_time = ""
     workbook.save(data_file)
@@ -351,11 +386,22 @@ def get_goal():
     print(goal)
 
 
-def update_slider():
-    global timer_time, progressbar, goal
+def update_slider(timer_time):
+    global progressbar, goal
     if goal == 0:
         goal = 60
-    progressbar.set((timer_time/60)/goal)
+    if (timer_time/60) < goal:
+        progressbar.set((timer_time/60)/goal)
+    else:
+        set_streak(goal, timer_time, progressbar)
+
+def set_streak(goal, timer_time, progressbar):
+    if timer_time >= goal:
+        progressbar.set(1)
+        worksheet["E" + str((data_amount + 1))].value = 1
+
+    
+    
 
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 def change_focus(event):
@@ -372,7 +418,7 @@ goal_progress_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5)
 goal_progress_frame.grid(row=0, column=0)
 goal_progress_frame.pack_propagate(False)
 
-goal_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, height=225, width=frame_width, corner_radius=10)
+goal_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
 goal_frame.pack(padx=frame_padding, pady=frame_padding)
 goal_frame.pack_propagate(False)
 
@@ -382,7 +428,7 @@ goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 goal_dropdown = ctk.CTkComboBox(goal_frame, values=["30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
                                                      "4 hours", "4 hours, 30 minutes", "5 hours", "5 hours, 30 minutes", "6 hours"], variable=default_choice, 
                                                      state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
-                                                       font=(font_family, int(font_size)), fg_color=border_frame_color)
+                                                       font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
 goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 goal_btn = ctk.CTkButton(goal_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
                          height=button_height, command=get_goal)
