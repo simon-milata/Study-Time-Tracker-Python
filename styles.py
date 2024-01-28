@@ -44,3 +44,13 @@ graph_bg_color = "#323232"
 graph_fg_color = "#323232"
 graph_color = "#f38064"
 spine_color = "#5b5b5b"
+
+pie_font_family = font_family
+pie_font_size = 12
+pie_color_orange_1 = "#f25730"
+pie_color_orange_2 = "#f26b49"
+pie_color_orange_3 = "#f27e61"
+pie_color_orange_4 = "#f29179"
+pie_color_orange_5 = "#f2a591"
+pie_color_orange_6 = "#f2b8aa"
+pie_color_orange_7 = "#f2cbc2"

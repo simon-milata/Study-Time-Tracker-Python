@@ -24,6 +24,17 @@ WINDOW.title(APPNAME)
 WINDOW.configure(background=window_color)
 WINDOW.resizable(False, False)
 
+
+#---------------------------------------------------------------------------VARIABLES---------------------------------------------------------------------------#
+timer_running = False
+break_running = False
+timer_time = 0
+break_time = 0
+start_time = ""
+goal = 0
+default_choice = ctk.StringVar(value="1 hour")
+
+
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
 main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 main_frame.grid_propagate(False)
@@ -99,10 +110,9 @@ def create_time_spent_graph(date_list, duration_list):
     ax.spines["right"].set_color(spine_color)
     fig.set_size_inches(5, 4, forward=True)
 
-    date_format = mdates.date_formatter("%d/%m")
+    date_format = mdates.DateFormatter("%d/%m")
     ax.xaxis.set_major_formatter(date_format)
     graph_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
-    graph_frame.grid_propagate(False)
 
     canvas_widget = graph_frame.get_tk_widget()
     canvas_widget.grid(row=4, column=0, padx=5, pady=10)
@@ -112,9 +122,82 @@ def create_time_spent_graph(date_list, duration_list):
     duration_list.clear()
 
 
-def create_weekday_graph(day_amount_list, day_name_list):
+def calculate_duration():
+    global timer_time, break_time
+    duration = timer_time - break_time
+    if duration < 0: 
+        duration = 0
+    else:
+        duration /= 60
+    return duration
+
+
+def save_weekday():
+    global timer_time, break_time
+    global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
+    global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
+
+    duration = calculate_duration()
+    print("AAAAA")
+    print(duration)
+
+    match datetime.datetime.now().weekday():
+        case 0:
+            print("Case 0")
+            monday_amount += 1
+            worksheet["V1"].value = monday_amount
+            monday_duration += duration
+            worksheet["W1"].value = monday_duration
+        case 1:
+            tuesday_amount += 1
+            worksheet["V2"].value = tuesday_amount
+            tuesday_duration += duration
+            worksheet["W2"].value = tuesday_duration
+        case 2:
+            wednesday_amount += 1
+            worksheet["V3"].value = wednesday_amount
+            wednesday_duration += duration
+            worksheet["W3"].value = wednesday_duration
+        case 3:
+            thursday_amount += 1
+            worksheet["V4"].value = thursday_amount
+            thursday_duration += duration
+            worksheet["W4"].value = thursday_duration
+        case 4:
+            friday_amount += 1
+            worksheet["V5"].value = friday_amount
+            friday_duration += duration
+            worksheet["W5"].value = friday_duration
+        case 5:
+            saturday_amount += 1
+            worksheet["V6"].value = saturday_amount
+            saturday_duration += duration
+            worksheet["W6"].value = saturday_duration
+        case 6:
+            sunday_amount += 1
+            worksheet["V7"].value = sunday_amount
+            sunday_duration += duration
+            worksheet["W7"].value = sunday_duration
+
+    timer_time, break_time = 0, 0
+    workbook.save(data_file)
+    print("Weekday saved.")
+
+
+def autopct_format(values):
+    def my_format(pct):
+        total = sum(values)
+        val = int(round(pct*total/100.0))
+        return '{v:d}'.format(v=val)
+    return my_format
+
+
+def create_weekday_graph(day_duration_list, day_name_list):
+    non_zero_durations = [duration for duration in day_duration_list if duration != 0]
+    non_zero_names = [name for name, duration in zip(day_name_list, day_duration_list) if duration != 0]
+
     fig, ax = plt.subplots()
-    ax.pie(day_amount_list, labels=day_name_list, autopct='%1.1f%%', pctdistance=1.25, labeldistance=0.6)
+    ax.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), colors=[button_color], textprops={'fontsize': pie_font_size, 'family': pie_font_family})
     plt.show()
 
 
@@ -141,11 +224,11 @@ def collect_data():
     saturday_duration = int(worksheet["W6"].value)
     sunday_duration = int(worksheet["W7"].value)
 
-    day_amount_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
+    day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-    #if data_amount > 0:
-        #create_weekday_graph(day_amount_list, day_name_list)
+    if data_amount > 0:
+        create_weekday_graph(day_duration_list, day_name_list)
 
     for data in range(2, data_amount + 2):
         if "/" in str(worksheet["B" + str(data)].value):
@@ -154,7 +237,6 @@ def collect_data():
             date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
         duration_list.append(round(worksheet["C" + str(data)].value))
     create_time_spent_graph(date_list, duration_list)
-    save_weekday()
     print("Data collected.")
     
 if os.path.isfile(data_file):
@@ -177,15 +259,6 @@ else:
     print("New file created")
     customize_excel(worksheet)
 
-
-#---------------------------------------------------------------------------VARIABLES---------------------------------------------------------------------------#
-timer_running = False
-break_running = False
-timer_time = 0
-break_time = 0
-start_time = ""
-goal = 0
-default_choice = ctk.StringVar(value="1 hour")
 
 #-----------------------------------------------------------------------------TIMER-----------------------------------------------------------------------------#
 def timer_mechanism():
@@ -235,64 +308,6 @@ def update_break_time():
 
 
 #------------------------------------------------------------------------------DATA-----------------------------------------------------------------------------#
-def calculate_duration(timer_time, break_time):
-    duration = timer_time - break_time
-    if duration < 0: 
-        duration = 0
-    else:
-        duration /= 60
-    return duration
-
-def save_weekday():
-    global timer_time, break_time
-    global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
-    global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
-
-    duration = calculate_duration(timer_time, break_time)
-    print("AAAAA")
-    print(duration)
-
-    match datetime.datetime.now().weekday():
-        case 0:
-            print("Case 0")
-            monday_amount += 1
-            worksheet["V1"].value = monday_amount
-            monday_duration += duration
-            worksheet["W1"].value = monday_duration
-        case 1:
-            tuesday_amount += 1
-            worksheet["V2"].value = tuesday_amount
-            tuesday_duration += duration
-            worksheet["W2"].value = tuesday_duration
-        case 2:
-            wednesday_amount += 1
-            worksheet["V3"].value = wednesday_amount
-            wednesday_duration += duration
-            worksheet["W3"].value = wednesday_duration
-        case 3:
-            thursday_amount += 1
-            worksheet["V4"].value = thursday_amount
-            thursday_duration += duration
-            worksheet["W4"].value = thursday_duration
-        case 4:
-            friday_amount += 1
-            worksheet["V5"].value = friday_amount
-            friday_duration += duration
-            worksheet["W5"].value = friday_duration
-        case 5:
-            saturday_amount += 1
-            worksheet["V6"].value = saturday_amount
-            saturday_duration += duration
-            worksheet["W6"].value = saturday_duration
-        case 6:
-            sunday_amount += 1
-            worksheet["V7"].value = sunday_amount
-            sunday_duration += duration
-            worksheet["W7"].value = sunday_duration
-
-    workbook.save(data_file)
-    print("Weekday saved.")
-
 def save_data():
     global data_amount, duration_list, date_list
     global timer_running, timer_time, start_time, timer_btn, timer_label
@@ -303,7 +318,7 @@ def save_data():
         return
     timer_running, break_running = False, False
 
-    duration = calculate_duration(timer_time, break_time)
+    duration = calculate_duration()
 
     data_amount += 1
     worksheet["Z1"].value = int(data_amount)
@@ -319,12 +334,11 @@ def save_data():
     break_btn.configure(text="Start")
     time_display_label.configure(text="0:00:00")
     break_display_label.configure(text="0:00:00")
-    timer_time, break_time = 0, 0
     start_time = ""
     workbook.save(data_file)
     print("Data saved.")
     collect_data()
-
+    save_weekday()
 
 def reset_data():
     global data_amount, duration_list, date_list
