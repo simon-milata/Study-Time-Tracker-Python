@@ -35,7 +35,6 @@ break_time = 0
 start_time = ""
 goal = 0
 default_choice = ctk.StringVar(value="1 hour")
-default_color = ctk.StringVar(value="Orange")
 color = ""
 
 
@@ -86,7 +85,7 @@ def customize_excel(worksheet):
     worksheet["W6"].value = saturday_duration
     worksheet["W7"].value = sunday_duration
 
-    worksheet["T1"].variable = color
+    worksheet["T1"].value = color
 
     worksheet["A1"].font = Font(bold=True, size=14)
     worksheet["B1"].font = Font(bold=True, size=14)
@@ -236,7 +235,7 @@ def collect_data():
     global data_amount, date_list, duration_list
     global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
-    global color
+    global color, default_color
 
     data_amount = int(worksheet["Z1"].value)
 
@@ -257,8 +256,9 @@ def collect_data():
     sunday_duration = int(worksheet["W7"].value)
 
     color = worksheet["T1"].value
-    if color == "":
+    if color == None:
         color = "Orange"
+    default_color = ctk.StringVar(value=color)
 
     day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -470,6 +470,8 @@ def set_streak(goal, timer_time, progressbar):
 def load_color(color, widget_list, progressbar):
     highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
     highlight_color = highlight_colors[color]
+    colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
+    color = colors[color]
     change_color(color, highlight_color, widget_list, progressbar)
 
     
@@ -481,6 +483,9 @@ def change_color(color, highlight_color, widget_list, progressbar):
     
 def set_color(widget):
     global color
+    worksheet["T1"].value = color
+    workbook.save(data_file)
+    print("Color saved.")
     color = widget.get()
     colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
     highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
@@ -605,6 +610,8 @@ reset_data_btn = ctk.CTkButton(reset_btn_frame, text="Reset Data", font=(font_fa
 reset_data_btn.pack()
 
 widget_list = [goal_btn, timer_btn, break_btn, save_data_btn, color_btn, reset_data_btn]
+
+load_color(color, widget_list, progressbar)
 
 WINDOW.bind_all("<Button>", change_focus)
 
