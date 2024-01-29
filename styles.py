@@ -40,17 +40,31 @@ main_frame_color = "#2b2b2b"
 main_frame_pad_x = 0
 main_frame_pad_y = 0
 
+graph_height = HEIGHT/2
+graph_width = (WIDTH/2)-25
 graph_bg_color = "#323232"
 graph_fg_color = "#323232"
 graph_color = "#f38064"
 spine_color = "#5b5b5b"
 
 pie_font_family = font_family
-pie_font_size = 12
-pie_color_orange_1 = "#f25730"
-pie_color_orange_2 = "#f26b49"
-pie_color_orange_3 = "#f27e61"
-pie_color_orange_4 = "#f29179"
-pie_color_orange_5 = "#f2a591"
-pie_color_orange_6 = "#f2b8aa"
-pie_color_orange_7 = "#f2cbc2"
+pie_font_size = 10
+pie_color_orange_1 = "#f38064"
+pie_color_orange_2 = "#eb856b"
+pie_color_orange_3 = "#e28a73"
+pie_color_orange_4 = "#da8f7c"
+pie_color_orange_5 = "#d29484"
+pie_color_orange_6 = "#c9998d"
+pie_color_orange_7 = "#c19e95"
+
+#ORANGE
+orange_button_color = "#f38064"
+orange_highlight_color = "#f5937a"
+
+#GREEN
+green_button_color = "#93f263"
+green_highlight_color = "#a3f47b"
+
+#BLUE
+blue_button_color = "#63c2f2"
+blue_highlight_color = "#7bccf4"

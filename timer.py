@@ -8,6 +8,7 @@ import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 from styles import *
+from matplotlib.ticker import MaxNLocator
 
 APPNAME = "Timer App"
 FILENAME = "Timer Data.xlsx"
@@ -23,6 +24,7 @@ WINDOW.geometry(str(WIDTH + BORDER_WIDTH + main_frame_pad_x + tab_frame_width) +
 WINDOW.title(APPNAME)
 WINDOW.configure(background=window_color)
 WINDOW.resizable(False, False)
+WINDOW.grid_propagate(False)
 
 
 #---------------------------------------------------------------------------VARIABLES---------------------------------------------------------------------------#
@@ -33,15 +35,23 @@ break_time = 0
 start_time = ""
 goal = 0
 default_choice = ctk.StringVar(value="1 hour")
+default_color = ctk.StringVar(value="Orange")
+color = ""
 
 
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
 main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 main_frame.grid_propagate(False)
 
-statistics_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color)
+statistics_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
 statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 statistics_frame.grid_forget()
+statistics_frame.grid_propagate(False)
+
+settings_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+settings_frame.grid_forget()
+settings_frame.grid_propagate(False)
 
 def customize_excel(worksheet):
     worksheet["A1"].value = "Start:"
@@ -58,6 +68,8 @@ def customize_excel(worksheet):
     worksheet["U6"].value = "Saturday:"
     worksheet["U7"].value = "Sunday:"
 
+    worksheet["S1"].value = "Color:"
+
     worksheet["V1"].value = monday_amount
     worksheet["V2"].value = tuesday_amount
     worksheet["V3"].value = wednesday_amount
@@ -73,6 +85,8 @@ def customize_excel(worksheet):
     worksheet["W5"].value = friday_duration
     worksheet["W6"].value = saturday_duration
     worksheet["W7"].value = sunday_duration
+
+    worksheet["T1"].variable = color
 
     worksheet["A1"].font = Font(bold=True, size=14)
     worksheet["B1"].font = Font(bold=True, size=14)
@@ -101,22 +115,23 @@ def create_time_spent_graph(date_list, duration_list):
     ax.set_title("Time Spent by Date", color=font_color)
     ax.tick_params(colors="white")
     ax.set_facecolor(graph_fg_color)
-    ax.set_xticks(grouped_data["Date"])
-    ax.set_yticks(grouped_data["Duration"])
     fig.set_facecolor(graph_bg_color)
     ax.spines["top"].set_color(spine_color)
     ax.spines["bottom"].set_color(spine_color)
     ax.spines["left"].set_color(spine_color)
     ax.spines["right"].set_color(spine_color)
-    fig.set_size_inches(5, 4, forward=True)
+    fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
+    ax.set_xticklabels(grouped_data["Date"], rotation=45, ha='right')
 
     date_format = mdates.DateFormatter("%d/%m")
     ax.xaxis.set_major_formatter(date_format)
-    graph_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
+    time_spent_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    plt.subplots_adjust(bottom=0.2)
 
-    canvas_widget = graph_frame.get_tk_widget()
-    canvas_widget.grid(row=4, column=0, padx=5, pady=10)
-    canvas_widget.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
+    time_spent_graph = time_spent_frame.get_tk_widget()
+    time_spent_graph.grid(row=0, column=0, padx=10, pady=10)
+    time_spent_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
     date_list.clear()
     duration_list.clear()
@@ -188,7 +203,7 @@ def autopct_format(values):
     def my_format(pct):
         total = sum(values)
         val = int(round(pct*total/100.0))
-        return '{v:d}'.format(v=val)
+        return "{v:d}".format(v=val)
     return my_format
 
 
@@ -197,14 +212,31 @@ def create_weekday_graph(day_duration_list, day_name_list):
     non_zero_names = [name for name, duration in zip(day_name_list, day_duration_list) if duration != 0]
 
     fig, ax = plt.subplots()
-    ax.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), colors=[button_color], textprops={'fontsize': pie_font_size, 'family': pie_font_family})
-    plt.show()
+    ax.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), 
+           colors=[pie_color_orange_1, pie_color_orange_2, pie_color_orange_3, pie_color_orange_4, pie_color_orange_5, pie_color_orange_6, pie_color_orange_7], 
+           textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": font_color}, counterclock=False, startangle=90)
+    fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
+    fig.set_facecolor(graph_bg_color)
+    ax.tick_params(colors="white")
+    ax.set_facecolor(graph_fg_color)
+    ax.set_title("Time Spent by Weekday", color=font_color)
+    ax.spines["top"].set_color(spine_color)
+    ax.spines["bottom"].set_color(spine_color)
+    ax.spines["left"].set_color(spine_color)
+    ax.spines["right"].set_color(spine_color)
+
+    weekday_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+
+    weekday_graph = weekday_frame.get_tk_widget()
+    weekday_graph.grid(row=0, column=1, padx=10, pady=10)
+    weekday_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
 
 def collect_data():
     global data_amount, date_list, duration_list
     global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
+    global color
 
     data_amount = int(worksheet["Z1"].value)
 
@@ -224,11 +256,14 @@ def collect_data():
     saturday_duration = int(worksheet["W6"].value)
     sunday_duration = int(worksheet["W7"].value)
 
+    color = worksheet["T1"].value
+    if color == "":
+        color = "Orange"
+
     day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
-    if data_amount > 0:
-        create_weekday_graph(day_duration_list, day_name_list)
+    create_weekday_graph(day_duration_list, day_name_list)
 
     for data in range(2, data_amount + 2):
         if "/" in str(worksheet["B" + str(data)].value):
@@ -337,13 +372,15 @@ def save_data():
     start_time = ""
     workbook.save(data_file)
     print("Data saved.")
-    collect_data()
     save_weekday()
+    collect_data()
+
 
 def reset_data():
     global data_amount, duration_list, date_list
     global timer_time, timer_running, time_display_label
     global break_time, break_running, break_display_label
+    global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
 
     data_amount = 0
     del workbook[workbook.active.title]
@@ -357,34 +394,50 @@ def reset_data():
 
     worksheet["Z1"].value = int(data_amount)
     workbook.save(data_file)
-
+    monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration = 0, 0, 0, 0, 0, 0, 0
+    day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
+    day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     duration_list.clear()
     date_list.clear()
 
     print("Data reset.")
     create_time_spent_graph(date_list, duration_list)
+    create_weekday_graph(day_duration_list, day_name_list)
     customize_excel(worksheet)
 
 
 def save_on_quit():
+    global color
     global timer_time
+
+    worksheet["T1"].value = color
+    print("Color saved.")
+    
     if timer_time > 0:
         save_data()
         print("Data saved on exit.")
     else: print("Quit.")
+
     workbook.save(data_file)
     WINDOW.destroy()
 
-def to_timer():
+def to_main():
     main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
     main_frame.grid_propagate(False)
     statistics_frame.grid_forget()
-
+    settings_frame.grid_forget()
 
 def to_statistics():
     statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+    statistics_frame.grid_propagate(False)
     main_frame.grid_forget()
+    settings_frame.grid_forget()
 
+def to_settings():
+    settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+    settings_frame.grid_propagate(False)
+    main_frame.grid_forget()
+    statistics_frame.grid_forget()
 
 def get_goal():
     global goal, goal_dropdown
@@ -414,9 +467,27 @@ def set_streak(goal, timer_time, progressbar):
         progressbar.set(1)
         worksheet["E" + str((data_amount + 1))].value = 1
 
-    
-    
+def load_color(color, widget_list, progressbar):
+    highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
+    highlight_color = highlight_colors[color]
+    change_color(color, highlight_color, widget_list, progressbar)
 
+    
+def change_color(color, highlight_color, widget_list, progressbar):
+    for widget in widget_list:
+        widget.configure(fg_color=color, hover_color=highlight_color)
+    progressbar.configure(progress_color = color)
+    
+    
+def set_color(widget):
+    global color
+    color = widget.get()
+    colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
+    highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
+    c = colors[color]
+    highlight_color = highlight_colors[color]
+    change_color(c, highlight_color, widget_list, progressbar)
+    
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 def change_focus(event):
     event.widget.focus_set()
@@ -424,9 +495,6 @@ def change_focus(event):
 tab_frame = ctk.CTkFrame(WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=tab_frame_color)
 tab_frame.grid(column=0, row=0)
 tab_frame.pack_propagate(False)
-
-border_frame = ctk.CTkFrame(WINDOW, width=BORDER_WIDTH, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=border_frame_color)
-border_frame.grid(column=1, row=0)
 
 goal_progress_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
 goal_progress_frame.grid(row=0, column=0)
@@ -497,31 +565,48 @@ data_frame.place(anchor="s", relx=0.5, rely=0.985)
 data_frame.grid_propagate(False)
 save_data_btn = ctk.CTkButton(data_frame, text="Save Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=save_data, width=450)
-save_data_btn.place(relx=0.01, anchor="w", rely=0.5)
-reset_data_btn = ctk.CTkButton(data_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
-                                border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=reset_data, width=450)
-reset_data_btn.place(relx=0.99, anchor="e", rely=0.5)
+save_data_btn.place(relx=0.5, anchor="center", rely=0.5)
 
 #TABS
 timer_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 timer_tab.pack(pady=tab_padding_y)
-timer_tab_btn = ctk.CTkButton(timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_timer)
+timer_tab_btn = ctk.CTkButton(timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_main)
 timer_tab_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 statistics_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 statistics_tab.pack(pady=tab_padding_y)
-statistics_btn = ctk.CTkButton(statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
+statistics_btn = ctk.CTkButton(statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
                                  fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_statistics)
 statistics_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
-settings_btn = ctk.CTkButton(settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/60, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w")
+settings_btn = ctk.CTkButton(settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_settings)
 settings_btn.place(relx=0.5, rely=0.5, anchor="center")
 
-WINDOW.bind_all('<Button>', change_focus)
+color_select_frame = ctk.CTkFrame(settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
+color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
+color_select_frame.pack_propagate(False)
+color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=font_color)
+color_label.place(anchor="nw", relx=0.05, rely=0.05)
+color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", "Blue"], variable=default_color, state="readonly", width=150, height=30, 
+                                 dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+color_dropdown.place(anchor="center", relx=0.5, rely=0.45)
+color_btn = ctk.CTkButton(color_select_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                         height=button_height, command=lambda: set_color(color_dropdown))
+color_btn.place(anchor="s", relx=0.5, rely=0.9)
+
+reset_btn_frame = ctk.CTkFrame(settings_frame, fg_color=tab_color)
+reset_btn_frame.place(anchor="s", relx=0.5, rely=0.985)
+reset_data_btn = ctk.CTkButton(reset_btn_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+                                border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=reset_data, width=450)
+reset_data_btn.pack()
+
+widget_list = [goal_btn, timer_btn, break_btn, save_data_btn, color_btn, reset_data_btn]
+
+WINDOW.bind_all("<Button>", change_focus)
 
 WINDOW.protocol("WM_DELETE_WINDOW", save_on_quit)
 
