@@ -35,7 +35,8 @@ break_time = 0
 start_time = ""
 goal = 0
 default_choice = ctk.StringVar(value="1 hour")
-color = ""
+color = "Orange"
+default_color = ctk.StringVar(value=color)
 
 
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
@@ -87,6 +88,8 @@ def customize_excel(worksheet):
 
     worksheet["T1"].value = color
 
+    worksheet["R1"].value = goal_amount
+
     worksheet["A1"].font = Font(bold=True, size=14)
     worksheet["B1"].font = Font(bold=True, size=14)
     worksheet["C1"].font = Font(bold=True, size=14)
@@ -101,31 +104,33 @@ def customize_excel(worksheet):
 
 date_list = []
 duration_list = []
+total_duration = 0
 
 
 def create_time_spent_graph(date_list, duration_list):
+    global graph_color
     data = {"Date": date_list, "Duration": duration_list}
     df = pd.DataFrame(data)
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
-    fig, ax = plt.subplots()
-    ax.bar(grouped_data["Date"], grouped_data["Duration"], color=graph_color)
-    ax.set_xlabel("Date", color=font_color)
-    ax.set_ylabel("Duration in minutes", color=font_color)
-    ax.set_title("Time Spent by Date", color=font_color)
-    ax.tick_params(colors="white")
-    ax.set_facecolor(graph_fg_color)
-    fig.set_facecolor(graph_bg_color)
-    ax.spines["top"].set_color(spine_color)
-    ax.spines["bottom"].set_color(spine_color)
-    ax.spines["left"].set_color(spine_color)
-    ax.spines["right"].set_color(spine_color)
-    fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
-    ax.set_xticklabels(grouped_data["Date"], rotation=45, ha='right')
+    fig1, ax1 = plt.subplots()
+    ax1.bar(grouped_data["Date"], grouped_data["Duration"], color=graph_color)
+    ax1.set_xlabel("Date", color=font_color)
+    ax1.set_ylabel("Duration in minutes", color=font_color)
+    ax1.set_title("Time Spent by Date", color=font_color)
+    ax1.tick_params(colors="white")
+    ax1.set_facecolor(graph_fg_color)
+    fig1.set_facecolor(graph_bg_color)
+    ax1.spines["top"].set_color(spine_color)
+    ax1.spines["bottom"].set_color(spine_color)
+    ax1.spines["left"].set_color(spine_color)
+    ax1.spines["right"].set_color(spine_color)
+    fig1.set_size_inches(graph_width/100, graph_height/100, forward=True)
+    ax1.set_xticklabels(grouped_data["Date"], rotation=45, ha='right')
 
     date_format = mdates.DateFormatter("%d/%m")
-    ax.xaxis.set_major_formatter(date_format)
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
-    time_spent_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    ax1.xaxis.set_major_formatter(date_format)
+    ax1.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
+    time_spent_frame = FigureCanvasTkAgg(fig1, master=statistics_frame)
     plt.subplots_adjust(bottom=0.2)
 
     time_spent_graph = time_spent_frame.get_tk_widget()
@@ -207,24 +212,25 @@ def autopct_format(values):
 
 
 def create_weekday_graph(day_duration_list, day_name_list):
+    global pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7
     non_zero_durations = [duration for duration in day_duration_list if duration != 0]
     non_zero_names = [name for name, duration in zip(day_name_list, day_duration_list) if duration != 0]
 
-    fig, ax = plt.subplots()
-    ax.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), 
-           colors=[pie_color_orange_1, pie_color_orange_2, pie_color_orange_3, pie_color_orange_4, pie_color_orange_5, pie_color_orange_6, pie_color_orange_7], 
+    fig2, ax2 = plt.subplots()
+    ax2.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), 
+           colors=[pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7], 
            textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": font_color}, counterclock=False, startangle=90)
-    fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
-    fig.set_facecolor(graph_bg_color)
-    ax.tick_params(colors="white")
-    ax.set_facecolor(graph_fg_color)
-    ax.set_title("Time Spent by Weekday", color=font_color)
-    ax.spines["top"].set_color(spine_color)
-    ax.spines["bottom"].set_color(spine_color)
-    ax.spines["left"].set_color(spine_color)
-    ax.spines["right"].set_color(spine_color)
+    fig2.set_size_inches(graph_width/100, graph_height/100, forward=True)
+    fig2.set_facecolor(graph_bg_color)
+    ax2.tick_params(colors="white")
+    ax2.set_facecolor(graph_fg_color)
+    ax2.set_title("Time Spent by Weekday", color=font_color)
+    ax2.spines["top"].set_color(spine_color)
+    ax2.spines["bottom"].set_color(spine_color)
+    ax2.spines["left"].set_color(spine_color)
+    ax2.spines["right"].set_color(spine_color)
 
-    weekday_frame = FigureCanvasTkAgg(fig, master=statistics_frame)
+    weekday_frame = FigureCanvasTkAgg(fig2, master=statistics_frame)
 
     weekday_graph = weekday_frame.get_tk_widget()
     weekday_graph.grid(row=0, column=1, padx=10, pady=10)
@@ -232,10 +238,10 @@ def create_weekday_graph(day_duration_list, day_name_list):
 
 
 def collect_data():
-    global data_amount, date_list, duration_list
+    global data_amount, date_list, duration_list, goal_amount, total_duration, day_duration_list, day_name_list
     global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
-    global color, default_color
+    global color, default_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7
 
     data_amount = int(worksheet["Z1"].value)
 
@@ -255,10 +261,17 @@ def collect_data():
     saturday_duration = int(worksheet["W6"].value)
     sunday_duration = int(worksheet["W7"].value)
 
+    goal_amount = int(worksheet["R1"].value)
+
     color = worksheet["T1"].value
     if color == None:
         color = "Orange"
     default_color = ctk.StringVar(value=color)
+    pie_colors = {"Orange": [pie_color_orange_1, pie_color_orange_2, pie_color_orange_3, pie_color_orange_4, pie_color_orange_5, pie_color_orange_6, pie_color_orange_7], 
+                  "Green": [pie_color_green_1, pie_color_green_2, pie_color_green_3, pie_color_green_4, pie_color_green_5, pie_color_green_6, pie_color_green_7], 
+                  "Blue": [pie_color_blue_1, pie_color_blue_2, pie_color_blue_3, pie_color_blue_4, pie_color_blue_5, pie_color_blue_6, pie_color_blue_7]}
+    pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7 = pie_colors[color]
+
 
     day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -271,6 +284,9 @@ def collect_data():
         elif "-" in str(worksheet["B" + str(data)].value):
             date_list.append(datetime.datetime.strptime(str(worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
         duration_list.append(round(worksheet["C" + str(data)].value))
+
+    total_duration = sum(duration_list)
+
     create_time_spent_graph(date_list, duration_list)
     print("Data collected.")
     
@@ -284,7 +300,7 @@ else:
     workbook = op.Workbook()
     worksheet = workbook.active
 
-    data_amount = 0
+    data_amount, goal_amount = 0, 0
 
     monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount = 0, 0, 0, 0, 0, 0, 0
 
@@ -344,9 +360,11 @@ def update_break_time():
 
 #------------------------------------------------------------------------------DATA-----------------------------------------------------------------------------#
 def save_data():
-    global data_amount, duration_list, date_list
+    global data_amount, duration_list, date_list, goal_amount, time_studied_label, total_duration, times_studied_label, progressbar
     global timer_running, timer_time, start_time, timer_btn, timer_label
     global break_running, break_time, break_btn, break_label
+
+    progressbar.set(0)
 
     if timer_time < 60:
         print("No data to save.")
@@ -371,13 +389,21 @@ def save_data():
     break_display_label.configure(text="0:00:00")
     start_time = ""
     workbook.save(data_file)
+
+    if timer_time/60 >= goal:
+        progressbar.set(1)
+        goal_amount += 1
+        worksheet["R1"].value = goal_amount
+        times_studied_label.configure(text=goal_amount)
+
     print("Data saved.")
     save_weekday()
     collect_data()
+    time_studied_label.configure(text=total_duration)
 
 
 def reset_data():
-    global data_amount, duration_list, date_list
+    global data_amount, duration_list, date_list, goal_amount, total_duration, times_studied_label, time_studied_label
     global timer_time, timer_running, time_display_label
     global break_time, break_running, break_display_label
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
@@ -397,6 +423,9 @@ def reset_data():
     monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration = 0, 0, 0, 0, 0, 0, 0
     day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
     day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    goal_amount, total_duration = 0, 0
+    time_studied_label.configure(text="0")
+    times_studied_label.configure(text="0")
     duration_list.clear()
     date_list.clear()
 
@@ -450,7 +479,6 @@ def get_goal():
     if "hour" not in choice:
         x += int(choice.split(" ")[0])
     goal = x
-    print(goal)
 
 
 def update_slider(timer_time):
@@ -459,38 +487,47 @@ def update_slider(timer_time):
         goal = 60
     if (timer_time/60) < goal:
         progressbar.set((timer_time/60)/goal)
-    else:
-        set_streak(goal, timer_time, progressbar)
 
-def set_streak(goal, timer_time, progressbar):
-    if timer_time >= goal:
-        progressbar.set(1)
-        worksheet["E" + str((data_amount + 1))].value = 1
 
 def load_color(color, widget_list, progressbar):
+    global graph_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7
+    pie_colors = {"Orange": [pie_color_orange_1, pie_color_orange_2, pie_color_orange_3, pie_color_orange_4, pie_color_orange_5, pie_color_orange_6, pie_color_orange_7], 
+                  "Green": [pie_color_green_1, pie_color_green_2, pie_color_green_3, pie_color_green_4, pie_color_green_5, pie_color_green_6, pie_color_green_7], 
+                  "Blue": [pie_color_blue_1, pie_color_blue_2, pie_color_blue_3, pie_color_blue_4, pie_color_blue_5, pie_color_blue_6, pie_color_blue_7]}
+    pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7 = pie_colors[color]
     highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
     highlight_color = highlight_colors[color]
     colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
     color = colors[color]
+    graph_color = color
     change_color(color, highlight_color, widget_list, progressbar)
 
     
 def change_color(color, highlight_color, widget_list, progressbar):
+    global date_list, duration_list, day_duration_list, day_name_list
+    colors = {orange_button_color: "Orange", green_button_color: "Green", blue_button_color: "Blue"}
+    worksheet["T1"].value = colors[color]
+    workbook.save(data_file)
+    collect_data()
     for widget in widget_list:
         widget.configure(fg_color=color, hover_color=highlight_color)
     progressbar.configure(progress_color = color)
     
-    
 def set_color(widget):
-    global color
+    global color, graph_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7, day_duration_list, day_name_list
     worksheet["T1"].value = color
     workbook.save(data_file)
     print("Color saved.")
     color = widget.get()
     colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
     highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
+    pie_colors = {"Orange": [pie_color_orange_1, pie_color_orange_2, pie_color_orange_3, pie_color_orange_4, pie_color_orange_5, pie_color_orange_6, pie_color_orange_7], 
+                  "Green": [pie_color_green_1, pie_color_green_2, pie_color_green_3, pie_color_green_4, pie_color_green_5, pie_color_green_6, pie_color_green_7], 
+                  "Blue": [pie_color_blue_1, pie_color_blue_2, pie_color_blue_3, pie_color_blue_4, pie_color_blue_5, pie_color_blue_6, pie_color_blue_7]}
+    pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7 = pie_colors[color]
     c = colors[color]
     highlight_color = highlight_colors[color]
+    graph_color = c
     change_color(c, highlight_color, widget_list, progressbar)
     
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
@@ -530,10 +567,23 @@ progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_
 progressbar.place(anchor="center", relx=0.5, rely=0.65)
 progressbar.set(0)
 
-streak_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=120)
+streak_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=220)
 streak_frame.pack(padx=frame_padding, pady=frame_padding)
 streak_label = ctk.CTkLabel(streak_frame, text="Streak", font=(font_family, int(font_size)), text_color=font_color)
 streak_label.place(anchor="nw", relx=0.05, rely=0.05)
+times_studied_text = ctk.CTkLabel(streak_frame, text="Goal\nreached", font=(font_family, int(font_size/1.25)), text_color=font_color)
+times_studied_text.place(anchor="center", relx=0.3, rely=0.4)
+times_studied_label = ctk.CTkLabel(streak_frame, text=goal_amount, font=(font_family, int(font_size*2.7)), text_color=font_color)
+times_studied_label.place(anchor="center", relx=0.3, rely=0.6)
+times_reached_label = ctk.CTkLabel(streak_frame, text="times", font=(font_family, int(font_size/1.25)), text_color=font_color)
+times_reached_label.place(anchor="center", relx=0.3, rely=0.8)
+
+time_studied_text = ctk.CTkLabel(streak_frame, text="Time\nstudied", font=(font_family, int(font_size/1.25)), text_color=font_color)
+time_studied_text.place(anchor="center", relx=0.7, rely=0.4)
+time_studied_label = ctk.CTkLabel(streak_frame, text=total_duration, font=(font_family, int(font_size*2.7)), text_color=font_color)
+time_studied_label.place(anchor="center", relx=0.7, rely=0.6)
+time_reached_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=font_color)
+time_reached_label.place(anchor="center", relx=0.7, rely=0.8)
 
 timer_break_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
 timer_break_frame.grid(row=0, column=1)
