@@ -82,3 +82,6 @@ pie_color_blue_4 = "#9ed185"
 pie_color_blue_5 = "#7dbad9"
 pie_color_blue_6 = "#85b6d1"
 pie_color_blue_7 = "#8db4c8"
+
+image_width = 30
+image_height = 30

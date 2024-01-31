@@ -9,6 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 from styles import *
 from matplotlib.ticker import MaxNLocator
+from PIL import Image
 
 APPNAME = "Timer App"
 FILENAME = "Timer Data.xlsx"
@@ -52,6 +53,16 @@ settings_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+(
 settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 settings_frame.grid_forget()
 settings_frame.grid_propagate(False)
+
+achievements_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+achievements_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+achievements_frame.grid_forget()
+achievements_frame.grid_propagate(False)
+
+history_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+history_frame.grid_forget()
+history_frame.grid_propagate(False)
 
 def customize_excel(worksheet):
     worksheet["A1"].value = "Start:"
@@ -450,23 +461,55 @@ def save_on_quit():
     workbook.save(data_file)
     WINDOW.destroy()
 
-def to_main():
-    main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-    main_frame.grid_propagate(False)
-    statistics_frame.grid_forget()
-    settings_frame.grid_forget()
+def switch_tab(tab = str):
+    match tab:
+        case "main":
+            main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+            main_frame.grid_propagate(False)
+            statistics_frame.grid_forget()
+            settings_frame.grid_forget()
+            achievements_frame.grid_forget()
+            history_frame.grid_forget()
+        case "statistics":
+            statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+            statistics_frame.grid_propagate(False)
+            main_frame.grid_forget()
+            settings_frame.grid_forget()
+            achievements_frame.grid_forget()
+            history_frame.grid_forget()
+        case "settings":
+            settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+            settings_frame.grid_propagate(False)
+            main_frame.grid_forget()
+            statistics_frame.grid_forget()
+            achievements_frame.grid_forget()
+            history_frame.grid_forget()
+        case "achievements":
+            achievements_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+            achievements_frame.grid_propagate(False)
+            statistics_frame.grid_forget()
+            settings_frame.grid_forget()
+            main_frame.grid_forget()
+            history_frame.grid_forget()
+        case "history":
+            history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+            history_frame.grid_propagate(False)
+            statistics_frame.grid_forget()
+            settings_frame.grid_forget()
+            main_frame.grid_forget()
+            achievements_frame.grid_forget()
+            load_history()
 
-def to_statistics():
-    statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-    statistics_frame.grid_propagate(False)
-    main_frame.grid_forget()
-    settings_frame.grid_forget()
+    
+def load_history():
+    global start_text
+    start_history = ""
+    for data in range(data_amount+1, 1, -1):
+        print("A" + str(data))
+        start_history += worksheet["A" + str(data)].value
+        start_history += "\n"
+    start_text.configure(text=start_history)
 
-def to_settings():
-    settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-    settings_frame.grid_propagate(False)
-    main_frame.grid_forget()
-    statistics_frame.grid_forget()
 
 def get_goal():
     global goal, goal_dropdown
@@ -508,6 +551,7 @@ def change_color(color, highlight_color, widget_list, progressbar):
     colors = {orange_button_color: "Orange", green_button_color: "Green", blue_button_color: "Blue"}
     worksheet["T1"].value = colors[color]
     workbook.save(data_file)
+    print("Color saved.")
     collect_data()
     for widget in widget_list:
         widget.configure(fg_color=color, hover_color=highlight_color)
@@ -517,7 +561,7 @@ def set_color(widget):
     global color, graph_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7, day_duration_list, day_name_list
     worksheet["T1"].value = color
     workbook.save(data_file)
-    print("Color saved.")
+    print("Color changed.")
     color = widget.get()
     colors = {"Orange": orange_button_color, "Green": green_button_color, "Blue": blue_button_color}
     highlight_colors = {"Orange": orange_highlight_color, "Green": green_highlight_color, "Blue": blue_highlight_color}
@@ -531,6 +575,7 @@ def set_color(widget):
     change_color(c, highlight_color, widget_list, progressbar)
     
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
+#clock_image = ctk.CTkImage(light_image=Image.open("images/clock.png"), size=(image_width, image_height))
 def change_focus(event):
     event.widget.focus_set()
 
@@ -625,20 +670,42 @@ save_data_btn.place(relx=0.5, anchor="center", rely=0.5)
 #TABS
 timer_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 timer_tab.pack(pady=tab_padding_y)
-timer_tab_btn = ctk.CTkButton(timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_main)
+timer_tab_btn = ctk.CTkButton(timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("main"))
 timer_tab_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 statistics_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 statistics_tab.pack(pady=tab_padding_y)
-statistics_btn = ctk.CTkButton(statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_statistics)
+statistics_btn = ctk.CTkButton(statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("statistics"))
 statistics_btn.place(relx=0.5, rely=0.5, anchor="center")
+
+achievements_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+achievements_tab.pack(pady=tab_padding_y)
+achievements_btn = ctk.CTkButton(achievements_tab, text="Achievements", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("achievements"))
+achievements_btn.place(relx=0.5, rely=0.5, anchor="center")
+
+history_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+history_tab.pack(pady=tab_padding_y)
+history_btn = ctk.CTkButton(history_tab, text="History", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("history"))
+history_btn.place(relx=0.5, rely=0.5, anchor="center")
+
+last_sessions_frame = ctk.CTkFrame(history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2))/2, width=WIDTH-(frame_padding*2),)
+last_sessions_frame.grid(padx=frame_padding, pady=frame_padding)
+last_sessions_frame.pack_propagate(False)
+start_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
+start_frame.pack(padx=frame_padding, pady=frame_padding)
+start_label = ctk.CTkLabel(start_frame, text="Start", font=(font_family, font_size), text_color=font_color)
+start_label.pack(padx=widget_padding_x, pady=widget_padding_y)
+start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color)
+start_text.pack(padx=widget_padding_x, pady=widget_padding_y)
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
-settings_btn = ctk.CTkButton(settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/55, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=to_settings)
+settings_btn = ctk.CTkButton(settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("settings"))
 settings_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 color_select_frame = ctk.CTkFrame(settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
