@@ -9,7 +9,8 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 from styles import *
 from matplotlib.ticker import MaxNLocator
-from PIL import Image
+from notifypy import Notify
+import random
 
 APPNAME = "Timer App"
 FILENAME = "Timer Data.xlsx"
@@ -38,6 +39,7 @@ goal = 0
 default_choice = ctk.StringVar(value="1 hour")
 color = "Orange"
 default_color = ctk.StringVar(value=color)
+notification_limit = False
 
 
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
@@ -63,6 +65,7 @@ history_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((
 history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 history_frame.grid_forget()
 history_frame.grid_propagate(False)
+
 
 def customize_excel(worksheet):
     worksheet["A1"].value = "Start:"
@@ -168,8 +171,6 @@ def save_weekday():
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
 
     duration = calculate_duration()
-    print("AAAAA")
-    print(duration)
 
     match datetime.datetime.now().weekday():
         case 0:
@@ -371,9 +372,11 @@ def update_break_time():
 
 #------------------------------------------------------------------------------DATA-----------------------------------------------------------------------------#
 def save_data():
-    global data_amount, duration_list, date_list, goal_amount, time_studied_label, total_duration, times_studied_label, progressbar
+    global data_amount, duration_list, date_list, goal_amount, time_studied_label, total_duration, times_studied_label, progressbar, notification_limit
     global timer_running, timer_time, start_time, timer_btn, timer_label
     global break_running, break_time, break_btn, break_label
+
+    notification_limit = False
 
     progressbar.set(0)
 
@@ -414,10 +417,12 @@ def save_data():
 
 
 def reset_data():
-    global data_amount, duration_list, date_list, goal_amount, total_duration, times_studied_label, time_studied_label
+    global data_amount, duration_list, date_list, goal_amount, total_duration, times_studied_label, time_studied_label, notification_limit
     global timer_time, timer_running, time_display_label
     global break_time, break_running, break_display_label
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
+
+    notification_limit = False
 
     data_amount = 0
     del workbook[workbook.active.title]
@@ -444,6 +449,15 @@ def reset_data():
     create_time_spent_graph(date_list, duration_list)
     create_weekday_graph(day_duration_list, day_name_list)
     customize_excel(worksheet)
+
+
+def send_notification(title, message):
+    global notification_limit
+    notification = Notify()
+    notification.title(title)
+    notification.message(message)
+    notification_limit = True
+    print("Notification " + title + " sent.")
 
 
 def save_on_quit():
@@ -502,13 +516,29 @@ def switch_tab(tab = str):
 
     
 def load_history():
-    global start_text
     start_history = ""
-    for data in range(data_amount+1, 1, -1):
-        print("A" + str(data))
-        start_history += worksheet["A" + str(data)].value
-        start_history += "\n"
-    start_text.configure(text=start_history)
+    end_history = ""
+    duration_history = ""
+    break_history = ""
+    if data_amount > 0:
+        for data in range(data_amount+1, 1, -1):
+            start_history += str(worksheet["A" + str(data)].value)
+            start_history += "\n"
+            end_history += str(worksheet["B" + str(data)].value)
+            end_history += "\n"
+            duration_history += str(round(worksheet["C" + str(data)].value)) + "m"
+            duration_history += "\n"
+            break_history += str(round(worksheet["D" + str(data)].value)) + "m"
+            break_history += "\n"
+        start_text.configure(text=start_history)
+        end_text.configure(text=end_history)
+        duration_text.configure(text=duration_history)
+        break_text.configure(text=break_history)
+    else:
+        start_text.configure(text="-")
+        end_text.configure(text="-")
+        duration_text.configure(text="-")
+        break_text.configure(text="-")
 
 
 def get_goal():
@@ -525,11 +555,19 @@ def get_goal():
 
 
 def update_slider(timer_time):
-    global progressbar, goal
+    global progressbar, goal, notification_limit
     if goal == 0:
         goal = 60
     if (timer_time/60) < goal:
         progressbar.set((timer_time/60)/goal)
+    if not notification_limit and timer_time/60 >= goal:
+        message =  random.randint(1 ,10)
+        messages = {1: "Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", 2: "Study session complete! Great job on reaching your goal. Time for a quick break!",
+                    3: "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", 4: "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
+                    5: "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", 6: "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
+                    7: "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", 8: "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
+                    9: "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", 10: "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"}
+        #send_notification("Study Goal Reached", messages[message])
 
 
 def load_color(color, widget_list, progressbar):
@@ -594,7 +632,7 @@ goal_frame.pack_propagate(False)
 goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=font_color)
 goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 
-goal_dropdown = ctk.CTkComboBox(goal_frame, values=["30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
+goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
                                                      "4 hours", "4 hours, 30 minutes", "5 hours", "5 hours, 30 minutes", "6 hours"], variable=default_choice, 
                                                      state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
                                                        font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
@@ -694,13 +732,35 @@ history_btn.place(relx=0.5, rely=0.5, anchor="center")
 
 last_sessions_frame = ctk.CTkFrame(history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2))/2, width=WIDTH-(frame_padding*2),)
 last_sessions_frame.grid(padx=frame_padding, pady=frame_padding)
-last_sessions_frame.pack_propagate(False)
+last_sessions_frame.grid_propagate(False)
+
 start_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
-start_frame.pack(padx=frame_padding, pady=frame_padding)
+start_frame.grid(row=0, column=0, padx=frame_padding, pady=frame_padding)
 start_label = ctk.CTkLabel(start_frame, text="Start", font=(font_family, font_size), text_color=font_color)
 start_label.pack(padx=widget_padding_x, pady=widget_padding_y)
 start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color)
 start_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+
+end_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
+end_frame.grid(row=0, column=1, padx=frame_padding, pady=frame_padding)
+end_label = ctk.CTkLabel(end_frame, text="End", font=(font_family, font_size), text_color=font_color)
+end_label.pack(padx=widget_padding_x, pady=widget_padding_y)
+end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, font_size), text_color=font_color)
+end_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+
+duration_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
+duration_frame.grid(row=0, column=2, padx=frame_padding, pady=frame_padding)
+duration_label = ctk.CTkLabel(duration_frame, text="Duration", font=(font_family, font_size), text_color=font_color)
+duration_label.pack(padx=widget_padding_x, pady=widget_padding_y)
+duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, font_size), text_color=font_color)
+duration_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+
+break_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
+break_frame.grid(row=0, column=3, padx=frame_padding, pady=frame_padding)
+break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=font_color)
+break_label.pack(padx=widget_padding_x, pady=widget_padding_y)
+break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, font_size), text_color=font_color)
+break_text.pack(padx=widget_padding_x, pady=widget_padding_y)
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
