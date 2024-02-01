@@ -9,7 +9,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 from styles import *
 from matplotlib.ticker import MaxNLocator
-from win11toast import toast
+from winotify import Notification
 import random
 from matplotlib.ticker import FuncFormatter
 
@@ -41,6 +41,9 @@ default_choice = ctk.StringVar(value="1 hour")
 color = "Orange"
 default_color = ctk.StringVar(value=color)
 notification_limit = False
+default_subject = ctk.StringVar(value="Other")
+current_subject = "Other"
+subject = ""
 
 
 main_frame = ctk.CTkFrame(WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
@@ -73,7 +76,7 @@ def customize_excel(worksheet):
     worksheet["B1"].value = "End:"
     worksheet["C1"].value = "Duration:"
     worksheet["D1"].value = "Break:"
-    worksheet["E1"].value = "Streak:"
+    worksheet["E1"].value = "Subject:"
 
     worksheet["U1"].value = "Monday:"
     worksheet["U2"].value = "Tuesday:"
@@ -252,7 +255,7 @@ def create_weekday_graph(day_duration_list, day_name_list):
 
 
 def collect_data():
-    global data_amount, date_list, duration_list, goal_amount, total_duration, day_duration_list, day_name_list
+    global data_amount, date_list, duration_list, goal_amount, total_duration, day_duration_list, day_name_list, current_subject, default_subject
     global monday_amount, tuesday_amount, wednesday_amount, thursday_amount, friday_amount, saturday_amount, sunday_amount
     global monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration
     global color, default_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7
@@ -276,6 +279,11 @@ def collect_data():
     sunday_duration = int(worksheet["W7"].value)
 
     goal_amount = int(worksheet["R1"].value)
+
+    current_subject = worksheet["Q1"].value
+    if current_subject == None or current_subject == "":
+        current_subject = "Other"
+    default_subject = ctk.StringVar(value=current_subject)
 
     color = worksheet["T1"].value
     if color == None:
@@ -375,7 +383,7 @@ def update_break_time():
 #------------------------------------------------------------------------------DATA-----------------------------------------------------------------------------#
 def save_data():
     global data_amount, duration_list, date_list, goal_amount, time_studied_label, total_duration, times_studied_label, progressbar, notification_limit
-    global timer_running, timer_time, start_time, timer_btn, timer_label
+    global timer_running, timer_time, start_time, timer_btn, timer_label, current_subject, subject
     global break_running, break_time, break_btn, break_label
 
     if timer_time < 60:
@@ -385,6 +393,9 @@ def save_data():
     progressbar.set(0)
     notification_limit = False
     timer_running, break_running = False, False
+
+    if subject == "" or subject == None:
+        subject = "Other"
 
     duration = calculate_duration()
 
@@ -397,6 +408,7 @@ def save_data():
     worksheet["B" + str((data_amount + 1))].value = stop_time.strftime("%d/%m/%Y %H:%M")
     worksheet["C" + str((data_amount + 1))].value = duration
     worksheet["D" + str((data_amount + 1))].value = break_time/60
+    worksheet["E" + str((data_amount + 1))].value = subject
 
     timer_btn.configure(text="Start")
     break_btn.configure(text="Start")
@@ -406,7 +418,6 @@ def save_data():
     workbook.save(data_file)
 
     if timer_time/60 >= goal:
-        progressbar.set(1)
         goal_amount += 1
         worksheet["R1"].value = goal_amount
         times_studied_label.configure(text=goal_amount)
@@ -454,7 +465,8 @@ def reset_data():
 
 def send_notification(title, message):
     global notification_limit
-    toast(title, message)
+    toast = Notification(app_id=APPNAME, title=title, msg=message)
+    toast.show()
     notification_limit = True
     print("Notification " + title + " sent.")
 
@@ -519,6 +531,7 @@ def load_history():
     end_history = ""
     duration_history = ""
     break_history = ""
+    subject_history = ""
     if data_amount > 0:
         for data in range(data_amount+1, 1, -1):
             start_history += str(worksheet["A" + str(data)].value)
@@ -529,15 +542,20 @@ def load_history():
             duration_history += "\n"
             break_history += str(round(worksheet["D" + str(data)].value)) + "m"
             break_history += "\n"
+            subject_history += str(worksheet["E" + str(data)].value)
+            subject_history += "\n"
+
         start_text.configure(text=start_history)
         end_text.configure(text=end_history)
         duration_text.configure(text=duration_history)
         break_text.configure(text=break_history)
+        subject_text.configure(text=subject_history)
     else:
         start_text.configure(text="-")
         end_text.configure(text="-")
         duration_text.configure(text="-")
         break_text.configure(text="-")
+        subject_text.configure(text="-")
 
 
 def set_goal():
@@ -609,6 +627,15 @@ def set_color(widget):
     highlight_color = highlight_colors[color]
     graph_color = c
     change_color(c, highlight_color, widget_list, progressbar)
+
+
+def set_subject():
+    global current_subject, subject
+    current_subject = subject_selection.get()
+    subject = current_subject
+    worksheet["Q1"].value = current_subject
+    workbook.save(data_file)
+    print("Subject set and saved.")
     
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 #clock_image = ctk.CTkImage(light_image=Image.open("images/clock.png"), size=(image_width, image_height))
@@ -668,7 +695,7 @@ time_reached_label.place(anchor="center", relx=0.7, rely=0.8)
 
 timer_break_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
 timer_break_frame.grid(row=0, column=1)
-timer_break_frame.propagate(False)
+timer_break_frame.pack_propagate(False)
 
 timer_frame = ctk.CTkFrame(timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
 timer_frame.pack(padx=frame_padding, pady=frame_padding)
@@ -694,6 +721,25 @@ break_display_label.place(anchor="center", relx=0.5, rely=0.45)
 break_btn = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                  border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=break_mechanism)
 break_btn.place(anchor="s", relx=0.5, rely=0.9)
+
+subject_pomodoro_frame = ctk.CTkFrame(main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
+subject_pomodoro_frame.grid(row=0, column=2)
+subject_pomodoro_frame.pack_propagate(False)
+
+subject_frame = ctk.CTkFrame(subject_pomodoro_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
+subject_frame.pack(padx=frame_padding, pady=frame_padding)
+subject_label = ctk.CTkLabel(subject_frame, text="Subject", font=(font_family, font_size), text_color=font_color)
+subject_label.place(anchor="nw", relx=0.05, rely=0.05)
+subject_selection = ctk.CTkComboBox(subject_frame, values=["Mathematics", "Science", "Literature", "History", "Geography", "Language Arts", "Foreign Languages", "Social Studies",
+                                                           "Economics", "Computer Science", "Psychology", "Philosophy", "Art", "Music", "Physical Education", "Other"], 
+                                                     state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)), variable=default_subject,
+                                                       font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+subject_selection.place(anchor="center", relx=0.5, rely=0.45)
+subject_btn = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                         height=button_height, command=set_subject)
+subject_btn.place(anchor="s", relx=0.5, rely=0.9)
+pomodoro_frame = ctk.CTkFrame(subject_pomodoro_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
+pomodoro_frame.pack(padx=frame_padding, pady=frame_padding)
 
 #DATA UI ROW
 data_frame = ctk.CTkFrame(main_frame, fg_color=frame_color, corner_radius=10, width=WIDTH-10, height=button_height*2)
@@ -739,34 +785,39 @@ history_label_frame.pack()
 history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
 history_data_frame.pack(padx=frame_padding, pady=frame_padding)
 
-start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
 start_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
-end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
 end_label.grid(row=0, column=1, padx=widget_padding_x, pady=widget_padding_y)
-duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
 duration_label.grid(row=0, column=2, padx=widget_padding_x, pady=widget_padding_y)
-break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
 break_label.grid(row=0, column=3, padx=widget_padding_x, pady=widget_padding_y)
 
 start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
 start_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
-start_text = ctk.CTkLabel(start_frame, font=(font_family, int(font_size*1.25)), text_color=font_color)
+start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color)
 start_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
 
 end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
 end_frame.grid(row=1, column=1, padx=frame_padding, pady=frame_padding)
-end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, font_size), text_color=font_color)
 end_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
 
 duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
 duration_frame.grid(row=1, column=2, padx=frame_padding, pady=frame_padding)
-duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, font_size), text_color=font_color)
 duration_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
 
 break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
 break_frame.grid(row=1, column=3, padx=frame_padding, pady=frame_padding)
-break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, font_size), text_color=font_color)
 break_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
+
+subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
+subject_frame.grid(row=1, column=4, padx=frame_padding, pady=frame_padding)
+subject_text = ctk.CTkLabel(subject_frame, text="", font=(font_family, font_size), text_color=font_color)
+subject_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
@@ -792,7 +843,7 @@ reset_data_btn = ctk.CTkButton(reset_btn_frame, text="Reset Data", font=(font_fa
                                 border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=reset_data, width=450)
 reset_data_btn.pack()
 
-widget_list = [goal_btn, timer_btn, break_btn, save_data_btn, color_btn, reset_data_btn]
+widget_list = [goal_btn, timer_btn, break_btn, save_data_btn, color_btn, reset_data_btn, subject_btn]
 
 load_color(color, widget_list, progressbar)
 
