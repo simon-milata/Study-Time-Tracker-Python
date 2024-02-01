@@ -9,8 +9,9 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import customtkinter as ctk
 from styles import *
 from matplotlib.ticker import MaxNLocator
-from notifypy import Notify
+from win11toast import toast
 import random
+from matplotlib.ticker import FuncFormatter
 
 APPNAME = "Timer App"
 FILENAME = "Timer Data.xlsx"
@@ -128,9 +129,7 @@ def create_time_spent_graph(date_list, duration_list):
     grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
     fig1, ax1 = plt.subplots()
     ax1.bar(grouped_data["Date"], grouped_data["Duration"], color=graph_color)
-    ax1.set_xlabel("Date", color=font_color)
-    ax1.set_ylabel("Duration in minutes", color=font_color)
-    ax1.set_title("Time Spent by Date", color=font_color)
+    ax1.set_title("Duration of Study Sessions by Date", color=font_color)
     ax1.tick_params(colors="white")
     ax1.set_facecolor(graph_fg_color)
     fig1.set_facecolor(graph_bg_color)
@@ -141,6 +140,10 @@ def create_time_spent_graph(date_list, duration_list):
     fig1.set_size_inches(graph_width/100, graph_height/100, forward=True)
     ax1.set_xticklabels(grouped_data["Date"], rotation=45, ha='right')
 
+    def format_func(value, tick_number):
+        return f"{int(value)} m"
+    
+    plt.gca().yaxis.set_major_formatter(FuncFormatter(format_func))
     date_format = mdates.DateFormatter("%d/%m")
     ax1.xaxis.set_major_formatter(date_format)
     ax1.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
@@ -215,18 +218,17 @@ def save_weekday():
     print("Weekday saved.")
 
 
-def autopct_format(values):
-    def my_format(pct):
-        total = sum(values)
-        val = int(round(pct*total/100.0))
-        return "{v:d}".format(v=val)
-    return my_format
-
-
 def create_weekday_graph(day_duration_list, day_name_list):
     global pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7
     non_zero_durations = [duration for duration in day_duration_list if duration != 0]
     non_zero_names = [name for name, duration in zip(day_name_list, day_duration_list) if duration != 0]
+
+    def autopct_format(values):
+        def my_format(pct):
+            total = sum(values)
+            val = int(round(pct*total/100.0))
+            return "{v:d} m".format(v=val)
+        return my_format
 
     fig2, ax2 = plt.subplots()
     ax2.pie(non_zero_durations, labels=non_zero_names, autopct=autopct_format(non_zero_durations), 
@@ -236,7 +238,7 @@ def create_weekday_graph(day_duration_list, day_name_list):
     fig2.set_facecolor(graph_bg_color)
     ax2.tick_params(colors="white")
     ax2.set_facecolor(graph_fg_color)
-    ax2.set_title("Time Spent by Weekday", color=font_color)
+    ax2.set_title("Duration of Study Sessions by Day of the Week", color=font_color)
     ax2.spines["top"].set_color(spine_color)
     ax2.spines["bottom"].set_color(spine_color)
     ax2.spines["left"].set_color(spine_color)
@@ -376,13 +378,12 @@ def save_data():
     global timer_running, timer_time, start_time, timer_btn, timer_label
     global break_running, break_time, break_btn, break_label
 
-    notification_limit = False
-
-    progressbar.set(0)
-
     if timer_time < 60:
         print("No data to save.")
         return
+    
+    progressbar.set(0)
+    notification_limit = False
     timer_running, break_running = False, False
 
     duration = calculate_duration()
@@ -453,9 +454,7 @@ def reset_data():
 
 def send_notification(title, message):
     global notification_limit
-    notification = Notify()
-    notification.title(title)
-    notification.message(message)
+    toast(title, message)
     notification_limit = True
     print("Notification " + title + " sent.")
 
@@ -541,7 +540,7 @@ def load_history():
         break_text.configure(text="-")
 
 
-def get_goal():
+def set_goal():
     global goal, goal_dropdown
     x = 0
     choice = goal_dropdown.get()
@@ -560,14 +559,13 @@ def update_slider(timer_time):
         goal = 60
     if (timer_time/60) < goal:
         progressbar.set((timer_time/60)/goal)
-    if not notification_limit and timer_time/60 >= goal:
-        message =  random.randint(1 ,10)
-        messages = {1: "Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", 2: "Study session complete! Great job on reaching your goal. Time for a quick break!",
-                    3: "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", 4: "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
-                    5: "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", 6: "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
-                    7: "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", 8: "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
-                    9: "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", 10: "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"}
-        #send_notification("Study Goal Reached", messages[message])
+    elif not notification_limit and timer_time/60 >= goal:
+        message = random.choice(["Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", "Study session complete! Great job on reaching your goal. Time for a quick break!",
+                      "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
+                      "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
+                      "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
+                      "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"])
+        send_notification("Study Goal Reached", message)
 
 
 def load_color(color, widget_list, progressbar):
@@ -638,7 +636,7 @@ goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "
                                                        font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
 goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 goal_btn = ctk.CTkButton(goal_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                         height=button_height, command=get_goal)
+                         height=button_height, command=set_goal)
 goal_btn.place(anchor="s", relx=0.5, rely=0.9)
 
 progress_frame = ctk.CTkFrame(goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=100)
@@ -730,37 +728,45 @@ history_btn = ctk.CTkButton(history_tab, text="History", font=(tab_font_family, 
                                  fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: switch_tab("history"))
 history_btn.place(relx=0.5, rely=0.5, anchor="center")
 
-last_sessions_frame = ctk.CTkFrame(history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2))/2, width=WIDTH-(frame_padding*2),)
-last_sessions_frame.grid(padx=frame_padding, pady=frame_padding)
-last_sessions_frame.grid_propagate(False)
 
-start_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
-start_frame.grid(row=0, column=0, padx=frame_padding, pady=frame_padding)
-start_label = ctk.CTkLabel(start_frame, text="Start", font=(font_family, font_size), text_color=font_color)
-start_label.pack(padx=widget_padding_x, pady=widget_padding_y)
-start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color)
-start_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+history_frame_frame = ctk.CTkFrame(history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
+history_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=frame_padding)
+history_frame_frame.pack_propagate(False)
 
-end_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
-end_frame.grid(row=0, column=1, padx=frame_padding, pady=frame_padding)
-end_label = ctk.CTkLabel(end_frame, text="End", font=(font_family, font_size), text_color=font_color)
-end_label.pack(padx=widget_padding_x, pady=widget_padding_y)
-end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, font_size), text_color=font_color)
-end_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4))
+history_label_frame.pack()
 
-duration_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
-duration_frame.grid(row=0, column=2, padx=frame_padding, pady=frame_padding)
-duration_label = ctk.CTkLabel(duration_frame, text="Duration", font=(font_family, font_size), text_color=font_color)
-duration_label.pack(padx=widget_padding_x, pady=widget_padding_y)
-duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, font_size), text_color=font_color)
-duration_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
+history_data_frame.pack(padx=frame_padding, pady=frame_padding)
 
-break_frame = ctk.CTkFrame(last_sessions_frame, fg_color="transparent")
-break_frame.grid(row=0, column=3, padx=frame_padding, pady=frame_padding)
-break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=font_color)
-break_label.pack(padx=widget_padding_x, pady=widget_padding_y)
-break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, font_size), text_color=font_color)
-break_text.pack(padx=widget_padding_x, pady=widget_padding_y)
+start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+start_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
+end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+end_label.grid(row=0, column=1, padx=widget_padding_x, pady=widget_padding_y)
+duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+duration_label.grid(row=0, column=2, padx=widget_padding_x, pady=widget_padding_y)
+break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.5)), text_color=font_color, fg_color="transparent")
+break_label.grid(row=0, column=3, padx=widget_padding_x, pady=widget_padding_y)
+
+start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
+start_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
+start_text = ctk.CTkLabel(start_frame, font=(font_family, int(font_size*1.25)), text_color=font_color)
+start_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
+
+end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
+end_frame.grid(row=1, column=1, padx=frame_padding, pady=frame_padding)
+end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+end_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
+
+duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
+duration_frame.grid(row=1, column=2, padx=frame_padding, pady=frame_padding)
+duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+duration_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
+
+break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
+break_frame.grid(row=1, column=3, padx=frame_padding, pady=frame_padding)
+break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, int(font_size*1.25)), text_color=font_color)
+break_text.pack(padx=widget_padding_x*3, pady=widget_padding_y)
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
