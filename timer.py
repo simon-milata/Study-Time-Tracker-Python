@@ -611,7 +611,7 @@ def change_color(color, highlight_color, widget_list, progressbar):
         widget.configure(fg_color=color, hover_color=highlight_color)
     progressbar.configure(progress_color = color)
     
-def set_color(widget):
+def choose_color(widget):
     global color, graph_color, pie_color_1, pie_color_2, pie_color_3, pie_color_4, pie_color_5, pie_color_6, pie_color_7, day_duration_list, day_name_list
     worksheet["T1"].value = color
     workbook.save(data_file)
@@ -636,7 +636,25 @@ def set_subject():
     worksheet["Q1"].value = current_subject
     workbook.save(data_file)
     print("Subject set and saved.")
-    
+
+
+def calculate_pomodoro_breaks(goal):
+    y = 0
+    pomodoro_breaks = []
+    while True:
+        if goal > 25:
+            y += 1
+            if y % 4 != 0:
+                pomodoro_breaks.append(5)
+            else:
+                pomodoro_breaks.append(20)
+            print(f"{goal} - {goal-25}, {pomodoro_breaks[y-1]}")
+            goal -= 25
+        else:
+            print(f"{goal} - 0")
+            return pomodoro_breaks
+        
+        
 #------------------------------------------------------------------------------GUI------------------------------------------------------------------------------#
 #clock_image = ctk.CTkImage(light_image=Image.open("images/clock.png"), size=(image_width, image_height))
 def change_focus(event):
@@ -790,41 +808,46 @@ history_label_frame.grid_propagate(False)
 history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
 history_data_frame.pack(padx=frame_padding)
 
-start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
-start_label.grid(row=0, column=0, padx=(WIDTH-(frame_padding*4))/11)
-end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
-end_label.grid(row=0, column=1, padx=(WIDTH-(frame_padding*4))/11)
-duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
-duration_label.grid(row=0, column=2, padx=widget_padding_x)
-break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
-break_label.grid(row=0, column=3, padx=(WIDTH-(frame_padding*4))/37)
-subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent")
-subject_label.grid(row=0, column=4, padx=(WIDTH-(frame_padding*4))/17)
+start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+start_label.grid(row=0, column=0)
+end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+end_label.grid(row=0, column=1)
+duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+duration_label.grid(row=0, column=2)
+break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+break_label.grid(row=0, column=3)
+subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+subject_label.grid(row=0, column=4)
 
-start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
-start_frame.grid(row=1, column=0, padx=frame_padding)
+start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+start_frame.grid(row=1, column=0)
+start_frame.pack_propagate(False)
 start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color)
-start_text.pack(padx=widget_padding_x*3)
+start_text.pack()
 
-end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
-end_frame.grid(row=1, column=1, padx=frame_padding)
+end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+end_frame.grid(row=1, column=1)
+end_frame.pack_propagate(False)
 end_text = ctk.CTkLabel(end_frame, text="", font=(font_family, font_size), text_color=font_color)
-end_text.pack(padx=widget_padding_x*3)
+end_text.pack()
 
-duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
-duration_frame.grid(row=1, column=2, padx=frame_padding)
+duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+duration_frame.grid(row=1, column=2)
+duration_frame.pack_propagate(False)
 duration_text = ctk.CTkLabel(duration_frame, text="", font=(font_family, font_size), text_color=font_color)
-duration_text.pack(padx=widget_padding_x*3)
+duration_text.pack()
 
-break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
-break_frame.grid(row=1, column=3, padx=frame_padding)
+break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+break_frame.grid(row=1, column=3)
+break_frame.pack_propagate(False)
 break_text = ctk.CTkLabel(break_frame, text="", font=(font_family, font_size), text_color=font_color)
-break_text.pack(padx=widget_padding_x*3)
+break_text.pack()
 
-subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent")
-subject_frame.grid(row=1, column=4, padx=frame_padding)
+subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+subject_frame.grid(row=1, column=4)
+subject_frame.pack_propagate(False)
 subject_text = ctk.CTkLabel(subject_frame, text="", font=(font_family, font_size), text_color=font_color)
-subject_text.pack(padx=widget_padding_x*3)
+subject_text.pack()
 
 settings_tab = ctk.CTkFrame(tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
 settings_tab.place(relx=0.5, rely=1, anchor="s")
@@ -841,7 +864,7 @@ color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", 
                                  dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
 color_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 color_btn = ctk.CTkButton(color_select_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                         height=button_height, command=lambda: set_color(color_dropdown))
+                         height=button_height, command=lambda: choose_color(color_dropdown))
 color_btn.place(anchor="s", relx=0.5, rely=0.9)
 
 reset_btn_frame = ctk.CTkFrame(settings_frame, fg_color=tab_color)
