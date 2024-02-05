@@ -20,10 +20,10 @@ class DataManager:
 
 
     def save_data(self, timer_button, break_button, time_display_label, break_display_label):
-        self.timer_time, self.break_time = self.timer_manager.get_time_data()
-        if self.timer_time < 60:
-            print("No data to save.")
-            return
+        if self.timer_manager.timer_time < 60:
+            return print("No data to save.")
+        self.timer_time = self.timer_manager.timer_time
+        self.break_time = self.timer_manager.break_time
 
         self.stop_time = datetime.datetime.now()
 
@@ -32,4 +32,5 @@ class DataManager:
         time_display_label.configure(text="0:00:00")
         break_display_label.configure(text="0:00:00")
         print(self.timer_time, self.break_time)
+        self.timer_manager.initialize_variables()
  

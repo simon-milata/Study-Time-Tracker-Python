@@ -3,6 +3,10 @@ import datetime
 class TimerManager:
     def __init__(self, window):
         self.window = window
+        self.initialize_variables()
+
+
+    def initialize_variables(self):
         self.timer_running = False
         self.break_running = False
         self.timer_time = 0
@@ -49,13 +53,3 @@ class TimerManager:
             self.break_time += 1
             self.break_display_label.configure(text=str(datetime.timedelta(seconds=self.break_time)))
             self.window.after(1000, self.update_break_time)
-
-    
-    def get_time_data(self):
-        self.timer_running = False
-        self.break_running = False
-        timer_time = self.timer_time
-        break_time = self.break_time
-        self.timer_time = 0
-        self.break_time = 0
-        return timer_time, break_time
