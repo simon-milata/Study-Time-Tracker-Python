@@ -20,11 +20,12 @@ class App:
     def __init__(self):
         self.file_setup()
         self.window_setup()
+
+        self.timer_manager = TimerManager(self, self.WINDOW)
+        self.data_manager = DataManager(self.timer_manager, self.workbook, self.worksheet)
+
         self.initialize_variables()
         self.create_gui()
-
-        self.timer_manager = TimerManager(self.WINDOW)
-        self.data_manager = DataManager(self.timer_manager, self.workbook, self.worksheet)
 
 
     def create_gui(self):
@@ -68,6 +69,8 @@ class App:
 
     def initialize_variables(self):
         self.default_choice = ctk.StringVar(value="1 hour")
+        self.notification_limit = False
+        self.goal = 1
 
 
     def window_setup(self):
@@ -257,6 +260,20 @@ class App:
     def timer_mechanism(self):
         self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
 
+
+    def update_slider(self, timer_time):
+        if self.goal == 0:
+            self.goal = 60
+        if (timer_time/60) < self.goal:
+            self.progressbar.set((timer_time/60)/self.goal)
+        elif not self.notification_limit and timer_time/60 >= self.goal:
+            self.progressbar.set(1)
+            message = random.choice(["Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", "Study session complete! Great job on reaching your goal. Time for a quick break!",
+                        "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
+                        "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
+                        "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
+                        "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"])
+            self.send_notification("Study Goal Reached", message)
     
     def break_mechanism(self):
         self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label)
@@ -264,6 +281,14 @@ class App:
 
     def save_data(self):
         self.data_manager.save_data(self.timer_button, self.break_button, self.time_display_label, self.break_display_label)
+        self.progressbar.set(0)
+
+    
+    def send_notification(self, title, message):
+        toast = Notification(app_id=self.APPNAME, title=title, msg=message)
+        toast.show()
+        self.notification_limit = True
+        print("Notification " + title + " sent.")
 
 
     def run(self):

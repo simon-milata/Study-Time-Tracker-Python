@@ -1,7 +1,8 @@
 import datetime
 
 class TimerManager:
-    def __init__(self, window):
+    def __init__(self, App, window):
+        self.app = App
         self.window = window
         self.initialize_variables()
 
@@ -31,7 +32,7 @@ class TimerManager:
         if self.timer_running:
             self.timer_time += 1
             self.time_display_label.configure(text=str(datetime.timedelta(seconds=self.timer_time)))
-            #update_slider(timer_time)
+            self.app.update_slider(self.timer_time)
             self.window.after(1000, self.update_time)
 
 
