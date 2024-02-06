@@ -18,14 +18,13 @@ from Package import *
 
 class App:
     def __init__(self):
-        self.file_setup()
+        self.APPNAME = "Timer App"
+        self.FILENAME = "Timer Data.xlsx"
+
         self.window_setup()
-
-        self.timer_manager = TimerManager(self, self.WINDOW)
-        self.data_manager = DataManager(self.timer_manager, self.workbook, self.worksheet)
-
         self.initialize_variables()
         self.create_gui()
+        self.file_setup()
 
 
     def create_gui(self):
@@ -43,19 +42,20 @@ class App:
 
 
     def file_setup(self):
-        self.APPNAME = "Timer App"
-        FILENAME = "Timer Data.xlsx"
-
         self.local_folder = os.path.expandvars(rf"%APPDATA%\{self.APPNAME}")
-        self.data_file = os.path.expandvars(rf"%APPDATA%\{self.APPNAME}\{FILENAME}")
+        self.data_file = os.path.expandvars(rf"%APPDATA%\{self.APPNAME}\{self.FILENAME}")
 
         os.makedirs(self.local_folder, exist_ok=True)
+
+        self.timer_manager = TimerManager(self, self.WINDOW)
 
         if os.path.isfile(self.data_file):
             self.workbook = op.load_workbook(self.data_file)
             self.worksheet = self.workbook.active
 
-            #collect_data()
+            self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
+
+            self.collect_data()
             print("File loaded")
 
         else:
@@ -63,6 +63,9 @@ class App:
             self.worksheet = self.workbook.active
 
             self.workbook.save(self.data_file)
+
+            self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
+            
             print("New file created")
             #customize_excel(worksheet)
 
@@ -156,14 +159,14 @@ class App:
         goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=font_color)
         goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 
-        goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
+        self.goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
                                                             "4 hours", "4 hours, 30 minutes", "5 hours", "5 hours, 30 minutes", "6 hours"], variable=self.default_choice, 
                                                             state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
                                                             font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
-        goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
+        self.goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 
         goal_button = ctk.CTkButton(goal_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height)
+                                height=button_height, command=self.set_goal)
         goal_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
@@ -187,17 +190,17 @@ class App:
         streak_label.place(anchor="nw", relx=0.05, rely=0.05)
         times_studied_text = ctk.CTkLabel(streak_frame, text="Goal\nreached", font=(font_family, int(font_size/1.25)), text_color=font_color)
         times_studied_text.place(anchor="center", relx=0.3, rely=0.4)
-        times_studied_label = ctk.CTkLabel(streak_frame, text="goal_amount", font=(font_family, int(font_size*2.7)), text_color=font_color)
-        times_studied_label.place(anchor="center", relx=0.3, rely=0.6)
+        self.times_goal_reached = ctk.CTkLabel(streak_frame, text="goal_amount", font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.times_goal_reached.place(anchor="center", relx=0.3, rely=0.6)
         times_reached_label = ctk.CTkLabel(streak_frame, text="times", font=(font_family, int(font_size/1.25)), text_color=font_color)
         times_reached_label.place(anchor="center", relx=0.3, rely=0.8)
 
         duration_studied_text = ctk.CTkLabel(streak_frame, text="Time\nstudied", font=(font_family, int(font_size/1.25)), text_color=font_color)
         duration_studied_text.place(anchor="center", relx=0.7, rely=0.4)
-        time_studied_label = ctk.CTkLabel(streak_frame, text="total_duration", font=(font_family, int(font_size*2.7)), text_color=font_color)
-        time_studied_label.place(anchor="center", relx=0.7, rely=0.6)
-        time_reached_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=font_color)
-        time_reached_label.place(anchor="center", relx=0.7, rely=0.8)
+        self.streak_duration = ctk.CTkLabel(streak_frame, text="total_duration", font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.streak_duration.place(anchor="center", relx=0.7, rely=0.6)
+        duration_minute_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=font_color)
+        duration_minute_label.place(anchor="center", relx=0.7, rely=0.8)
 
 
     def timer_gui(self):
@@ -261,22 +264,53 @@ class App:
         self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
 
 
-    def update_slider(self, timer_time):
+    def reset_timers(self):
+        self.timer_button.configure(text="Start")
+        self.break_button.configure(text="Start")
+        self.time_display_label.configure(text="0:00:00")
+        self.break_display_label.configure(text="0:00:00") 
+
+
+    def set_goal(self):
+        x = 0
+        choice = self.goal_dropdown.get()
+        if "hour" in choice:
+            x += int(choice.split(" ")[0]) * 60
+        if "minutes" in choice and "hour" in choice:
+            x += int(choice.split(", ")[1].removesuffix(" minutes"))
+        if "hour" not in choice:
+            x += int(choice.split(" ")[0])
+        self.goal = x
+
+
+    def reach_goal(self, timer_time):
         if self.goal == 0:
             self.goal = 60
         if (timer_time/60) < self.goal:
             self.progressbar.set((timer_time/60)/self.goal)
         elif not self.notification_limit and timer_time/60 >= self.goal:
             self.progressbar.set(1)
+
+            self.data_manager.increase_goal_streak()
+
             message = random.choice(["Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", "Study session complete! Great job on reaching your goal. Time for a quick break!",
                         "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
                         "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
                         "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
                         "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"])
             self.send_notification("Study Goal Reached", message)
+
+    def update_streak_values(self):
+        self.times_goal_reached.configure(text=self.data_manager.goal_amount)
+        self.streak_duration.configure(text=self.data_manager.total_duration)
+
     
     def break_mechanism(self):
         self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label)
+
+
+    def collect_data(self):
+        self.data_manager.collect_data()
 
 
     def save_data(self):

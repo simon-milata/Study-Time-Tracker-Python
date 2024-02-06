@@ -32,7 +32,7 @@ class TimerManager:
         if self.timer_running:
             self.timer_time += 1
             self.time_display_label.configure(text=str(datetime.timedelta(seconds=self.timer_time)))
-            self.app.update_slider(self.timer_time)
+            self.app.reach_goal(self.timer_time)
             self.window.after(1000, self.update_time)
 
 

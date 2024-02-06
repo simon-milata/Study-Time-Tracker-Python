@@ -4,22 +4,38 @@ import datetime
 import openpyxl as op
 
 class DataManager:
-    def __init__(self, timer_manager, workbook, worksheet):
-        self.initialize_variables()
-
+    def __init__(self, App, timer_manager, workbook, worksheet):
+        self.app = App
         self.timer_manager = timer_manager
         self.workbook = workbook
         self.worksheet = worksheet
+        self.initialize_variables()
 
 
     def initialize_variables(self):
-        self.timer_time = 0
-        self.break_time = 0
-        self.data_amount = 0
-        self.stop_time = ""
+        self.date_list = []
+        self.duration_list = []
+        self.total_duration = 0
+
+    
+    def collect_data(self):
+        self.data_amount = int(self.worksheet["Z1"].value)
+        self.goal_amount = int(self.worksheet["R1"].value)
 
 
-    def save_data(self, timer_button, break_button, time_display_label, break_display_label):
+        for data in range(2, self.data_amount + 2):
+            if "/" in str(self.worksheet["B" + str(data)].value):
+                self.date_list.append(datetime.datetime.strptime(str(self.worksheet["B" + str(data)].value).split(" ")[0], "%d/%m/%Y").date())
+            elif "-" in str(self.worksheet["B" + str(data)].value):
+                self.date_list.append(datetime.datetime.strptime(str(self.worksheet["B" + str(data)].value).split(" ")[0], "%Y-%m-%d").date())
+            self.duration_list.append(round(self.worksheet["C" + str(data)].value))
+
+        self.total_duration = sum(self.duration_list)
+        print("Data collected.")
+        self.app.update_streak_values()
+
+
+    def save_data(self):
         if self.timer_manager.timer_time < 60:
             return print("No data to save.")
         
@@ -30,12 +46,12 @@ class DataManager:
 
         self.stop_time = datetime.datetime.now()
 
-        timer_button.configure(text="Start")
-        break_button.configure(text="Start")
-        time_display_label.configure(text="0:00:00")
-        break_display_label.configure(text="0:00:00")
-        print(self.timer_time, self.break_time)
+        print("Data saved.")
+
         self.timer_manager.initialize_variables()
+        self.app.reset_timers()
+
+
 
     def calculate_duration(self):
         duration = self.timer_time - self.break_time
@@ -44,4 +60,9 @@ class DataManager:
         else:
             duration /= 60
         return duration
+    
+
+    def increase_goal_streak(self):
+        self.goal_amount += 1
+
  
