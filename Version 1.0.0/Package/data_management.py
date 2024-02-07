@@ -119,8 +119,9 @@ class DataManager:
         self.workbook = workbook
         self.worksheet = worksheet
 
-        self.workbook.save(self.app.data_file)
-
         self.initialize_new_file_variables()
+        self.customize_excel()
+
+        self.workbook.save(self.app.data_file)
 
         print("Data reset.")

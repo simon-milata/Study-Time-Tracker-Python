@@ -24,7 +24,6 @@ class App:
         self.initialize_variables()
         self.create_gui()
         self.file_setup()
-        self.settings_gui_setup()
 
 
     def create_gui(self):
@@ -38,7 +37,7 @@ class App:
         self.goal_gui_setup()
         self.progress_gui_setup()
         self.streak_gui_setup()
-
+        self.settings_gui_setup()
 
 
     def file_setup(self):
@@ -66,11 +65,11 @@ class App:
             self.workbook.save(self.data_file)
 
             self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
-            
-            print("New file created")
-            self.data_manager.initialize_new_file_variables()
 
+            self.data_manager.initialize_new_file_variables()
             self.data_manager.customize_excel()
+
+            print("New file created")
 
 
     def initialize_variables(self):
@@ -99,7 +98,6 @@ class App:
 
         self.statistics_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-        self.statistics_frame.grid_forget()
 
         self.settings_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
@@ -107,11 +105,11 @@ class App:
 
         self.achievements_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.achievements_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-        self.achievements_frame.grid_forget()
 
         self.history_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
-        self.history_frame.grid_forget()
+
+        self.forget_and_propagate(list = [self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame])
 
 
     def tab_frames_gui_setup(self):
@@ -250,14 +248,25 @@ class App:
 
 
     def settings_gui_setup(self):
+        color_select_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
+        color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
+        color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=font_color)
+        color_label.place(anchor="nw", relx=0.05, rely=0.05)
+        color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", "Blue"], variable=default_color, state="readonly", width=150, height=30, 
+                                         dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+        color_dropdown.place(anchor="center", relx=0.5, rely=0.45)
+
         reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=tab_color)
         reset_frame.place(anchor="s", relx=0.5, rely=0.985)
         reset_data_btn = ctk.CTkButton(reset_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.reset_data, width=450)
         reset_data_btn.pack()
 
-
     
+    def forget_and_propagate(self, list):
+        for item in list:
+            item.grid_forget()
+            item.grid_propagate(False)
 
 
     def switch_tab(self, tab = str):
