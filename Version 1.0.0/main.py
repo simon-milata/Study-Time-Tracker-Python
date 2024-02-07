@@ -3,7 +3,6 @@ import os
 import random
 
 import openpyxl as op
-from openpyxl.styles import Font
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -25,6 +24,7 @@ class App:
         self.initialize_variables()
         self.create_gui()
         self.file_setup()
+        self.settings_gui_setup()
 
 
     def create_gui(self):
@@ -56,6 +56,7 @@ class App:
             self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
 
             self.collect_data()
+            self.update_streak_values()
             print("File loaded")
 
         else:
@@ -67,13 +68,15 @@ class App:
             self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
             
             print("New file created")
-            #customize_excel(worksheet)
+            self.data_manager.initialize_new_file_variables()
+
+            self.data_manager.customize_excel()
 
 
     def initialize_variables(self):
         self.default_choice = ctk.StringVar(value="1 hour")
         self.notification_limit = False
-        self.goal = 1
+        self.goal = 60
 
 
     def window_setup(self):
@@ -139,6 +142,11 @@ class App:
                                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, 
                                                 anchor="w", command=lambda: self.switch_tab("history"))
         self.history_tab_button.place(relx=0.5, rely=0.5, anchor="center")
+        self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.settings_tab.place(relx=0.5, rely=1, anchor="s")
+        settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: self.switch_tab("settings"))
+        settings_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
 
     def secondary_frames_gui_setup(self):
@@ -186,18 +194,20 @@ class App:
     def streak_gui_setup(self):
         streak_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=220)
         streak_frame.pack(padx=frame_padding, pady=frame_padding)
+
         streak_label = ctk.CTkLabel(streak_frame, text="Streak", font=(font_family, int(font_size)), text_color=font_color)
         streak_label.place(anchor="nw", relx=0.05, rely=0.05)
+        
         times_studied_text = ctk.CTkLabel(streak_frame, text="Goal\nreached", font=(font_family, int(font_size/1.25)), text_color=font_color)
         times_studied_text.place(anchor="center", relx=0.3, rely=0.4)
-        self.times_goal_reached = ctk.CTkLabel(streak_frame, text="goal_amount", font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.times_goal_reached = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=font_color)
         self.times_goal_reached.place(anchor="center", relx=0.3, rely=0.6)
         times_reached_label = ctk.CTkLabel(streak_frame, text="times", font=(font_family, int(font_size/1.25)), text_color=font_color)
         times_reached_label.place(anchor="center", relx=0.3, rely=0.8)
 
         duration_studied_text = ctk.CTkLabel(streak_frame, text="Time\nstudied", font=(font_family, int(font_size/1.25)), text_color=font_color)
         duration_studied_text.place(anchor="center", relx=0.7, rely=0.4)
-        self.streak_duration = ctk.CTkLabel(streak_frame, text="total_duration", font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.streak_duration = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=font_color)
         self.streak_duration.place(anchor="center", relx=0.7, rely=0.6)
         duration_minute_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=font_color)
         duration_minute_label.place(anchor="center", relx=0.7, rely=0.8)
@@ -239,6 +249,17 @@ class App:
         save_data_btn.place(relx=0.5, anchor="center", rely=0.5)
 
 
+    def settings_gui_setup(self):
+        reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=tab_color)
+        reset_frame.place(anchor="s", relx=0.5, rely=0.985)
+        reset_data_btn = ctk.CTkButton(reset_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.reset_data, width=450)
+        reset_data_btn.pack()
+
+
+    
+
+
     def switch_tab(self, tab = str):
         tabs = {
             "main": self.main_frame,
@@ -262,6 +283,15 @@ class App:
 
     def timer_mechanism(self):
         self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
+        if self.timer_manager.timer_time <= 1:
+            self.data_manager.get_start_time()
+
+
+    def reset_gui_values(self):
+        self.times_goal_reached.configure(text=0)
+        self.streak_duration.configure(text=0)
+        self.progressbar.set(0)
+        self.reset_timers()
 
 
     def reset_timers(self):
@@ -284,21 +314,18 @@ class App:
 
 
     def reach_goal(self, timer_time):
-        if self.goal == 0:
-            self.goal = 60
         if (timer_time/60) < self.goal:
             self.progressbar.set((timer_time/60)/self.goal)
-        elif not self.notification_limit and timer_time/60 >= self.goal:
+        elif timer_time/60 >= self.goal and not self.notification_limit:
             self.progressbar.set(1)
 
-            self.data_manager.increase_goal_streak()
-
             message = random.choice(["Congratulations! You've reached your study goal. Take a well-deserved break and recharge!", "Study session complete! Great job on reaching your goal. Time for a quick break!",
-                        "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
-                        "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
-                        "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
-                        "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"])
+                                     "You did it! Study session accomplished. Treat yourself to a moment of relaxation!", "Well done! You've met your study goal. Now, take some time to unwind and reflect on your progress.",
+                                     "Study session over! You've achieved your goal. Reward yourself with a brief pause before your next task.", "Goal achieved! Take a breather and pat yourself on the back for your hard work.",
+                                     "Mission accomplished! You've hit your study target. Enjoy a short break before diving back in.", "Study session complete. Nicely done! Use this time to relax and rejuvenate before your next endeavor.",
+                                     "You've reached your study goal! Treat yourself to a well-deserved break. You've earned it!", "Goal achieved! Take a moment to celebrate your success. Your dedication is paying off!"])
             self.send_notification("Study Goal Reached", message)
+            print(self.notification_limit)
 
     def update_streak_values(self):
         self.times_goal_reached.configure(text=self.data_manager.goal_amount)
@@ -311,11 +338,22 @@ class App:
 
     def collect_data(self):
         self.data_manager.collect_data()
+        self.data_manager.data_to_variable()
 
 
     def save_data(self):
-        self.data_manager.save_data(self.timer_button, self.break_button, self.time_display_label, self.break_display_label)
-        self.progressbar.set(0)
+        if self.timer_manager.timer_time > 60:
+            if self.timer_manager.timer_time/60 >= self.goal:
+                self.data_manager.increase_goal_streak()
+
+            self.data_manager.save_data()
+            self.collect_data()
+            self.reset_gui_values()
+            self.update_streak_values()
+
+            self.notification_limit = False
+        else:
+            print("No data to save. (time less than 1m)")
 
     
     def send_notification(self, title, message):
@@ -323,6 +361,16 @@ class App:
         toast.show()
         self.notification_limit = True
         print("Notification " + title + " sent.")
+
+
+    def reset_data(self):
+        del self.workbook[self.workbook.active.title]
+        self.workbook.create_sheet()
+        self.worksheet = self.workbook.active
+
+        self.data_manager.reset_data(self.workbook, self.worksheet)
+
+        self.reset_gui_values()
 
 
     def run(self):
