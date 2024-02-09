@@ -21,19 +21,19 @@ class TimerManager:
             self.break_running = False
             timer_button.configure(text="Stop")
             break_button.configure(text="Start")
-            self.update_time()
+            self._update_time()
 
         elif self.timer_running:
             self.timer_running = False
             timer_button.configure(text="Start")
     
 
-    def update_time(self):
+    def _update_time(self):
         if self.timer_running:
             self.timer_time += 1
             self.time_display_label.configure(text=str(datetime.timedelta(seconds=self.timer_time)))
             self.app.reach_goal(self.timer_time)
-            self.window.after(1000, self.update_time)
+            self.window.after(1000, self._update_time)
 
 
     def break_mechanism(self, break_button, timer_button, break_display_label):
@@ -43,14 +43,14 @@ class TimerManager:
             self.timer_running = False
             break_button.configure(text="Stop")
             timer_button.configure(text="Start")
-            self.update_break_time()
+            self._update_break_time()
         elif self.break_running:
             self.break_running = False
             self.break_button.configure(text="Start")
 
 
-    def update_break_time(self):
+    def _update_break_time(self):
         if self.break_running:
             self.break_time += 1
             self.break_display_label.configure(text=str(datetime.timedelta(seconds=self.break_time)))
-            self.window.after(1000, self.update_break_time)
+            self.window.after(1000, self._update_break_time)

@@ -53,35 +53,19 @@ pie_font_size = 10
 #ORANGE
 orange_button_color = "#f38064"
 orange_highlight_color = "#f5937a"
-pie_color_orange_1 = "#f38064"
-pie_color_orange_2 = "#eb856b"
-pie_color_orange_3 = "#e28a73"
-pie_color_orange_4 = "#da8f7c"
-pie_color_orange_5 = "#d29484"
-pie_color_orange_6 = "#c9998d"
-pie_color_orange_7 = "#c19e95"
+orange_pie_colors = ["#f38064", "#eb856b", "#e28a73", "#da8f7c", "#d29484", "#c9998d", "#c19e95"]
+
 
 #GREEN
 green_button_color = "#93f263"
 green_highlight_color = "#a3f47b"
-pie_color_green_1 = "#96ea6c"
-pie_color_green_2 = "#99e274"
-pie_color_green_3 = "#9cd97d"
-pie_color_green_4 = "#9ed185"
-pie_color_green_5 = "#a1c88d"
-pie_color_green_6 = "#a4c096"
-pie_color_green_7 = "#a7b79e"
+green_pie_colors = ["#96ea6c", "#99e274", "#9cd97d", "#9ed185", "#a1c88d", "#a4c096", "#a7b79e"]
+
 
 #BLUE
 blue_button_color = "#63c2f2"
 blue_highlight_color = "#7bccf4"
-pie_color_blue_1 = "#63c2f2"
-pie_color_blue_2 = "#6cc0ea"
-pie_color_blue_3 = "#74bde2"
-pie_color_blue_4 = "#9ed185"
-pie_color_blue_5 = "#7dbad9"
-pie_color_blue_6 = "#85b6d1"
-pie_color_blue_7 = "#8db4c8"
+blue_pie_colors = ["#63c2f2", "#6cc0ea", "#74bde2", "#9ed185", "#7dbad9", "#85b6d1", "#8db4c8"]
 
 image_width = 30
 image_height = 30
