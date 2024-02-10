@@ -28,7 +28,7 @@ class DataManager:
         self.data_amount = 0
         self.monday_duration = self.tuesday_duration = self.wednesday_duration = self.thursday_duration = self.friday_duration = self.saturday_duration = self.sunday_duration = 0
         self.color_name = "Orange"
-        self.save_color(self.color_name)
+        self.save_color()
 
     
     def collect_data(self):
@@ -41,6 +41,8 @@ class DataManager:
 
 
     def data_to_variable(self):
+        self.clear_graph_lists()
+
         for data in range(2, self.data_amount + 2):
             if "/" in str(self.worksheet["B" + str(data)].value):
                 self.date_list.append(datetime.datetime.strptime(str(self.worksheet["B" + str(data)].value).split(" ")[0], "%d/%m/%Y").date())
@@ -54,7 +56,7 @@ class DataManager:
     def save_data(self):
         self.initialize_variables()
         self.save_weekday()
-        self.save_color(self.color_name)
+        self.save_color()
         
         self.data_amount += 1
 
@@ -156,16 +158,15 @@ class DataManager:
 
 
     def collect_day_data(self):
-        monday_duration = int(self.worksheet["W2"].value)
-        tuesday_duration = int(self.worksheet["W3"].value)
-        wednesday_duration = int(self.worksheet["W4"].value)
-        thursday_duration = int(self.worksheet["W5"].value)
-        friday_duration = int(self.worksheet["W6"].value)
-        saturday_duration = int(self.worksheet["W7"].value)
-        sunday_duration = int(self.worksheet["W8"].value)
+        self.monday_duration = int(self.worksheet["W2"].value)
+        self.tuesday_duration = int(self.worksheet["W3"].value)
+        self.wednesday_duration = int(self.worksheet["W4"].value)
+        self.thursday_duration = int(self.worksheet["W5"].value)
+        self.friday_duration = int(self.worksheet["W6"].value)
+        self.saturday_duration = int(self.worksheet["W7"].value)
+        self.sunday_duration = int(self.worksheet["W8"].value)
 
-        day_duration_list = [monday_duration, tuesday_duration, wednesday_duration, thursday_duration, friday_duration, saturday_duration, sunday_duration]
-        return day_duration_list
+        self.day_duration_list = [self.monday_duration, self.tuesday_duration, self.wednesday_duration, self.thursday_duration, self.friday_duration, self.saturday_duration, self.sunday_duration]
     
 
     def save_weekday(self):
@@ -200,13 +201,13 @@ class DataManager:
 
 
     def set_color(self, color_dropdown):
-        color_name = color_dropdown.get()
+        self.color_name = color_dropdown.get()
         print("Color set.")
-        self.save_color(color_name)
+        self.save_color()
 
 
-    def save_color(self, color_name):
-        self.worksheet["T2"].value = color_name
+    def save_color(self):
+        self.worksheet["T2"].value = self.color_name
         self.load_color()
 
 
@@ -229,4 +230,7 @@ class DataManager:
         for widget in self.widget_list:
             widget.configure(fg_color=color, hover_color=highlight_color)
         self.app.progressbar.configure(progress_color = color)
+
+        self.app.create_graphs()
+
         print("Color changed.")

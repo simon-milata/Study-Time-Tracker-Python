@@ -65,7 +65,7 @@ green_pie_colors = ["#96ea6c", "#99e274", "#9cd97d", "#9ed185", "#a1c88d", "#a4c
 #BLUE
 blue_button_color = "#63c2f2"
 blue_highlight_color = "#7bccf4"
-blue_pie_colors = ["#63c2f2", "#6cc0ea", "#74bde2", "#9ed185", "#7dbad9", "#85b6d1", "#8db4c8"]
+blue_pie_colors = ["#63c2f2", "#6cc0ea", "#74bde2", "#7dbad9", "#85b6d1", "#8db4c8", "#96b2c0"]
 
 image_width = 30
 image_height = 30

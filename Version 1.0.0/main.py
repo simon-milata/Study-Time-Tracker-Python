@@ -23,8 +23,7 @@ class App:
         self.initialize_variables()
         self.create_gui()
         self._file_setup()
-        self.create_time_spent_graph()
-        self.create_weekday_graph()
+
         self.WINDOW.protocol("WM_DELETE_WINDOW", self.save_on_quit)
 
 
@@ -324,13 +323,17 @@ class App:
         time_spent_graph.grid(row=0, column=0, padx=10, pady=10)
         time_spent_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
-        self.data_manager.clear_graph_lists()
-
 
     def create_weekday_graph(self):
-        day_duration_list = self.data_manager.collect_day_data()
-        non_zero_durations = [duration for duration in day_duration_list if duration != 0]
-        non_zero_names = [name for name, duration in zip(self.data_manager.day_name_list, day_duration_list) if duration != 0]
+        self.data_manager.collect_day_data()
+
+        if self.data_manager.day_duration_list:
+            non_zero_durations = [duration for duration in self.data_manager.day_duration_list if duration != 0]
+            non_zero_names = [name for name, duration in zip(self.data_manager.day_name_list, self.data_manager.day_duration_list) if duration != 0]
+
+        else:
+            non_zero_durations = [0]
+            non_zero_names = []
 
         def _autopct_format(values):
             def _my_format(pct):
@@ -340,9 +343,8 @@ class App:
             return _my_format
 
         fig, ax = plt.subplots()
-        ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), 
-            colors=self.data_manager.pie_colors, 
-            textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": font_color}, counterclock=False, startangle=90)
+        ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), colors=self.data_manager.pie_colors, 
+               textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": font_color}, counterclock=False, startangle=90)
         fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
         fig.set_facecolor(graph_bg_color)
         ax.tick_params(colors="white")
@@ -358,6 +360,11 @@ class App:
         weekday_graph = weekday_frame.get_tk_widget()
         weekday_graph.grid(row=0, column=1, padx=10, pady=10)
         weekday_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
+
+
+    def create_graphs(self):
+        self.create_time_spent_graph()
+        self.create_weekday_graph()
 
     
     def forget_and_propagate(self, list: list):
@@ -399,6 +406,7 @@ class App:
         self.times_goal_reached.configure(text=0)
         self.streak_duration.configure(text=0)
         self.progressbar.set(0)
+        self.progressbar.configure(progress_color = self.data_manager.color)
         self.reset_timers()
 
 
