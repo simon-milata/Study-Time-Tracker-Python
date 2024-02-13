@@ -1,5 +1,7 @@
 import os
 import random
+import time
+from threading import Thread
 
 import openpyxl as op
 import pandas as pd
@@ -24,6 +26,10 @@ class App:
         self.create_gui()
         self._file_setup()
 
+        self.t1 = Thread(target=self.eye_protection)
+        self.data_manager.load_subject()
+        self.data_manager.load_eye_care()
+
         self.WINDOW.protocol("WM_DELETE_WINDOW", self.save_on_quit)
 
 
@@ -38,10 +44,13 @@ class App:
         self._goal_gui_setup()
         self._progress_gui_setup()
         self._streak_gui_setup()
+        self._subject_gui_setup()
+        self._pomodoro_gui_setup()
+        self._history_gui_setup()
         self._settings_gui_setup()
 
 
-    def _file_setup(self):
+    def _file_setup(self) -> None:
         self.local_folder = os.path.expandvars(rf"%APPDATA%\{self.APPNAME}")
         self.data_file = os.path.expandvars(rf"%APPDATA%\{self.APPNAME}\{self.FILENAME}")
 
@@ -52,18 +61,21 @@ class App:
         data_file_exists = os.path.isfile(self.data_file)
 
         if data_file_exists:
+            print("File loaded.")
             self.workbook = op.load_workbook(self.data_file)
             self.worksheet = self.workbook.active
 
             self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
 
+            self.create_widget_list()
             self.collect_data()
             self.update_streak_values()
-            self.create_widget_list()
+            self.load_history()
+
             self.data_manager.load_color()
-            print("File loaded.")
 
         else:
+            print("New file created.")
             self.workbook = op.Workbook()
             self.worksheet = self.workbook.active
 
@@ -71,21 +83,19 @@ class App:
 
             self.data_manager = DataManager(self, self.timer_manager, self.workbook, self.worksheet)
 
-            self.data_manager.initialize_new_file_variables()
-            self.data_manager.customize_excel()
-
             self.create_widget_list()
 
-            print("New file created.")
+            self.data_manager.initialize_new_file_variables()
 
 
-    def initialize_variables(self):
+    def initialize_variables(self) -> None:
+        self.widget_list = []
         self.default_choice = ctk.StringVar(value="1 hour")
         self.notification_limit_on = False
         self.goal = 60
 
 
-    def _window_setup(self):
+    def _window_setup(self) -> None:
         self.WINDOW = ctk.CTk()
         self.WINDOW.geometry(str(WIDTH + BORDER_WIDTH + main_frame_pad_x + tab_frame_width) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
         self.WINDOW.title(self.APPNAME)
@@ -94,7 +104,7 @@ class App:
         self.WINDOW.grid_propagate(False)
 
 
-    def _main_frame_gui_setup(self):
+    def _main_frame_gui_setup(self) -> None:
         self.tab_frame = ctk.CTkFrame(self.WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=tab_frame_color)
         self.tab_frame.grid(column=0, row=0)
         self.tab_frame.pack_propagate(False)
@@ -119,43 +129,43 @@ class App:
         self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame])
 
 
-    def _tab_frames_gui_setup(self):
+    def _tab_frames_gui_setup(self) -> None:
         self.timer_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.timer_tab.pack(pady=tab_padding_y)
         self.timer_tab_button = ctk.CTkButton(self.timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                              fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, 
+                                              fg_color=tab_selected_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
                                               anchor="w", command=lambda: self.switch_tab("main"))
         self.timer_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.statistics_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.statistics_tab.pack(pady=tab_padding_y)
         self.statistics_tab_button = ctk.CTkButton(self.statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                   fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, 
+                                                   fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
                                                    anchor="w", command=lambda: self.switch_tab("statistics"))
         self.statistics_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.achievements_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.achievements_tab.pack(pady=tab_padding_y)
         self.achievements_tab_button = ctk.CTkButton(self.achievements_tab, text="Achievements", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                     fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, 
+                                                     fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
                                                      anchor="w", command=lambda: self.switch_tab("achievements"))
         self.achievements_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.history_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.history_tab.pack(pady=tab_padding_y)
         self.history_tab_button = ctk.CTkButton(self.history_tab, text="History", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, 
+                                                fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
                                                 anchor="w", command=lambda: self.switch_tab("history"))
         self.history_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.settings_tab.place(relx=0.5, rely=1, anchor="s")
-        settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.7), hover_color=tab_highlight_color, anchor="w", command=lambda: self.switch_tab("settings"))
-        settings_tab_button.place(relx=0.5, rely=0.5, anchor="center")
+        self.settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, anchor="w", command=lambda: self.switch_tab("settings"))
+        self.settings_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
 
-    def _secondary_frames_gui_setup(self):
+    def _secondary_frames_gui_setup(self) -> None:
         self.timer_break_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
         self.timer_break_frame.grid(row=0, column=1)
         self.timer_break_frame.pack_propagate(False)
@@ -169,7 +179,7 @@ class App:
         self.subject_pomodoro_frame.pack_propagate(False)
 
 
-    def _goal_gui_setup(self):
+    def _goal_gui_setup(self) -> None:
         goal_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
         goal_frame.pack(padx=frame_padding, pady=frame_padding)
         goal_frame.pack_propagate(False)
@@ -188,7 +198,7 @@ class App:
         self.goal_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
-    def _progress_gui_setup(self):
+    def _progress_gui_setup(self) -> None:
         progress_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=100)
         progress_frame.pack(padx=frame_padding, pady=frame_padding)
         progress_frame.pack_propagate(False)
@@ -201,7 +211,7 @@ class App:
         self.progressbar.set(0)
 
 
-    def _streak_gui_setup(self):
+    def _streak_gui_setup(self) -> None:
         streak_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=220)
         streak_frame.pack(padx=frame_padding, pady=frame_padding)
 
@@ -223,7 +233,7 @@ class App:
         duration_minute_label.place(anchor="center", relx=0.7, rely=0.8)
 
 
-    def _timer_gui_setup(self):
+    def _timer_gui_setup(self) -> None:
         timer_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
         timer_frame.pack(padx=frame_padding, pady=frame_padding)
         timer_frame.pack_propagate(False)
@@ -237,7 +247,7 @@ class App:
         self.timer_button.place(anchor="s", relx=0.5, rely=0.9)
         
     
-    def _break_gui_setup(self):
+    def _break_gui_setup(self) -> None:
         break_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
         break_frame.pack(padx=frame_padding, pady=frame_padding)
         break_frame.pack_propagate(False)
@@ -250,7 +260,7 @@ class App:
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.break_mechanism)
         self.break_button.place(anchor="s", relx=0.5, rely=0.9)
 
-    def _save_data_gui(self):
+    def _save_data_gui(self) -> None:
         self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=frame_color, corner_radius=10, width=WIDTH-10, height=button_height*2)
         self.data_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.data_frame.grid_propagate(False)
@@ -259,7 +269,61 @@ class App:
         self.save_data_button.place(relx=0.5, anchor="center", rely=0.5)
 
 
-    def _settings_gui_setup(self):
+    def _history_gui_setup(self) -> None:
+        history_frame_frame = ctk.CTkFrame(self.history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
+        history_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
+        history_frame_frame.pack_propagate(False)
+
+        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=35)
+        history_label_frame.pack(pady=(frame_padding, 0))
+        history_label_frame.grid_propagate(False)
+
+        history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
+        history_data_frame.pack(padx=frame_padding)
+
+        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        start_label.grid(row=0, column=0)
+        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        end_label.grid(row=0, column=1)
+        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        duration_label.grid(row=0, column=2)
+        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        break_label.grid(row=0, column=3)
+        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        subject_label.grid(row=0, column=4)
+
+        start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        start_frame.grid(row=1, column=0)
+        start_frame.pack_propagate(False)
+        self.start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.start_text.pack()
+
+        end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        end_frame.grid(row=1, column=1)
+        end_frame.pack_propagate(False)
+        self.end_text = ctk.CTkLabel(end_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.end_text.pack()
+
+        duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        duration_frame.grid(row=1, column=2)
+        duration_frame.pack_propagate(False)
+        self.duration_text = ctk.CTkLabel(duration_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.duration_text.pack()
+
+        break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        break_frame.grid(row=1, column=3)
+        break_frame.pack_propagate(False)
+        self.break_text = ctk.CTkLabel(break_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.break_text.pack()
+
+        subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        subject_frame.grid(row=1, column=4)
+        subject_frame.pack_propagate(False)
+        self.subject_text = ctk.CTkLabel(subject_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.subject_text.pack()
+
+
+    def _settings_gui_setup(self) -> None:
         color_select_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
         color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
         color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=font_color)
@@ -271,6 +335,17 @@ class App:
                                      height=button_height, command=lambda: self.data_manager.set_color(self.color_dropdown))
         self.color_button.place(anchor="s", relx=0.5, rely=0.9)
 
+        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
+        eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
+        eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=font_color)
+        eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
+        self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
+                                             font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+        self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.45)
+        eye_care_button = ctk.CTkButton(eye_care_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
+                                        hover_color=button_highlight_color, height=button_height, command=self.select_eye_care)
+        eye_care_button.place(anchor="s", relx=0.5, rely=0.9)
+
         reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=tab_color)
         reset_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.reset_data_button = ctk.CTkButton(reset_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
@@ -278,21 +353,32 @@ class App:
         self.reset_data_button.pack()
 
 
-    def _subject_gui_setup(self):
+    def _subject_gui_setup(self) -> None:
         subject_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
         subject_frame.pack(padx=frame_padding, pady=frame_padding)
         subject_label = ctk.CTkLabel(subject_frame, text="Subject", font=(font_family, font_size), text_color=font_color)
         subject_label.place(anchor="nw", relx=0.05, rely=0.05)
-        subject_selection = ctk.CTkComboBox(subject_frame, values=["Mathematics", "Science", "Literature", "History", "Geography", "Language Arts", "Foreign Languages", "Social Studies",
+        self.subject_selection = ctk.CTkComboBox(subject_frame, values=["Mathematics", "Science", "Literature", "History", "Geography", "Language Arts", "Foreign Languages", "Social Studies",
                                                                 "Economics", "Computer Science", "Psychology", "Philosophy", "Art", "Music", "Physical Education", "Other"], 
                                                             state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
                                                             font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
-        subject_selection.place(anchor="center", relx=0.5, rely=0.45)
-        subject_btn = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height)
-        subject_btn.place(anchor="s", relx=0.5, rely=0.9)
+        self.subject_selection.place(anchor="center", relx=0.5, rely=0.45)
+        subject_button = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                                height=button_height, command=self.select_subject)
+        subject_button.place(anchor="s", relx=0.5, rely=0.9)
 
-    def create_time_spent_graph(self):
+
+    def _pomodoro_gui_setup(self) -> None:
+        pomodoro_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
+        pomodoro_frame.pack(padx=frame_padding, pady=frame_padding)
+        pomodoro_label = ctk.CTkLabel(pomodoro_frame, text="Pomodoro", font=(font_family, int(font_size)), text_color=font_color)
+        pomodoro_label.place(anchor="nw", relx=0.05, rely=0.05)
+        pomodoro_button = ctk.CTkButton(pomodoro_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height)
+        pomodoro_button.place(anchor="s", relx=0.5, rely=0.9)
+
+
+    def create_time_spent_graph(self) -> None:
         data = {"Date": self.data_manager.date_list, "Duration": self.data_manager.duration_list}
         df = pd.DataFrame(data)
         grouped_data = df.groupby("Date")["Duration"].sum().reset_index()
@@ -324,7 +410,7 @@ class App:
         time_spent_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
 
-    def create_weekday_graph(self):
+    def create_weekday_graph(self) -> None:
         self.data_manager.collect_day_data()
 
         if self.data_manager.day_duration_list:
@@ -362,39 +448,53 @@ class App:
         weekday_graph.config(highlightbackground=frame_border_color, highlightthickness=2, background=frame_color)
 
 
-    def create_graphs(self):
+    def create_graphs(self) -> None:
+        self.statistics_frame.grid_propagate(False)
         self.create_time_spent_graph()
         self.create_weekday_graph()
 
     
-    def forget_and_propagate(self, list: list):
+    def forget_and_propagate(self, list: list) -> None:
         for item in list:
             item.grid_forget()
             item.grid_propagate(False)
 
 
-    def switch_tab(self, tab = str):
+    def switch_tab(self, tab = str) -> None:
         tabs = {
-            "main": self.main_frame,
-            "statistics": self.statistics_frame,
-            "settings": self.settings_frame,
-            "achievements": self.achievements_frame,
-            "history": self.history_frame
+            "main": [self.main_frame, self.timer_tab_button],
+            "statistics": [self.statistics_frame, self.statistics_tab_button],
+            "settings": [self.settings_frame, self.settings_tab_button],
+            "achievements": [self.achievements_frame, self.achievements_tab_button],
+            "history": [self.history_frame, self.history_tab_button]
         }
 
         tab_list = [self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame]
-        tab_list.remove(tabs[tab])
+        tab_list.remove(tabs[tab][0])
 
-        def forget_tabs():
+        def _forget_tabs():
             for frame in tab_list:
                 frame.grid_forget()
-        forget_tabs()
 
-        tabs[tab].grid(column=2, row=0, padx=main_frame_pad_x)
-        tabs[tab].grid_propagate(False)
+        _forget_tabs()
+
+        tabs[tab][0].grid(column=2, row=0, padx=main_frame_pad_x)
+        tabs[tab][0].grid_propagate(False)
+
+        tab_button_list = [self.timer_tab_button, self.statistics_tab_button, self.settings_tab_button, self.achievements_tab_button, self.history_tab_button]
+        tab_button_list.remove(tabs[tab][1])
+
+        def _decolor_tabs():
+            for button in tab_button_list:
+                button.configure(fg_color=tab_color, hover_color=tab_highlight_color)
+
+        _decolor_tabs()
+
+        tabs[tab][1].configure(fg_color=tab_selected_color, hover_color=tab_selected_color)
 
 
-    def timer_mechanism(self):
+
+    def timer_mechanism(self) -> None:
         self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
         
         #Get start time only at the start of timer
@@ -402,7 +502,7 @@ class App:
             self.data_manager.get_start_time()
 
 
-    def reset_gui_values(self):
+    def reset_gui_values(self) -> None:
         self.times_goal_reached.configure(text=0)
         self.streak_duration.configure(text=0)
         self.progressbar.set(0)
@@ -410,14 +510,14 @@ class App:
         self.reset_timers()
 
 
-    def reset_timers(self):
+    def reset_timers(self) -> None:
         self.timer_button.configure(text="Start")
         self.break_button.configure(text="Start")
         self.time_display_label.configure(text="0:00:00")
         self.break_display_label.configure(text="0:00:00") 
 
 
-    def set_goal(self):
+    def set_goal(self) -> None:
         x = 0
         choice = self.goal_dropdown.get()
 
@@ -431,7 +531,21 @@ class App:
         self.goal = x
 
 
-    def reach_goal(self, timer_time: int):
+    def select_subject(self):
+        subject = self.subject_selection.get()
+        self.subject_selection.configure(variable=ctk.StringVar(value=subject))
+
+        self.data_manager.save_subject(subject)
+
+
+    def select_eye_care(self):
+        eye_care = self.eye_care_selection.get()
+        self.eye_care_selection.configure(variable=ctk.StringVar(value=eye_care))
+
+        self.data_manager.save_eye_care(eye_care)
+
+
+    def reach_goal(self, timer_time: int) -> None:
         time_in_minutes = timer_time / 60
         if time_in_minutes < self.goal:
             self.progressbar.set(time_in_minutes/self.goal)
@@ -446,21 +560,21 @@ class App:
             self.send_notification("Study Goal Reached", message)
 
 
-    def update_streak_values(self):
+    def update_streak_values(self) -> None:
         self.times_goal_reached.configure(text=self.data_manager.goal_amount)
         self.streak_duration.configure(text=self.data_manager.total_duration)
 
     
-    def break_mechanism(self):
+    def break_mechanism(self) -> None:
         self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label)
 
 
-    def collect_data(self):
+    def collect_data(self) -> None:
         self.data_manager.collect_data()
         self.data_manager.data_to_variable()
 
 
-    def save_data(self):
+    def save_data(self) -> None:
         time_in_minutes = self.timer_manager.timer_time / 60
 
         #Only be able to save if time is higher than 1m
@@ -475,40 +589,74 @@ class App:
             self.update_streak_values()
             self.create_time_spent_graph()
             self.create_weekday_graph()
+            self.load_history()
             
             self.notification_limit_on = False
         else:
             print("No data to save. (time less than 1m)")
 
+
+    def eye_protection(self):
+        time_between = 60 * 20
+        if self.eye_care_selection.get() == "On":
+            time.sleep(time_between)
+            if self.eye_care_selection.get() == "On":
+                self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
+                self.eye_protection()
+
+
+    def load_history(self):
+        start_history = ""
+        end_history = ""
+        duration_history = ""
+        break_history = ""
+        subject_history = ""
+
+        if self.data_manager.data_amount > 0:
+            for data in range(self.data_manager.data_amount+1, 1, -1):
+                start_history += str(self.worksheet["A" + str(data)].value)
+                start_history += "\n"
+                end_history += str(self.worksheet["B" + str(data)].value)
+                end_history += "\n"
+                duration_history += str(round(self.worksheet["C" + str(data)].value)) + "m"
+                duration_history += "\n"
+                break_history += str(round(self.worksheet["D" + str(data)].value)) + "m"
+                break_history += "\n"
+                subject_history += str(self.worksheet["E" + str(data)].value)
+                subject_history += "\n"
+
+            self.start_text.configure(text=start_history)
+            self.end_text.configure(text=end_history)
+            self.duration_text.configure(text=duration_history)
+            self.break_text.configure(text=break_history)
+            self.subject_text.configure(text=subject_history)
+
     
-    def send_notification(self, title, message):
+    def send_notification(self, title, message) -> None:
         toast = Notification(app_id=self.APPNAME, title=title, msg=message)
         toast.show()
         self.notification_limit_on = True
         print("Notification " + title + " sent.")
 
 
-    def reset_data(self):
-        del self.workbook[self.workbook.active.title]
-        self.workbook.create_sheet()
-        self.worksheet = self.workbook.active
-
-        self.data_manager.reset_data(self.workbook, self.worksheet)
-
+    def reset_data(self) -> None:
+        os.remove(self.data_file)
+        self.timer_manager.timer_running = False
+        self.timer_manager.break_running = False
         self.reset_gui_values()
-        self.create_time_spent_graph()
-        self.create_weekday_graph()
+
+        self._file_setup()
 
 
     #Get all buttons other than tab buttons
-    def create_widget_list(self):
+    def create_widget_list(self) -> None:
         frame_list = []
+        widgets = []
+
         for frame in self.WINDOW.winfo_children():
             if isinstance(frame, ctk.CTkFrame):
                 frame_list.append(frame)
         frame_list.pop(0)
-        
-        widgets = []
 
         def _get_widgets(frame):
             for child in frame.winfo_children():
@@ -521,10 +669,10 @@ class App:
 
         for widget in widgets:
             if isinstance(widget, ctk.CTkButton):
-                self.data_manager.widget_list.append(widget)
+                self.widget_list.append(widget)
 
 
-    def save_on_quit(self):
+    def save_on_quit(self) -> None:
         self.save_data()
         print("Data saved on exit.")
 
@@ -532,7 +680,7 @@ class App:
         self.WINDOW.destroy()
 
 
-    def run(self):
+    def run(self) -> None:
         self.WINDOW.mainloop()
 
 

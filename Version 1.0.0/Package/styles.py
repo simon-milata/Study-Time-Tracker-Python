@@ -23,9 +23,10 @@ button_color = "#f38064"
 button_highlight_color = "#f5937a"
 button_font_color = "black"
 
-tab_frame_color = "#1f1f1f"
+tab_frame_color = "#222222"
 tab_frame_width = 200
-tab_highlight_color = "#262626"
+tab_highlight_color = "#333333"
+tab_selected_color = "#343434"
 tab_color = tab_frame_color
 tab_font_weight = "normal"
 tab_font_family = "Calibri"
