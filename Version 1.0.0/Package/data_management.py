@@ -1,5 +1,4 @@
 import datetime
-
 from openpyxl.styles import Font
 from .styles import *
 
@@ -96,6 +95,7 @@ class DataManager:
         self.worksheet["E1"].value = "Subject:"
 
         self.worksheet["Q1"].value = "Eye care:"
+        self.worksheet["Q4"].value = "Only when timer running:"
 
         self.worksheet["R1"].value = "Goals reached:"
         self.worksheet["R2"].value = self.goal_amount
@@ -238,7 +238,7 @@ class DataManager:
         for widget in self.app.widget_list:
             widget.configure(fg_color=self.color, hover_color=self.highlight_color)
         self.app.progressbar.configure(progress_color = self.color)
-
+        self.app.eye_care_checkbox.configure(fg_color=self.color)
         self.app.create_graphs()
 
         print("Color changed.")
@@ -260,8 +260,9 @@ class DataManager:
         return subject
     
 
-    def save_eye_care(self, eye_care: str) -> None:
+    def save_eye_care(self, eye_care: str, checkbox: str) -> None:
         self.worksheet["Q2"].value = eye_care
+        self.worksheet["Q5"].value = checkbox
         print("Eye care saved.")
 
 
@@ -272,5 +273,12 @@ class DataManager:
             eye_care = "Off"
 
         self.app.eye_care_selection.configure(variable=ctk.StringVar(value=eye_care))
+
+        if self.worksheet["Q5"].value != None:
+            checkbox = self.worksheet["Q5"].value
+        else:
+            checkbox = "Off"
+
+        self.app.eye_care_checkbox.configure(variable=ctk.StringVar(value=checkbox))
 
         self.app.t1.start()

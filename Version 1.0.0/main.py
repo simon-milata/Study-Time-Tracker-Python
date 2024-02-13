@@ -335,13 +335,16 @@ class App:
                                      height=button_height, command=lambda: self.data_manager.set_color(self.color_dropdown))
         self.color_button.place(anchor="s", relx=0.5, rely=0.9)
 
-        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
+        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=250, width=int(frame_width/1.25), corner_radius=10)
         eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
         eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=font_color)
         eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
                                              font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
-        self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.45)
+        self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.35)
+        self.eye_care_checkbox = ctk.CTkCheckBox(eye_care_frame, text="Only on when timer running", fg_color=button_color, hover=False, offvalue="Off",
+                                                 font=(font_family, font_size*0.8), text_color="white", checkmark_color=button_font_color, onvalue="On")
+        self.eye_care_checkbox.place(anchor="center", relx=0.5, rely=0.55)
         eye_care_button = ctk.CTkButton(eye_care_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
                                         hover_color=button_highlight_color, height=button_height, command=self.select_eye_care)
         eye_care_button.place(anchor="s", relx=0.5, rely=0.9)
@@ -542,7 +545,10 @@ class App:
         eye_care = self.eye_care_selection.get()
         self.eye_care_selection.configure(variable=ctk.StringVar(value=eye_care))
 
-        self.data_manager.save_eye_care(eye_care)
+        checkbox = self.eye_care_checkbox.get()
+        self.eye_care_checkbox.configure(variable=ctk.StringVar(value=checkbox))
+
+        self.data_manager.save_eye_care(eye_care, checkbox)
 
 
     def reach_goal(self, timer_time: int) -> None:
@@ -597,12 +603,22 @@ class App:
 
 
     def eye_protection(self):
+        checkbox = self.eye_care_checkbox.get()
         time_between = 60 * 20
         if self.eye_care_selection.get() == "On":
-            time.sleep(time_between)
-            if self.eye_care_selection.get() == "On":
-                self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
-                self.eye_protection()
+            if checkbox == "On" and self.timer_manager.timer_running:
+                time.sleep(time_between)
+                if checkbox == "On" and self.timer_manager.timer_running:
+                    self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
+                    self.eye_protection()
+            else:
+                time.sleep(time_between)
+                if self.eye_care_selection.get() == "On" and checkbox == "Off":
+                    self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
+                    self.eye_protection()
+        else:
+            time.sleep(10)
+            self.eye_protection()
 
 
     def load_history(self):
