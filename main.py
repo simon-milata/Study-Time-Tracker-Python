@@ -47,6 +47,7 @@ class App:
         self._subject_gui_setup()
         self._pomodoro_gui_setup()
         self._history_gui_setup()
+        self._notes_gui_setup()
         self._settings_gui_setup()
 
 
@@ -126,7 +127,10 @@ class App:
         self.history_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-        self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame])
+        self.notes_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.notes_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+
+        self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame])
 
 
     def _tab_frames_gui_setup(self) -> None:
@@ -157,6 +161,13 @@ class App:
                                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
                                                 anchor="w", command=lambda: self.switch_tab("history"))
         self.history_tab_button.place(relx=0.5, rely=0.5, anchor="center")
+
+        self.notes_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.notes_tab.pack(pady=tab_padding_y)
+        self.notes_tab_button = ctk.CTkButton(self.notes_tab, text="Notes", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
+                                                fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+                                                anchor="w", command=lambda: self.switch_tab("notes"))
+        self.notes_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
         self.settings_tab.place(relx=0.5, rely=1, anchor="s")
@@ -274,7 +285,7 @@ class App:
         history_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
         history_frame_frame.pack_propagate(False)
 
-        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=35)
+        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=frame_color, width=WIDTH-(frame_padding*4), height=35)
         history_label_frame.pack(pady=(frame_padding, 0))
         history_label_frame.grid_propagate(False)
 
@@ -381,6 +392,35 @@ class App:
         pomodoro_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
+    def _notes_gui_setup(self) -> None:
+        self.notes_frame_frame = ctk.CTkFrame(self.notes_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
+        self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
+        self.notes_frame_frame.pack_propagate(False)
+
+        new_note_frame = ctk.CTkFrame(self.notes_frame_frame, fg_color=frame_color, width=WIDTH-(frame_padding*4), height=35)
+        new_note_frame.pack(pady=(frame_padding, 0))
+        new_note_frame.grid_propagate(False)
+
+        notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
+        notes_data_frame.pack(padx=frame_padding)
+        
+        new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                                height=button_height, command=self.create_new_note)
+        new_note_button.grid()
+
+
+    def _new_note_gui_setup(self):
+        self.note_creation_frame = ctk.CTkFrame(self.notes_frame, fg_color=frame_color, corner_radius=10, height=HEIGHT + frame_padding * 2, width=WIDTH - frame_padding * 2)
+        self.note_creation_frame.grid(padx=frame_padding, pady=frame_padding)
+        self.note_creation_frame.grid_propagate(False)
+        self.notes_title_entry = ctk.CTkEntry(self.note_creation_frame, placeholder_text="Title", font=(font_family, font_size), text_color=font_color,
+                                              border_color=frame_border_color, height=40, width=200, fg_color=frame_color)
+        self.notes_title_entry.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
+        self.notes_text_entry = ctk.CTkTextbox(self.note_creation_frame, font=(font_family, font_size), text_color=font_color,
+                                               border_color=frame_border_color, height=40, width=500, fg_color=frame_color, border_width=2, bg_color="black")
+        self.notes_text_entry.grid(row=1, column=0, padx=widget_padding_x, pady=widget_padding_y)
+
+
     def create_time_spent_graph(self) -> None:
         data = {"Date": self.data_manager.date_list, "Duration": self.data_manager.duration_list}
         df = pd.DataFrame(data)
@@ -469,10 +509,11 @@ class App:
             "statistics": [self.statistics_frame, self.statistics_tab_button],
             "settings": [self.settings_frame, self.settings_tab_button],
             "achievements": [self.achievements_frame, self.achievements_tab_button],
-            "history": [self.history_frame, self.history_tab_button]
+            "history": [self.history_frame, self.history_tab_button],
+            "notes": [self.notes_frame, self.notes_tab_button]
         }
 
-        tab_list = [self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame]
+        tab_list = [self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame]
         tab_list.remove(tabs[tab][0])
 
         def _forget_tabs():
@@ -484,7 +525,7 @@ class App:
         tabs[tab][0].grid(column=2, row=0, padx=main_frame_pad_x)
         tabs[tab][0].grid_propagate(False)
 
-        tab_button_list = [self.timer_tab_button, self.statistics_tab_button, self.settings_tab_button, self.achievements_tab_button, self.history_tab_button]
+        tab_button_list = [self.timer_tab_button, self.statistics_tab_button, self.settings_tab_button, self.achievements_tab_button, self.history_tab_button, self.notes_tab_button]
         tab_button_list.remove(tabs[tab][1])
 
         def _decolor_tabs():
@@ -646,6 +687,12 @@ class App:
             self.duration_text.configure(text=duration_history)
             self.break_text.configure(text=break_history)
             self.subject_text.configure(text=subject_history)
+
+
+    def create_new_note(self):
+        self.notes_frame_frame.grid_forget()
+
+        self._new_note_gui_setup()
 
     
     def send_notification(self, title, message) -> None:
