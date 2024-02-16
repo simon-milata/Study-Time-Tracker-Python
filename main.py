@@ -74,6 +74,8 @@ class App:
             self.load_history()
 
             self.data_manager.load_color()
+            self.data_manager.load_theme()
+            self.data_manager.load_notes()
 
         else:
             print("New file created.")
@@ -88,6 +90,8 @@ class App:
 
             self.data_manager.initialize_new_file_variables()
 
+            self.data_manager.save_eye_care("Off", "Off")
+
 
     def initialize_variables(self) -> None:
         self.widget_list = []
@@ -98,110 +102,110 @@ class App:
 
     def _window_setup(self) -> None:
         self.WINDOW = ctk.CTk()
-        self.WINDOW.geometry(str(WIDTH + BORDER_WIDTH + main_frame_pad_x + tab_frame_width) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
+        self.WINDOW.geometry(str(WIDTH + main_frame_pad_x + tab_frame_width) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
         self.WINDOW.title(self.APPNAME)
-        self.WINDOW.configure(background=window_color)
+        self.WINDOW.configure(fg_color=(light_window_color, window_color))
         self.WINDOW.resizable(False, False)
         self.WINDOW.grid_propagate(False)
 
 
     def _main_frame_gui_setup(self) -> None:
-        self.tab_frame = ctk.CTkFrame(self.WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=tab_frame_color)
+        self.tab_frame = ctk.CTkFrame(self.WINDOW, width=tab_frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2), fg_color=(light_tab_frame_color, tab_frame_color))
         self.tab_frame.grid(column=0, row=0)
         self.tab_frame.pack_propagate(False)
 
-        self.main_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.main_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.main_frame.grid(column=2, row=0, padx=main_frame_pad_x)
         self.main_frame.grid_propagate(False)
 
-        self.statistics_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.statistics_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-        self.settings_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.settings_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
         self.settings_frame.grid_forget()
 
-        self.achievements_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.achievements_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.achievements_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-        self.history_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.history_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.history_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-        self.notes_frame = ctk.CTkFrame(self.WINDOW, fg_color=main_frame_color, height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.notes_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.notes_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
         self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame])
 
 
     def _tab_frames_gui_setup(self) -> None:
-        self.timer_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.timer_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.timer_tab.pack(pady=tab_padding_y)
-        self.timer_tab_button = ctk.CTkButton(self.timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                              fg_color=tab_selected_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+        self.timer_tab_button = ctk.CTkButton(self.timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                              fg_color=(light_tab_selected_color, tab_selected_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                               anchor="w", command=lambda: self.switch_tab("main"))
         self.timer_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.statistics_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.statistics_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.statistics_tab.pack(pady=tab_padding_y)
-        self.statistics_tab_button = ctk.CTkButton(self.statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                   fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+        self.statistics_tab_button = ctk.CTkButton(self.statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                                   fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                                    anchor="w", command=lambda: self.switch_tab("statistics"))
         self.statistics_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.achievements_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.achievements_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.achievements_tab.pack(pady=tab_padding_y)
-        self.achievements_tab_button = ctk.CTkButton(self.achievements_tab, text="Achievements", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                     fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+        self.achievements_tab_button = ctk.CTkButton(self.achievements_tab, text="Achievements", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                                     fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                                      anchor="w", command=lambda: self.switch_tab("achievements"))
         self.achievements_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.history_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.history_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.history_tab.pack(pady=tab_padding_y)
-        self.history_tab_button = ctk.CTkButton(self.history_tab, text="History", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+        self.history_tab_button = ctk.CTkButton(self.history_tab, text="History", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                                fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                                 anchor="w", command=lambda: self.switch_tab("history"))
         self.history_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.notes_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.notes_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.notes_tab.pack(pady=tab_padding_y)
-        self.notes_tab_button = ctk.CTkButton(self.notes_tab, text="Notes", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                                fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, 
+        self.notes_tab_button = ctk.CTkButton(self.notes_tab, text="Notes", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                                fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                                 anchor="w", command=lambda: self.switch_tab("notes"))
         self.notes_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
-        self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=tab_color)
+        self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.settings_tab.place(relx=0.5, rely=1, anchor="s")
-        self.settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=font_color,
-                                 fg_color=tab_color, width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=tab_highlight_color, anchor="w", command=lambda: self.switch_tab("settings"))
+        self.settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
+                                 fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), anchor="w", command=lambda: self.switch_tab("settings"))
         self.settings_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
 
     def _secondary_frames_gui_setup(self) -> None:
-        self.timer_break_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
+        self.timer_break_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width, fg_color="transparent")
         self.timer_break_frame.grid(row=0, column=1)
         self.timer_break_frame.pack_propagate(False)
 
-        self.goal_progress_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
+        self.goal_progress_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width, fg_color="transparent")
         self.goal_progress_frame.grid(row=0, column=0)
         self.goal_progress_frame.pack_propagate(False)
 
-        self.subject_pomodoro_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width)
+        self.subject_pomodoro_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width, fg_color="transparent")
         self.subject_pomodoro_frame.grid(row=0, column=2)
         self.subject_pomodoro_frame.pack_propagate(False)
 
 
     def _goal_gui_setup(self) -> None:
-        goal_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
+        goal_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=(light_frame_color, frame_color), height=175, width=frame_width, corner_radius=10)
         goal_frame.pack(padx=frame_padding, pady=frame_padding)
         goal_frame.pack_propagate(False)
 
-        goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=font_color)
+        goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=(light_font_color, font_color))
         goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 
         self.goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
                                                             "4 hours", "4 hours, 30 minutes", "5 hours", "5 hours, 30 minutes", "6 hours"], variable=self.default_choice, 
-                                                            state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
-                                                            font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+                                                            state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)), border_color=(light_border_frame_color, border_frame_color),
+                                                            font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
         self.goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 
         self.goal_button = ctk.CTkButton(goal_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
@@ -210,48 +214,48 @@ class App:
 
 
     def _progress_gui_setup(self) -> None:
-        progress_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=100)
+        progress_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=(light_frame_color, frame_color), width=frame_width, corner_radius=10, height=100)
         progress_frame.pack(padx=frame_padding, pady=frame_padding)
         progress_frame.pack_propagate(False)
 
-        progress_label = ctk.CTkLabel(progress_frame, text="Progress", font=(font_family, int(font_size)), text_color=font_color)
+        progress_label = ctk.CTkLabel(progress_frame, text="Progress", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
         progress_label.place(anchor="nw", relx=0.05, rely=0.05)
 
-        self.progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_color=button_color, fg_color=border_frame_color, corner_radius=10)
+        self.progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_color=button_color, fg_color=(light_border_frame_color, border_frame_color), corner_radius=10)
         self.progressbar.place(anchor="center", relx=0.5, rely=0.65)
         self.progressbar.set(0)
 
 
     def _streak_gui_setup(self) -> None:
-        streak_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=frame_color, width=frame_width, corner_radius=10, height=220)
+        streak_frame = ctk.CTkFrame(self.goal_progress_frame, fg_color=(light_frame_color, frame_color), width=frame_width, corner_radius=10, height=220)
         streak_frame.pack(padx=frame_padding, pady=frame_padding)
 
-        streak_label = ctk.CTkLabel(streak_frame, text="Streak", font=(font_family, int(font_size)), text_color=font_color)
+        streak_label = ctk.CTkLabel(streak_frame, text="Streak", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
         streak_label.place(anchor="nw", relx=0.05, rely=0.05)
         
-        times_studied_text = ctk.CTkLabel(streak_frame, text="Goal\nreached", font=(font_family, int(font_size/1.25)), text_color=font_color)
+        times_studied_text = ctk.CTkLabel(streak_frame, text="Goal\nreached", font=(font_family, int(font_size/1.25)), text_color=(light_font_color, font_color))
         times_studied_text.place(anchor="center", relx=0.3, rely=0.4)
-        self.times_goal_reached = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.times_goal_reached = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=(light_font_color, font_color))
         self.times_goal_reached.place(anchor="center", relx=0.3, rely=0.6)
-        times_reached_label = ctk.CTkLabel(streak_frame, text="times", font=(font_family, int(font_size/1.25)), text_color=font_color)
+        times_reached_label = ctk.CTkLabel(streak_frame, text="times", font=(font_family, int(font_size/1.25)), text_color=(light_font_color, font_color))
         times_reached_label.place(anchor="center", relx=0.3, rely=0.8)
 
-        duration_studied_text = ctk.CTkLabel(streak_frame, text="Time\nstudied", font=(font_family, int(font_size/1.25)), text_color=font_color)
+        duration_studied_text = ctk.CTkLabel(streak_frame, text="Time\nstudied", font=(font_family, int(font_size/1.25)), text_color=(light_font_color, font_color))
         duration_studied_text.place(anchor="center", relx=0.7, rely=0.4)
-        self.streak_duration = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=font_color)
+        self.streak_duration = ctk.CTkLabel(streak_frame, text=0, font=(font_family, int(font_size*2.7)), text_color=(light_font_color, font_color))
         self.streak_duration.place(anchor="center", relx=0.7, rely=0.6)
-        duration_minute_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=font_color)
+        duration_minute_label = ctk.CTkLabel(streak_frame, text="minutes", font=(font_family, int(font_size/1.25)), text_color=(light_font_color, font_color))
         duration_minute_label.place(anchor="center", relx=0.7, rely=0.8)
 
 
     def _timer_gui_setup(self) -> None:
-        timer_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
+        timer_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
         timer_frame.pack(padx=frame_padding, pady=frame_padding)
         timer_frame.pack_propagate(False)
 
-        timer_label = ctk.CTkLabel(timer_frame, text="Timer", font=(font_family, font_size), text_color=font_color)
+        timer_label = ctk.CTkLabel(timer_frame, text="Timer", font=(font_family, font_size), text_color=(light_font_color, font_color))
         timer_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
+        self.time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=(light_font_color, font_color))
         self.time_display_label.place(anchor="center", relx=0.5, rely=0.45)
         self.timer_button = ctk.CTkButton(timer_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.timer_mechanism)
@@ -259,20 +263,20 @@ class App:
         
     
     def _break_gui_setup(self) -> None:
-        break_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
+        break_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
         break_frame.pack(padx=frame_padding, pady=frame_padding)
         break_frame.pack_propagate(False)
 
-        break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=font_color)
+        break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=(light_font_color, font_color))
         break_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=font_color)
+        self.break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=(light_font_color, font_color))
         self.break_display_label.place(anchor="center", relx=0.5, rely=0.45)
         self.break_button = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.break_mechanism)
         self.break_button.place(anchor="s", relx=0.5, rely=0.9)
 
     def _save_data_gui(self) -> None:
-        self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=frame_color, corner_radius=10, width=WIDTH-10, height=button_height*2)
+        self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-10, height=button_height*2)
         self.data_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.data_frame.grid_propagate(False)
         self.save_data_button = ctk.CTkButton(self.data_frame, text="Save Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
@@ -281,101 +285,121 @@ class App:
 
 
     def _history_gui_setup(self) -> None:
-        history_frame_frame = ctk.CTkFrame(self.history_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
+        history_frame_frame = ctk.CTkFrame(self.history_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
         history_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
         history_frame_frame.pack_propagate(False)
 
-        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=frame_color, width=WIDTH-(frame_padding*4), height=35)
+        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=35)
         history_label_frame.pack(pady=(frame_padding, 0))
         history_label_frame.grid_propagate(False)
 
         history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
         history_data_frame.pack(padx=frame_padding)
 
-        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         start_label.grid(row=0, column=0)
-        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         end_label.grid(row=0, column=1)
-        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         duration_label.grid(row=0, column=2)
-        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         break_label.grid(row=0, column=3)
-        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=font_color, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         subject_label.grid(row=0, column=4)
 
         start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         start_frame.grid(row=1, column=0)
         start_frame.pack_propagate(False)
-        self.start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.start_text.pack()
 
         end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         end_frame.grid(row=1, column=1)
         end_frame.pack_propagate(False)
-        self.end_text = ctk.CTkLabel(end_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.end_text = ctk.CTkLabel(end_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.end_text.pack()
 
         duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         duration_frame.grid(row=1, column=2)
         duration_frame.pack_propagate(False)
-        self.duration_text = ctk.CTkLabel(duration_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.duration_text = ctk.CTkLabel(duration_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.duration_text.pack()
 
         break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         break_frame.grid(row=1, column=3)
         break_frame.pack_propagate(False)
-        self.break_text = ctk.CTkLabel(break_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.break_text = ctk.CTkLabel(break_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.break_text.pack()
 
         subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         subject_frame.grid(row=1, column=4)
         subject_frame.pack_propagate(False)
-        self.subject_text = ctk.CTkLabel(subject_frame, font=(font_family, font_size), text_color=font_color, text="-")
+        self.subject_text = ctk.CTkLabel(subject_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.subject_text.pack()
 
 
     def _settings_gui_setup(self) -> None:
-        color_select_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=200, width=int(frame_width/1.25), corner_radius=10)
-        color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
-        color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=font_color)
-        color_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", "Blue"], state="readonly", width=150, height=30,
-                                         dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
-        self.color_dropdown.place(anchor="center", relx=0.5, rely=0.45)
-        self.color_button = ctk.CTkButton(color_select_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                     height=button_height, command=lambda: self.data_manager.set_color(self.color_dropdown))
-        self.color_button.place(anchor="s", relx=0.5, rely=0.9)
+        self.color_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
+        self.color_frame.grid(column=0)
 
-        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=frame_color, height=250, width=int(frame_width/1.25), corner_radius=10)
-        eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
-        eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=font_color)
-        eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
-                                             font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
-        self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.35)
-        self.eye_care_checkbox = ctk.CTkCheckBox(eye_care_frame, text="Only on when timer running", fg_color=button_color, hover=False, offvalue="Off",
-                                                 font=(font_family, font_size*0.8), text_color="white", checkmark_color=button_font_color, onvalue="On")
-        self.eye_care_checkbox.place(anchor="center", relx=0.5, rely=0.55)
-        eye_care_button = ctk.CTkButton(eye_care_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
-                                        hover_color=button_highlight_color, height=button_height, command=self.select_eye_care)
-        eye_care_button.place(anchor="s", relx=0.5, rely=0.9)
+        self._color_gui_setup()
+        self._eye_care_gui_setup()
 
-        reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=tab_color)
+        reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_tab_color, tab_color))
         reset_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.reset_data_button = ctk.CTkButton(reset_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.reset_data, width=450)
         self.reset_data_button.pack()
 
+    
+    def _color_gui_setup(self) -> None:
+        color_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
+        color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
+        color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        color_label.place(anchor="nw", relx=0.05, rely=0.05)
+        self.color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", "Blue", "Pink"], state="readonly", width=150, height=30, border_color=(light_border_frame_color, border_frame_color),
+                                         dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
+        self.color_dropdown.place(anchor="center", relx=0.5, rely=0.45)
+        self.color_button = ctk.CTkButton(color_select_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                                     height=button_height, command=lambda: self.data_manager.set_color(self.color_dropdown))
+        self.color_button.place(anchor="s", relx=0.5, rely=0.9)
+
+        theme_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
+        theme_select_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
+        theme_label = ctk.CTkLabel(theme_select_frame, text="Theme", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        theme_label.place(anchor="nw", relx=0.05, rely=0.05)
+        self.theme_dropdown = ctk.CTkComboBox(theme_select_frame, values=["Dark", "Light"], state="readonly", width=150, height=30, border_color=(light_border_frame_color, border_frame_color),
+                                         dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
+        self.theme_dropdown.place(anchor="center", relx=0.5, rely=0.45)
+        self.theme_button = ctk.CTkButton(theme_select_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+                                     height=button_height, command=lambda: self.data_manager.set_theme(self.theme_dropdown))
+        self.theme_button.place(anchor="s", relx=0.5, rely=0.9)
+
+    def _eye_care_gui_setup(self):
+        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
+        eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
+        eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
+        self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
+                                             font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
+        self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.35)
+        self.eye_care_checkbox = ctk.CTkCheckBox(eye_care_frame, text="Only on when timer running", fg_color=button_color, hover=False, offvalue="Off",
+                                                 font=(font_family, font_size*0.8), text_color=(light_font_color, font_color), checkmark_color=button_font_color, onvalue="On", border_color=(light_frame_border_color, border_frame_color))
+        self.eye_care_checkbox.place(anchor="center", relx=0.5, rely=0.55)
+        eye_care_button = ctk.CTkButton(eye_care_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
+                                        hover_color=button_highlight_color, height=button_height, command=self.select_eye_care)
+        eye_care_button.place(anchor="s", relx=0.5, rely=0.9)
+
 
     def _subject_gui_setup(self) -> None:
-        subject_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=frame_color, height=175, width=frame_width, corner_radius=10)
+        subject_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=(light_frame_color, frame_color), height=175, width=frame_width, corner_radius=10)
         subject_frame.pack(padx=frame_padding, pady=frame_padding)
-        subject_label = ctk.CTkLabel(subject_frame, text="Subject", font=(font_family, font_size), text_color=font_color)
+        subject_label = ctk.CTkLabel(subject_frame, text="Subject", font=(font_family, font_size), text_color=(light_font_color, font_color))
         subject_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.subject_selection = ctk.CTkComboBox(subject_frame, values=["Mathematics", "Science", "Literature", "History", "Geography", "Language Arts", "Foreign Languages", "Social Studies",
                                                                 "Economics", "Computer Science", "Psychology", "Philosophy", "Art", "Music", "Physical Education", "Other"], 
-                                                            state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)),
-                                                            font=(font_family, int(font_size)), fg_color=border_frame_color, button_color=border_frame_color)
+                                                            state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)), border_color=(light_border_frame_color, border_frame_color),
+                                                            font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
         self.subject_selection.place(anchor="center", relx=0.5, rely=0.45)
         subject_button = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
                                 height=button_height, command=self.select_subject)
@@ -383,9 +407,9 @@ class App:
 
 
     def _pomodoro_gui_setup(self) -> None:
-        pomodoro_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=frame_color, corner_radius=10, width=frame_width, height=220)
+        pomodoro_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
         pomodoro_frame.pack(padx=frame_padding, pady=frame_padding)
-        pomodoro_label = ctk.CTkLabel(pomodoro_frame, text="Pomodoro", font=(font_family, int(font_size)), text_color=font_color)
+        pomodoro_label = ctk.CTkLabel(pomodoro_frame, text="Pomodoro", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
         pomodoro_label.place(anchor="nw", relx=0.05, rely=0.05)
         pomodoro_button = ctk.CTkButton(pomodoro_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height)
@@ -393,32 +417,48 @@ class App:
 
 
     def _notes_gui_setup(self) -> None:
-        self.notes_frame_frame = ctk.CTkFrame(self.notes_frame, fg_color=frame_color, corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
+        self.notes_frame_frame = ctk.CTkFrame(self.notes_frame, fg_color="transparent", corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
         self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
         self.notes_frame_frame.pack_propagate(False)
 
-        new_note_frame = ctk.CTkFrame(self.notes_frame_frame, fg_color=frame_color, width=WIDTH-(frame_padding*4), height=35)
+        new_note_frame = ctk.CTkFrame(self.notes_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=35)
         new_note_frame.pack(pady=(frame_padding, 0))
         new_note_frame.grid_propagate(False)
 
-        notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
-        notes_data_frame.pack(padx=frame_padding)
+        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
+        self.notes_data_frame.pack(padx=frame_padding)
         
         new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height, command=self.create_new_note)
+                                height=button_height, command=self._create_new_note_gui)
         new_note_button.grid()
 
 
     def _new_note_gui_setup(self):
-        self.note_creation_frame = ctk.CTkFrame(self.notes_frame, fg_color=frame_color, corner_radius=10, height=HEIGHT + frame_padding * 2, width=WIDTH - frame_padding * 2)
+        self.note_creation_frame = ctk.CTkFrame(self.notes_frame, fg_color="transparent", corner_radius=10, height=HEIGHT + frame_padding * 2, width=WIDTH - frame_padding * 2)
         self.note_creation_frame.grid(padx=frame_padding, pady=frame_padding)
         self.note_creation_frame.grid_propagate(False)
-        self.notes_title_entry = ctk.CTkEntry(self.note_creation_frame, placeholder_text="Title", font=(font_family, font_size), text_color=font_color,
-                                              border_color=frame_border_color, height=40, width=200, fg_color=frame_color)
+
+        self.note_title_frame = ctk.CTkFrame(self.note_creation_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH - frame_padding * 2, height=60)
+        self.note_title_frame.grid(row=0, column=0, pady=(0, frame_padding))
+        self.note_title_frame.grid_propagate(False)
+
+        self.notes_title_entry = ctk.CTkEntry(self.note_title_frame, placeholder_text="Title", font=(font_family, font_size), text_color=(light_font_color, font_color),
+                                              border_color=frame_border_color, height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color))
         self.notes_title_entry.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
-        self.notes_text_entry = ctk.CTkTextbox(self.note_creation_frame, font=(font_family, font_size), text_color=font_color,
-                                               border_color=frame_border_color, height=40, width=500, fg_color=frame_color, border_width=2, bg_color="black")
-        self.notes_text_entry.grid(row=1, column=0, padx=widget_padding_x, pady=widget_padding_y)
+        self.create_note_button = ctk.CTkButton(self.note_title_frame, height=button_height, text="Create note", fg_color=self.data_manager.color, 
+                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, command=self.create_new_note)
+        self.create_note_button.grid(row=0, column=1)
+        exit_create_note_button = ctk.CTkButton(self.note_title_frame, height=button_height, text="Cancel", fg_color=self.data_manager.color, 
+                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, command=self.exit_note_creation)
+        exit_create_note_button.grid(row=0, column=2, padx=widget_padding_x, pady=widget_padding_y)
+        
+
+
+        notes_text_frame = ctk.CTkFrame(self.note_creation_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH - frame_padding * 2, height=HEIGHT - 40 - frame_padding * 2)
+        notes_text_frame.grid(row=1, column=0, pady=(frame_padding, 0))
+        self.notes_textbox = ctk.CTkTextbox(notes_text_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), border_color=frame_border_color, 
+                                            width=WIDTH - frame_padding * 4, height=HEIGHT - frame_padding * 8, fg_color=(light_frame_color, frame_color), border_width=2, bg_color="black")
+        self.notes_textbox.grid(row=1, column=0, padx=widget_padding_x, pady=widget_padding_y)
 
 
     def create_time_spent_graph(self) -> None:
@@ -530,11 +570,11 @@ class App:
 
         def _decolor_tabs():
             for button in tab_button_list:
-                button.configure(fg_color=tab_color, hover_color=tab_highlight_color)
+                button.configure(fg_color=(light_tab_color, tab_color), hover_color=(light_tab_highlight_color, tab_highlight_color))
 
         _decolor_tabs()
 
-        tabs[tab][1].configure(fg_color=tab_selected_color, hover_color=tab_selected_color)
+        tabs[tab][1].configure(fg_color=(light_tab_selected_color, tab_selected_color), hover_color=(light_tab_selected_color, tab_selected_color))
 
 
 
@@ -689,10 +729,25 @@ class App:
             self.subject_text.configure(text=subject_history)
 
 
-    def create_new_note(self):
+    def _create_new_note_gui(self):
         self.notes_frame_frame.grid_forget()
 
         self._new_note_gui_setup()
+        self.widget_list.append(self.create_note_button)
+
+
+    def exit_note_creation(self):
+        self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
+        self.note_creation_frame.grid_forget()
+
+
+    def create_new_note(self):
+        if len(self.notes_title_entry.get()) > 0 or len(self.notes_textbox.get("0.0", "end")) > 1:
+            self.data_manager.create_new_note(self.notes_title_entry.get(), self.notes_textbox.get("0.0", "end"))
+            self.exit_note_creation()
+            return
+        
+        print("Error. Note title or text can't be empty.")
 
     
     def send_notification(self, title, message) -> None:

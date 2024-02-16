@@ -24,16 +24,20 @@ class DataManager:
     def initialize_new_file_variables(self) -> None:
         self.goal_amount = 0
         self.data_amount = 0
+        self.notes_amount = 0
         self.monday_duration = self.tuesday_duration = self.wednesday_duration = self.thursday_duration = self.friday_duration = self.saturday_duration = self.sunday_duration = 0
         self.color_name = "Orange"
+        self.theme_name = "Dark"
 
         self.customize_excel()
         self.save_color()
+        self.save_theme()
 
     
     def collect_data(self) -> None:
         self.data_amount = int(self.worksheet["Z2"].value)
         self.goal_amount = int(self.worksheet["R2"].value)
+        self.notes_amount = int(self.worksheet["N9"].value)
 
         self.collect_day_data()
 
@@ -81,6 +85,8 @@ class DataManager:
         self.worksheet["D" + str((self.data_amount + 1))].value = self.timer_manager.break_time/60
         self.worksheet["E" + str((self.data_amount + 1))].value = self.app.subject_selection.get()
 
+        self.worksheet["N9"].value = self.notes_amount
+
         self.worksheet["R2"].value = self.goal_amount
 
         self.worksheet["Z2"].value = self.data_amount
@@ -94,6 +100,13 @@ class DataManager:
         self.worksheet["D1"].value = "Break:"
         self.worksheet["E1"].value = "Subject:"
 
+        self.worksheet["N8"].value = "Notes amount:"
+        self.worksheet["N9"].value = self.notes_amount
+        self.worksheet["N11"].value = "Notes:"
+        self.worksheet["N12"].value = "Date:"
+        self.worksheet["O12"].value = "Title:"
+        self.worksheet["P12"].value = "Text:"
+
         self.worksheet["Q1"].value = "Eye care:"
         self.worksheet["Q4"].value = "Only when timer running:"
 
@@ -104,6 +117,9 @@ class DataManager:
 
         self.worksheet["T1"].value = "Color:"
         self.worksheet["T2"].value = self.color_name
+
+        self.worksheet["U1"].value = "Theme:"
+        self.worksheet["U2"].value = self.theme_name
 
         self.worksheet["W1"].value = "Weekday duration:"
 
@@ -224,7 +240,8 @@ class DataManager:
         self.app.color_dropdown.configure(variable=ctk.StringVar(value=self.color_name))
         colors = {"Orange": [orange_button_color, orange_highlight_color, orange_pie_colors], 
                     "Green": [green_button_color, green_highlight_color, green_pie_colors], 
-                    "Blue": [blue_button_color, blue_highlight_color, blue_pie_colors]}
+                    "Blue": [blue_button_color, blue_highlight_color, blue_pie_colors],
+                    "Pink": [pink_button_color, pink_highlight_color, pink_pie_colors]}
         
         self.color = colors[self.color_name][0]
         self.highlight_color = colors[self.color_name][1]
@@ -244,9 +261,31 @@ class DataManager:
         print("Color changed.")
 
 
+    def set_theme(self, theme_dropdown) -> None:
+        self.theme_name = theme_dropdown.get()
+        print("Theme set.")
+        self.save_theme()
+
+    def save_theme(self) -> None:
+        self.worksheet["U2"].value = self.theme_name
+        self.load_theme()
+
+
     def save_subject(self, subject: str) -> None:
         self.worksheet["S2"].value = subject
         print("Subject saved.")
+
+    
+    def load_theme(self) -> None:
+        self.theme_name = self.worksheet["U2"].value
+        self.app.theme_dropdown.configure(variable=ctk.StringVar(value=self.theme_name))
+
+        if self.theme_name == "Dark":
+            ctk.set_appearance_mode("dark")
+        else:
+            ctk.set_appearance_mode("light")
+
+        print("Theme loaded.")
 
 
     def load_subject(self) -> None:
@@ -260,9 +299,46 @@ class DataManager:
         return subject
     
 
+    def create_new_note(self, title, text):
+        self.notes_amount += 1
+        
+        self.worksheet["N9"].value = self.notes_amount
+
+        self.worksheet["N" + str(self.notes_amount + 12)].value = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        self.worksheet["O" + str(self.notes_amount + 12)].value = title
+        self.worksheet["P" + str(self.notes_amount + 12)].value = text
+
+        self.workbook.save(self.app.data_file)
+
+        print("New note created.")
+
+        self.load_notes()
+
+
+    def load_notes(self) -> None:
+        if self.notes_amount == 0:
+            return None
+        
+        for i in range(13, self.notes_amount+13):
+            frame = ctk.CTkFrame(self.app.notes_data_frame)
+            frame.pack(padx=frame_padding, pady=frame_padding)
+            #date_label = ctk.CTkLabel(frame, font=(font_family, font_size), text_color=(light_font_color, font_color))
+            #date_label.grid()
+            date = ctk.CTkLabel(frame, text=f"Date: {str(self.worksheet["N" + str(i)].value)}", font=(font_family, font_size), text_color=(light_font_color, font_color))
+            date.pack()
+            title = ctk.CTkLabel(frame, text=f"Title: {str(self.worksheet["O" + str(i)].value)}", font=(font_family, font_size), text_color=(light_font_color, font_color))
+            title.pack()
+            text = ctk.CTkTextbox(frame, font=(font_family, font_size), text_color=(light_font_color, font_color))
+            text.pack()
+            text.insert("0.0", str(self.worksheet["P" + str(i)].value))
+            text.configure(state="disabled")
+    
+
     def save_eye_care(self, eye_care: str, checkbox: str) -> None:
         self.worksheet["Q2"].value = eye_care
         self.worksheet["Q5"].value = checkbox
+
+        self.workbook.save(self.app.data_file)
         print("Eye care saved.")
 
 
