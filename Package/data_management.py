@@ -316,23 +316,33 @@ class DataManager:
 
 
     def load_notes(self) -> None:
+        self.app.clear_notes()
+
         if self.notes_amount == 0:
             return None
         
-        for i in range(13, self.notes_amount+13):
-            frame = ctk.CTkFrame(self.app.notes_data_frame)
-            frame.pack(padx=frame_padding, pady=frame_padding)
-            #date_label = ctk.CTkLabel(frame, font=(font_family, font_size), text_color=(light_font_color, font_color))
-            #date_label.grid()
-            date = ctk.CTkLabel(frame, text=f"Date: {str(self.worksheet["N" + str(i)].value)}", font=(font_family, font_size), text_color=(light_font_color, font_color))
-            date.pack()
-            title = ctk.CTkLabel(frame, text=f"Title: {str(self.worksheet["O" + str(i)].value)}", font=(font_family, font_size), text_color=(light_font_color, font_color))
-            title.pack()
-            text = ctk.CTkTextbox(frame, font=(font_family, font_size), text_color=(light_font_color, font_color))
-            text.pack()
-            text.insert("0.0", str(self.worksheet["P" + str(i)].value))
-            text.configure(state="disabled")
-    
+        for i in range(self.notes_amount+13, 13, -1):
+            frame = ctk.CTkFrame(self.app.notes_data_frame, width=WIDTH + frame_padding, fg_color=(light_frame_color, frame_color), height=button_height + frame_padding * 2)
+            frame.pack(pady=frame_padding)
+            frame.grid_propagate(False)
+
+            title = ctk.CTkLabel(frame, text=str(self.worksheet["O" + str(i)].value), font=(font_family, font_size*1.25),
+                                 text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
+            title.grid(row=0, column=0, padx=widget_padding_x)
+            date = ctk.CTkLabel(frame, text=str(self.worksheet["N" + str(i)].value), font=(font_family, font_size*1.25),
+                                text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
+            date.grid(row=0, column=1, padx=widget_padding_x)
+
+            button_frame = ctk.CTkFrame(frame, fg_color="transparent")
+            button_frame.place(anchor="center", rely=0.5, relx=0.8)
+
+            open_button = ctk.CTkButton(button_frame, text="Open", height=button_height, fg_color=self.color, hover_color=self.highlight_color, font=(font_family, font_size), text_color=button_font_color,
+                                   command=lambda: self.app._open_notes_text(str(self.worksheet["N" + str(i)].value), str(self.worksheet["O" + str(i)].value), str(self.worksheet["P" + str(i)].value), i))
+            open_button.grid(row=0, column=0, padx=widget_padding_x)
+            delete_button = ctk.CTkButton(button_frame, text="Delete", height=button_height, fg_color=self.color, hover_color=self.highlight_color, font=(font_family, font_size), text_color=button_font_color,
+                                          command=lambda: self.app._delete_note(frame))
+            delete_button.grid(row=0, column=1)
+
 
     def save_eye_care(self, eye_care: str, checkbox: str) -> None:
         self.worksheet["Q2"].value = eye_care

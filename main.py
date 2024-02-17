@@ -421,12 +421,12 @@ class App:
         self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
         self.notes_frame_frame.pack_propagate(False)
 
-        new_note_frame = ctk.CTkFrame(self.notes_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=35)
+        new_note_frame = ctk.CTkFrame(self.notes_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH - frame_padding * 2, height=60)
         new_note_frame.pack(pady=(frame_padding, 0))
         new_note_frame.grid_propagate(False)
 
-        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
-        self.notes_data_frame.pack(padx=frame_padding)
+        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH, height=520+frame_padding*2)
+        self.notes_data_frame.pack()
         
         new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
                                 height=button_height, command=self._create_new_note_gui)
@@ -749,7 +749,54 @@ class App:
         
         print("Error. Note title or text can't be empty.")
 
-    
+
+    def _open_notes_text(self, date, title, text, index):
+        self.notes_frame_frame.grid_forget()
+
+        frame = ctk.CTkFrame(self.notes_frame, fg_color="transparent", corner_radius=10, height=HEIGHT + frame_padding * 2, width=WIDTH - frame_padding * 2)
+        frame.grid(padx=frame_padding, pady=frame_padding)
+        frame.grid_propagate(False)
+
+        header_frame = ctk.CTkFrame(frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH - frame_padding * 2, height=60)
+        header_frame.grid(row=0, column=0, pady=(0, frame_padding))
+        header_frame.grid_propagate(False)
+
+        title_label = ctk.CTkLabel(header_frame, text=title, font=(font_family, font_size), text_color=(light_font_color, font_color),
+                                   height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color))
+        title_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
+        date_label = ctk.CTkLabel(header_frame, text=date, font=(font_family, font_size), text_color=(light_font_color, font_color),
+                                  height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color))
+        date_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
+
+        button_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
+        button_frame.place(anchor="center", rely=0.5, relx=0.85)
+        
+        save_button = ctk.CTkButton(button_frame, height=button_height, text="Save", fg_color=self.data_manager.color, 
+                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color)
+        save_button.grid(row=0, column=1)
+        exit_button = ctk.CTkButton(button_frame, height=button_height, text="Exit", fg_color=self.data_manager.color, command=lambda: self._exit_note(frame), 
+                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color)
+        exit_button.grid(row=0, column=2, padx=widget_padding_x, pady=widget_padding_y)
+
+        textbox = ctk.CTkTextbox(frame, font=(font_family, font_size), text_color=(light_font_color, font_color), fg_color="transparent", width=WIDTH - frame_padding * 4, height=300)
+        textbox.grid(row=1, column=0, pady=(widget_padding_y, 0))
+        textbox.insert("0.0", text)
+        textbox.configure(state="disabled")
+
+
+    def _exit_note(self, frame):
+        frame.destroy()
+        self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
+
+
+    def _delete_note(self, frame):
+        frame.configure(fg_color="red")
+        #DELTE NOTE FROM EXCEL
+
+    def clear_notes(self):
+        for note in self.notes_data_frame.winfo_children():
+            note.destroy()
+
     def send_notification(self, title, message) -> None:
         toast = Notification(app_id=self.APPNAME, title=title, msg=message)
         toast.show()
