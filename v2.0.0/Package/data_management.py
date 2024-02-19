@@ -5,12 +5,14 @@ from .styles import *
 import customtkinter as ctk
 
 class DataManager:
-    def __init__(self, App, timer_manager, workbook, worksheet):
+    def __init__(self, App, TimerManager, workbook, worksheet):
         self.app = App
-        self.timer_manager = timer_manager
+        self.timer_manager = TimerManager
         self.workbook = workbook
         self.worksheet = worksheet
+
         self.initialize_variables()
+        self.load_color()
 
 
     def initialize_variables(self) -> None:
@@ -59,7 +61,7 @@ class DataManager:
 
     def save_data(self) -> None:
         self.initialize_variables()
-        self.set_weekday()
+        self.save_weekday()
         self.save_color()
         
         self.data_amount += 1
@@ -188,7 +190,7 @@ class DataManager:
         self.day_duration_list = [self.monday_duration, self.tuesday_duration, self.wednesday_duration, self.thursday_duration, self.friday_duration, self.saturday_duration, self.sunday_duration]
     
 
-    def set_weekday(self) -> None:
+    def save_weekday(self) -> None:
         duration = self.calculate_duration()
         weekday_today = datetime.datetime.now().weekday()
 
@@ -237,7 +239,7 @@ class DataManager:
 
     def load_color(self) -> None:
         self.color_name = self.worksheet["T2"].value
-        self.app.color_dropdown.configure(variable=ctk.StringVar(value=self.color_name))
+        self.statistics_gui.color_dropdown.configure(variable=ctk.StringVar(value=self.color_name))
         colors = {"Orange": [orange_button_color, orange_highlight_color, orange_pie_colors], 
                     "Green": [green_button_color, green_highlight_color, green_pie_colors], 
                     "Blue": [blue_button_color, blue_highlight_color, blue_pie_colors],

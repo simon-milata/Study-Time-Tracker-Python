@@ -8,8 +8,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-import customtkinter as ctk
 from matplotlib.ticker import MaxNLocator, FuncFormatter
+import customtkinter as ctk
 from winotify import Notification
 
 from Package import *
@@ -142,41 +142,41 @@ class App:
         self.timer_tab.pack(pady=tab_padding_y)
         self.timer_tab_button = ctk.CTkButton(self.timer_tab, text="Timer", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
                                               fg_color=(light_tab_selected_color, tab_selected_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
-                                              anchor="w", command=lambda: self.switch_tab("main"))
+                                              anchor="w", command=lambda: self.switch_tab("Timer"))
         self.timer_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.statistics_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.statistics_tab.pack(pady=tab_padding_y)
         self.statistics_tab_button = ctk.CTkButton(self.statistics_tab, text="Statistics", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
                                                    fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
-                                                   anchor="w", command=lambda: self.switch_tab("statistics"))
+                                                   anchor="w", command=lambda: self.switch_tab("Statistics"))
         self.statistics_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.achievements_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.achievements_tab.pack(pady=tab_padding_y)
         self.achievements_tab_button = ctk.CTkButton(self.achievements_tab, text="Achievements", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
                                                      fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
-                                                     anchor="w", command=lambda: self.switch_tab("achievements"))
+                                                     anchor="w", command=lambda: self.switch_tab("Achievements"))
         self.achievements_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.history_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.history_tab.pack(pady=tab_padding_y)
         self.history_tab_button = ctk.CTkButton(self.history_tab, text="History", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
                                                 fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
-                                                anchor="w", command=lambda: self.switch_tab("history"))
+                                                anchor="w", command=lambda: self.switch_tab("History"))
         self.history_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.notes_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.notes_tab.pack(pady=tab_padding_y)
         self.notes_tab_button = ctk.CTkButton(self.notes_tab, text="Notes", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
                                                 fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
-                                                anchor="w", command=lambda: self.switch_tab("notes"))
+                                                anchor="w", command=lambda: self.switch_tab("Notes"))
         self.notes_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
         self.settings_tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
         self.settings_tab.place(relx=0.5, rely=1, anchor="s")
         self.settings_tab_button = ctk.CTkButton(self.settings_tab, text="Settings", font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
-                                 fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), anchor="w", command=lambda: self.switch_tab("settings"))
+                                 fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), anchor="w", command=lambda: self.switch_tab("Settings"))
         self.settings_tab_button.place(relx=0.5, rely=0.5, anchor="center")
 
 
@@ -545,12 +545,12 @@ class App:
 
     def switch_tab(self, tab = str) -> None:
         tabs = {
-            "main": [self.main_frame, self.timer_tab_button],
-            "statistics": [self.statistics_frame, self.statistics_tab_button],
-            "settings": [self.settings_frame, self.settings_tab_button],
-            "achievements": [self.achievements_frame, self.achievements_tab_button],
-            "history": [self.history_frame, self.history_tab_button],
-            "notes": [self.notes_frame, self.notes_tab_button]
+            "Timer": [self.main_frame, self.timer_tab_button],
+            "Statistics": [self.statistics_frame, self.statistics_tab_button],
+            "Settings": [self.settings_frame, self.settings_tab_button],
+            "Achievements": [self.achievements_frame, self.achievements_tab_button],
+            "History": [self.history_frame, self.history_tab_button],
+            "Notes": [self.notes_frame, self.notes_tab_button]
         }
 
         tab_list = [self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame]
@@ -788,10 +788,6 @@ class App:
         frame.destroy()
         self.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
 
-
-    def _delete_note(self, frame):
-        frame.configure(fg_color="red")
-        #DELTE NOTE FROM EXCEL
 
     def clear_notes(self):
         for note in self.notes_data_frame.winfo_children():
