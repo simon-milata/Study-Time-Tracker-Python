@@ -1,2 +1,0 @@
-class NoteManager:
-    pass

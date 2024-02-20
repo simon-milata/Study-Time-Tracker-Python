@@ -1,8 +1,10 @@
 import datetime
 from openpyxl.styles import Font
-from .styles import *
 
 import customtkinter as ctk
+
+from .styles import *
+from .note_management import NotesManager
 
 class DataManager:
     def __init__(self, App, timer_manager, workbook, worksheet):
@@ -12,6 +14,8 @@ class DataManager:
         self.worksheet = worksheet
         self.initialize_variables()
 
+        self.notes_manager = NotesManager(self.app, self)
+
 
     def initialize_variables(self) -> None:
         self.day_name_list = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
@@ -19,6 +23,10 @@ class DataManager:
         self.duration_list = []
         self.total_duration = 0
         self.graph_color = "#f38064"
+        self.graph_bg_color = graph_bg_color
+        self.graph_fg_color = graph_fg_color
+        self.font_color = font_color
+        self.spine_color = border_frame_color
         
 
     def initialize_new_file_variables(self) -> None:
@@ -103,6 +111,7 @@ class DataManager:
         self.worksheet["N8"].value = "Notes amount:"
         self.worksheet["N9"].value = self.notes_amount
         self.worksheet["N11"].value = "Notes:"
+        self.worksheet["M12"].value = "Deleted:"
         self.worksheet["N12"].value = "Date:"
         self.worksheet["O12"].value = "Title:"
         self.worksheet["P12"].value = "Text:"
@@ -258,6 +267,7 @@ class DataManager:
         self.app.eye_care_checkbox.configure(fg_color=self.color)
         self.app.create_graphs()
 
+        self.load_notes()
         print("Color changed.")
 
 
@@ -266,14 +276,10 @@ class DataManager:
         print("Theme set.")
         self.save_theme()
 
+
     def save_theme(self) -> None:
         self.worksheet["U2"].value = self.theme_name
         self.load_theme()
-
-
-    def save_subject(self, subject: str) -> None:
-        self.worksheet["S2"].value = subject
-        print("Subject saved.")
 
     
     def load_theme(self) -> None:
@@ -282,10 +288,25 @@ class DataManager:
 
         if self.theme_name == "Dark":
             ctk.set_appearance_mode("dark")
+            self.graph_bg_color = graph_bg_color
+            self.graph_fg_color = graph_fg_color
+            self.spine_color = border_frame_color
+            self.font_color = "white"
         else:
             ctk.set_appearance_mode("light")
+            self.graph_bg_color = light_graph_bg_color
+            self.graph_fg_color = light_graph_fg_color
+            self.spine_color = light_border_frame_color
+            self.font_color = "black"
+
+        self.app.create_graphs()
 
         print("Theme loaded.")
+
+
+    def save_subject(self, subject: str) -> None:
+        self.worksheet["S2"].value = subject
+        print("Subject saved.")
 
 
     def load_subject(self) -> None:
@@ -316,36 +337,14 @@ class DataManager:
 
 
     def load_notes(self) -> None:
-        self.app.clear_notes()
+        self.notes_manager.clear_notes()
 
         if self.notes_amount == 0:
             return None
         
-        for i in range(self.notes_amount+13, 13, -1):
-            frame = ctk.CTkFrame(self.app.notes_data_frame, width=WIDTH + frame_padding, fg_color=(light_frame_color, frame_color), height=button_height + frame_padding * 2)
-            frame.pack(pady=frame_padding)
-            frame.grid_propagate(False)
-
-            def _delete_note(frame):
-                frame.destroy()
-                #DELETE NOTE FROM EXCEL
-
-            title = ctk.CTkLabel(frame, text=str(self.worksheet["O" + str(i)].value), font=(font_family, font_size*1.25),
-                                 text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
-            title.grid(row=0, column=0, padx=widget_padding_x)
-            date = ctk.CTkLabel(frame, text=str(self.worksheet["N" + str(i)].value), font=(font_family, font_size*1.25),
-                                text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
-            date.grid(row=0, column=1, padx=widget_padding_x)
-
-            button_frame = ctk.CTkFrame(frame, fg_color="transparent")
-            button_frame.place(anchor="center", rely=0.5, relx=0.8)
-
-            open_button = ctk.CTkButton(button_frame, text="Open", height=button_height, fg_color=self.color, hover_color=self.highlight_color, font=(font_family, font_size), text_color=button_font_color,
-                                   command=lambda: self.app._open_notes_text(str(self.worksheet["N" + str(i)].value), str(self.worksheet["O" + str(i)].value), str(self.worksheet["P" + str(i)].value), i))
-            open_button.grid(row=0, column=0, padx=widget_padding_x)
-            delete_button = ctk.CTkButton(button_frame, text="Delete", height=button_height, fg_color=self.color, hover_color=self.highlight_color, font=(font_family, font_size), text_color=button_font_color,
-                                          command=lambda: _delete_note(frame))
-            delete_button.grid(row=0, column=1)
+        for i in range(self.notes_amount+12, 12, -1):
+            if self.worksheet["M" + str(i)].value != "Yes":
+                self.notes_manager.create_task(i)
 
 
     def save_eye_care(self, eye_care: str, checkbox: str) -> None:

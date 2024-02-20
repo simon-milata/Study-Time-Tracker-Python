@@ -55,7 +55,7 @@ light_tab_color = light_tab_frame_color
 tab_width = tab_frame_width - (tab_frame_width * 0.2)
 tab_height = HEIGHT * 0.07
 
-border_frame_color = "#5b5b5b"
+border_frame_color = frame_border_color
 light_border_frame_color = "#b3b3b3"
 
 main_frame_pad_x = 0
@@ -64,17 +64,17 @@ main_frame_pad_y = 0
 main_frame_color = "#2b2b2b"
 light_main_frame_color = "#d4d4d4"
 
-graph_height = HEIGHT/2
-graph_width = (WIDTH/2)-25
+graph_height = HEIGHT / 2
+graph_width = (WIDTH / 2) - frame_padding * 4
 
-graph_bg_color = "#323232"
-light_graph_bg_color = "#cccccc"
+graph_bg_color = frame_color
+light_graph_bg_color = light_frame_color
 
-graph_fg_color = "#323232"
-light_graph_fg_color = "#cccccc"
+graph_fg_color = frame_color
+light_graph_fg_color = light_frame_color
 
 graph_color = "#f38064"
-spine_color = "#5b5b5b"
+spine_color = frame_border_color
 
 pie_font_family = font_family
 pie_font_size = 10
