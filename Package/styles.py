@@ -37,8 +37,9 @@ button_font_color = "black"
 
 tab_frame_width = 200
 tab_font_weight = "normal"
-tab_font_family = "Calibri"
-tab_padding_y = 0
+tab_font_family = font_family
+tab_font_size = 16
+tab_padding_y = 2
 
 tab_frame_color = "#222222"
 light_tab_frame_color = "#dedede"
@@ -100,5 +101,5 @@ pink_highlight_color = "#f47bdc"
 pink_pie_colors = ["#f263d5", "#ea6cd1", "#e274cc", "#d97dc7", "#d185c2", "#c88dbd", "#c096b8"]
 
 
-image_width = 30
-image_height = 30
+icon_size = 24
+tab_icon_size = 20

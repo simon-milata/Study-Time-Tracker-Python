@@ -2,6 +2,7 @@ import datetime
 from openpyxl.styles import Font
 
 import customtkinter as ctk
+import darkdetect
 
 from .styles import *
 from .note_management import NotesManager
@@ -35,7 +36,10 @@ class DataManager:
         self.notes_amount = 0
         self.monday_duration = self.tuesday_duration = self.wednesday_duration = self.thursday_duration = self.friday_duration = self.saturday_duration = self.sunday_duration = 0
         self.color_name = "Orange"
-        self.theme_name = "Dark"
+        if darkdetect.isDark():
+            self.theme_name = "Dark"
+        else:
+            self.theme_name = "Light"
 
         self.customize_excel()
         self.save_color()
@@ -115,6 +119,8 @@ class DataManager:
         self.worksheet["N12"].value = "Date:"
         self.worksheet["O12"].value = "Title:"
         self.worksheet["P12"].value = "Text:"
+
+        self.worksheet["P1"].value = "Autobreak:"
 
         self.worksheet["Q1"].value = "Eye care:"
         self.worksheet["Q4"].value = "Only when timer running:"
@@ -231,6 +237,12 @@ class DataManager:
         self.worksheet["W6"].value = self.friday_duration
         self.worksheet["W7"].value = self.saturday_duration
         self.worksheet["W8"].value = self.sunday_duration
+
+
+    def save_autobreak(self, frequency: str, duration: str) -> None:
+        frequency = int(frequency)
+        duration = int(duration)
+        print(frequency, duration)
 
 
     def set_color(self, color_dropdown) -> None:

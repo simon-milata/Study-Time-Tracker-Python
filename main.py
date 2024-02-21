@@ -35,6 +35,7 @@ class App:
         self.data_manager.load_subject()
         self.data_manager.load_eye_care()
 
+        self.WINDOW.bind_all("<Button>", self.change_focus)
         self.WINDOW.protocol("WM_DELETE_WINDOW", self.save_on_quit)
 
 
@@ -50,7 +51,7 @@ class App:
         self._progress_gui_setup()
         self._streak_gui_setup()
         self._subject_gui_setup()
-        self._pomodoro_gui_setup()
+        self._autobreak_gui_setup()
         self._history_gui_setup()
         self._notes_gui_setup()
         self._settings_gui_setup()
@@ -106,12 +107,19 @@ class App:
     
     def _icon_setup(self):
         self.icon_attribution = "UIcons by https://www.flaticon.com/uicons Flaticon"
-        self.clock_icon = ctk.CTkImage(light_image=Image.open("icons/clock_icon_dark.png"), dark_image=Image.open("icons/clock_icon_light.png"))
-        self.statistics_icon = ctk.CTkImage(light_image=Image.open("icons/statistics_icon_dark.png"), dark_image=Image.open("icons/statistics_icon_light.png"))
-        self.achievements_icon = ctk.CTkImage(light_image=Image.open("icons/achievements_icon_dark.png"), dark_image=Image.open("icons/achievements_icon_light.png"))
-        self.history_icon = ctk.CTkImage(light_image=Image.open("icons/history_icon_dark.png"), dark_image=Image.open("icons/history_icon_light.png"))
-        self.notes_icon = ctk.CTkImage(light_image=Image.open("icons/notes_icon_dark.png"), dark_image=Image.open("icons/notes_icon_light.png"))
-        self.settings_icon = ctk.CTkImage(light_image=Image.open("icons/settings_icon_dark.png"), dark_image=Image.open("icons/settings_icon_light.png"))
+
+        self.clock_icon = ctk.CTkImage(light_image=Image.open("icons/clock_icon_dark.png"), dark_image=Image.open("icons/clock_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.statistics_icon = ctk.CTkImage(light_image=Image.open("icons/statistics_icon_dark.png"), dark_image=Image.open("icons/statistics_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.achievements_icon = ctk.CTkImage(light_image=Image.open("icons/achievements_icon_dark.png"), dark_image=Image.open("icons/achievements_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.history_icon = ctk.CTkImage(light_image=Image.open("icons/history_icon_dark.png"), dark_image=Image.open("icons/history_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.notes_icon = ctk.CTkImage(light_image=Image.open("icons/notes_icon_dark.png"), dark_image=Image.open("icons/notes_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.settings_icon = ctk.CTkImage(light_image=Image.open("icons/settings_icon_dark.png"), dark_image=Image.open("icons/settings_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+
+        self.save_icon = ctk.CTkImage(Image.open("icons/save_icon_dark.png"), size=(icon_size, icon_size))
+        self.edit_icon = ctk.CTkImage(Image.open("icons/edit_icon_dark.png"), size=(icon_size, icon_size))
+        self.delete_icon = ctk.CTkImage(Image.open("icons/delete_icon_dark.png"), size=(icon_size, icon_size))
+        self.open_icon = ctk.CTkImage(Image.open("icons/open_icon_dark.png"), size=(icon_size, icon_size))
+        self.back_icon = ctk.CTkImage(Image.open("icons/back_icon_dark.png"), size=(icon_size, icon_size))
 
 
     def _window_setup(self) -> None:
@@ -158,8 +166,8 @@ class App:
         def _initialize_tab(tab_name: str, icon: ctk.CTkImage) -> None:
             #Create a tab frame and a tab button for each tab in tab_list
             tab = ctk.CTkFrame(self.tab_frame, width=tab_frame_width, height=tab_height*0.8, fg_color=(light_tab_color, tab_color))
-            tab_button = ctk.CTkButton(tab, image=icon, text=" " + tab_name, font=(tab_font_family, 22*tab_height/50, tab_font_weight), text_color=(light_font_color, font_color),
-                                                   fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.8), hover_color=(light_tab_highlight_color, tab_highlight_color), 
+            tab_button = ctk.CTkButton(tab, image=icon, text=" " + tab_name, font=(tab_font_family, tab_font_size, tab_font_weight), text_color=(light_font_color, font_color),
+                                                   fg_color=(light_tab_color, tab_color), width=int(tab_frame_width*0.95), height=int(tab_height*0.9), hover_color=(light_tab_highlight_color, tab_highlight_color), 
                                                    anchor="w", command=lambda: self.switch_tab(tab_button, tab_buttons))
             
             #Place settings tab frame on the bottom of tab frame
@@ -191,9 +199,9 @@ class App:
         self.goal_progress_frame.grid(row=0, column=0)
         self.goal_progress_frame.pack_propagate(False)
 
-        self.subject_pomodoro_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width, fg_color="transparent")
-        self.subject_pomodoro_frame.grid(row=0, column=2)
-        self.subject_pomodoro_frame.pack_propagate(False)
+        self.subject_autobreak_frame = ctk.CTkFrame(self.main_frame, height=(HEIGHT-button_height*1.5), width=frame_width, fg_color="transparent")
+        self.subject_autobreak_frame.grid(row=0, column=2)
+        self.subject_autobreak_frame.pack_propagate(False)
 
 
     def _goal_gui_setup(self) -> None:
@@ -400,7 +408,7 @@ class App:
 
 
     def _subject_gui_setup(self) -> None:
-        subject_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=(light_frame_color, frame_color), height=175, width=frame_width, corner_radius=10)
+        subject_frame = ctk.CTkFrame(self.subject_autobreak_frame, fg_color=(light_frame_color, frame_color), height=175, width=frame_width, corner_radius=10)
         subject_frame.pack(padx=frame_padding, pady=frame_padding)
         subject_label = ctk.CTkLabel(subject_frame, text="Subject", font=(font_family, font_size), text_color=(light_font_color, font_color))
         subject_label.place(anchor="nw", relx=0.05, rely=0.05)
@@ -414,16 +422,43 @@ class App:
         subject_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
-    def _pomodoro_gui_setup(self) -> None:
-        pomodoro_frame = ctk.CTkFrame(self.subject_pomodoro_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
-        pomodoro_frame.pack(padx=frame_padding, pady=frame_padding)
-        pomodoro_label = ctk.CTkLabel(pomodoro_frame, text="Break frequency", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
-        pomodoro_label.place(anchor="nw", relx=0.05, rely=0.05)
-        frequency_label = ctk.CTkLabel(pomodoro_frame, text="Every", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
-        frequency_label.place(anchor="n", relx=0.5, rely=0.3)
-        pomodoro_button = ctk.CTkButton(pomodoro_frame, text="Save", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
-                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height)
-        pomodoro_button.place(anchor="s", relx=0.5, rely=0.9)
+    def _autobreak_gui_setup(self) -> None:
+        autobreak_frame = ctk.CTkFrame(self.subject_autobreak_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=400)
+        autobreak_frame.pack(padx=frame_padding, pady=frame_padding)
+        autobreak_frame.pack_propagate(False)
+        autobreak_label = ctk.CTkLabel(autobreak_frame, text="Auto-start break", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        autobreak_label.place(anchor="nw", relx=0.05, rely=0.05)
+
+        frequency_duration_frame = ctk.CTkFrame(autobreak_frame, fg_color="transparent")
+        frequency_duration_frame.pack(pady=(frame_padding*5, frame_padding*2))
+
+        frequency_frame = ctk.CTkFrame(frequency_duration_frame, fg_color="transparent")
+        frequency_frame.grid(row=0, column=0, padx=frame_padding*2)
+        frequency_label = ctk.CTkLabel(frequency_frame, text="Every", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        frequency_label.grid(row=0, column=0, pady=5)
+        self.frequency_input = ctk.CTkEntry(frequency_frame, placeholder_text="30", font=(font_family, font_size * 2.7), text_color=(light_font_color, font_color),
+                                              border_color=frame_border_color, height=75, width=75, fg_color=(light_frame_color, frame_color), justify="center")
+        self.frequency_input.grid(row=1, column=0)
+        minutes_label = ctk.CTkLabel(frequency_frame, text="minutes", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        minutes_label.grid(row=2, column=0)
+
+        duration_frame = ctk.CTkFrame(frequency_duration_frame, fg_color="transparent")
+        duration_frame.grid(row=0, column=1, padx=frame_padding*2)
+        duration_label = ctk.CTkLabel(duration_frame, text="For", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        duration_label.grid(row=0, column=0, pady=5)
+        self.duration_input = ctk.CTkEntry(duration_frame, placeholder_text="5", font=(font_family, font_size * 2.7), text_color=(light_font_color, font_color),
+                                              border_color=frame_border_color, height=75, width=75, fg_color=(light_frame_color, frame_color), justify="center")
+        self.duration_input.grid(row=1, column=0)
+        duration_minutes_label = ctk.CTkLabel(duration_frame, text="minutes", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        duration_minutes_label.grid(row=2, column=0)
+
+        self.autobreak_switch = ctk.CTkComboBox(autobreak_frame,values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
+                                                font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
+        self.autobreak_switch.pack()
+
+        autobreak_button = ctk.CTkButton(autobreak_frame, text="Save", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.save_autobreak)
+        autobreak_button.place(anchor="s", relx=0.5, rely=0.925)
 
 
     def _notes_gui_setup(self) -> None:
@@ -435,11 +470,11 @@ class App:
         new_note_frame.pack(pady=(frame_padding, 0))
         new_note_frame.grid_propagate(False)
 
-        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH, height=520+frame_padding*2)
+        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH, height=520+frame_padding*2, label_anchor="w")
         self.notes_data_frame.pack()
         
         new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height, command=self._create_new_note_gui)
+                                        height=button_height, command=self._create_new_note_gui)
         new_note_button.grid()
 
 
@@ -701,6 +736,25 @@ class App:
             print("No data to save. (time less than 1m)")
 
 
+    def save_autobreak(self) -> None:
+        frequency_input = self.frequency_input.get()[:2]
+        if len(frequency_input) == 0:
+            frequency_input = "30"
+        elif not frequency_input.isdigit():
+            return
+        
+        duration_input = self.duration_input.get()[:2]
+        if len(duration_input) == 0:
+            duration_input = "30"
+        elif not duration_input.isdigit():
+            return
+        
+        self.frequency_input.delete("2", "end")
+        self.duration_input.delete("2", "end")
+        
+        self.data_manager.save_autobreak(frequency_input, duration_input)
+
+
     def eye_protection(self):
         checkbox = self.eye_care_checkbox.get()
         time_between = 60 * 20
@@ -821,6 +875,10 @@ class App:
         self.workbook.save(self.data_file)
 
         self.WINDOW.destroy()
+
+
+    def change_focus(self, event) -> None:
+        event.widget.focus_set()
 
 
     def run(self) -> None:
