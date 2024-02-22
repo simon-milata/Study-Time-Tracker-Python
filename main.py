@@ -1,7 +1,5 @@
 import os
 import random
-import time
-import threading
 from PIL import Image
 
 import openpyxl as op
@@ -29,11 +27,9 @@ class App:
         self.create_gui()
         self._file_setup()
 
-        self.t1 = threading.Thread(target=self.eye_protection)
-        self.stop_event = threading.Event()
-
         self.data_manager.load_subject()
         self.data_manager.load_eye_care()
+        self.data_manager.load_autobreak()
 
         self.WINDOW.bind_all("<Button>", self.change_focus)
         self.WINDOW.protocol("WM_DELETE_WINDOW", self.save_on_quit)
@@ -172,7 +168,7 @@ class App:
             
             #Place settings tab frame on the bottom of tab frame
             if tab_name == "Settings":
-                tab.place(relx=0.5, rely=1, anchor="s")
+                tab.place(relx=0.5, rely=0.995, anchor="s")
             else:
                 tab.pack(pady=tab_padding_y)
             tab_button.place(relx=0.5, rely=0.5, anchor="center")
@@ -456,9 +452,9 @@ class App:
                                                 font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
         self.autobreak_switch.pack()
 
-        autobreak_button = ctk.CTkButton(autobreak_frame, text="Save", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+        self.autobreak_button = ctk.CTkButton(autobreak_frame, text="Save", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.save_autobreak)
-        autobreak_button.place(anchor="s", relx=0.5, rely=0.925)
+        self.autobreak_button.place(anchor="s", relx=0.5, rely=0.925)
 
 
     def _notes_gui_setup(self) -> None:
@@ -531,7 +527,7 @@ class App:
         ax.xaxis.set_major_formatter(date_format)
         ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
         time_spent_frame = FigureCanvasTkAgg(fig, master=frame)
-        plt.subplots_adjust(bottom=0.2)
+        plt.subplots_adjust(bottom=0.15)
 
         time_spent_graph = time_spent_frame.get_tk_widget()
         time_spent_graph.pack(padx=widget_padding_x, pady=widget_padding_y)
@@ -557,7 +553,7 @@ class App:
 
         fig, ax = plt.subplots()
         ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), colors=self.data_manager.pie_colors, 
-               textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": font_color}, counterclock=False, startangle=90)
+               textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": self.data_manager.font_color}, counterclock=False, startangle=90)
         fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
         ax.set_facecolor(self.data_manager.graph_fg_color)
         fig.set_facecolor(self.data_manager.graph_bg_color)
@@ -567,6 +563,7 @@ class App:
         ax.spines["bottom"].set_color(self.data_manager.spine_color)
         ax.spines["left"].set_color(self.data_manager.spine_color)
         ax.spines["right"].set_color(self.data_manager.spine_color)
+        plt.subplots_adjust(bottom=0.0)
 
         weekday_frame = FigureCanvasTkAgg(fig, master=frame)
 
@@ -719,6 +716,12 @@ class App:
 
         #Only be able to save if time is higher than 1m
         if time_in_minutes >= 1:
+            self.frequency_input.configure(state="normal")
+            self.frequency_input.delete("end")
+            self.duration_input.configure(state="normal")
+            self.duration_input.delete("end")
+            self.autobreak_button.configure(state="normal")
+
             if time_in_minutes >= self.goal:
                 self.data_manager.increase_goal_streak()
 
@@ -739,40 +742,72 @@ class App:
     def save_autobreak(self) -> None:
         frequency_input = self.frequency_input.get()[:2]
         if len(frequency_input) == 0:
-            frequency_input = "30"
-        elif not frequency_input.isdigit():
-            return
+            frequency_input = self.data_manager.autobreak_frequency
+        else:
+            if self.data_manager.autobreak_frequency != self.frequency_input.cget("placeholder_text"):
+                if len(frequency_input) == 0 or int(frequency_input) < 1:
+                    frequency_input = "25"
+                elif not frequency_input.isdigit():
+                    return
         
         duration_input = self.duration_input.get()[:2]
         if len(duration_input) == 0:
-            duration_input = "30"
-        elif not duration_input.isdigit():
-            return
+            duration_input = self.data_manager.autobreak_duration
+        else:
+            if self.data_manager.autobreak_duration != self.duration_input.cget("placeholder_text"):
+                if len(duration_input) == 0 or int(duration_input) < 1:
+                    duration_input = "5"
+                elif not duration_input.isdigit():
+                    return
+            
         
-        self.frequency_input.delete("2", "end")
-        self.duration_input.delete("2", "end")
+        self.frequency_input.delete("0", "end")
+        self.duration_input.delete("0", "end")
+        self.frequency_input.insert("0", frequency_input)
+        self.duration_input.insert("0", duration_input)
+
+        if self.autobreak_switch.get() == "On":
+            switch = "On"
+        else:
+            switch = "Off"
         
-        self.data_manager.save_autobreak(frequency_input, duration_input)
+        print(frequency_input, duration_input)
+        self.data_manager.save_autobreak(frequency_input, duration_input, switch)
 
 
     def eye_protection(self):
         checkbox = self.eye_care_checkbox.get()
         time_between = 60 * 20
-        while not self.stop_event.is_set():
-            if self.eye_care_selection.get() == "On":
-                if checkbox == "On" and self.timer_manager.timer_running:
-                    time.sleep(time_between)
-                    if checkbox == "On" and self.timer_manager.timer_running:
-                        self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
-                        self.eye_protection()
-                else:
-                    time.sleep(time_between)
-                    if self.eye_care_selection.get() == "On" and checkbox == "Off":
-                        self.send_notification("Eye Protection", "Look away 20ft for 20 seconds")
-                        self.eye_protection()
+        
+        if self.eye_care_selection.get() == "On":
+            if checkbox == "On" and self.timer_manager.timer_running:
+                self.send_notification("Eye Protection", "It's time for a 20/20/20 break! Look away for 20 seconds at something 20 feet away.")
+            elif checkbox == "Off":
+                self.send_notification("Eye Protection", "It's time for a 20/20/20 break! Look away for 20 seconds at something 20 feet away.")
+        
+        # Schedule the next iteration
+        if self.eye_care_selection.get() == "On":
+            self.WINDOW.after(time_between * 1000, self.eye_protection)
+        else:
+            self.WINDOW.after(10 * 1000, self.eye_protection)
+
+
+    def auto_break(self):
+        time_between = self.data_manager.autobreak_frequency * 60
+
+        def try_timer():
+            if self.timer_manager.break_time % self.data_manager.autobreak_duration == 0: 
+                self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
             else:
-                time.sleep(10)
-                self.eye_protection()
+                self.WINDOW.after(1000, try_timer)
+        
+        if self.autobreak_switch.get() == "On" and self.timer_manager.timer_running and self.timer_manager.timer_time % time_between == 0:
+            self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label)
+            self.send_notification("Auto-break", f"Time for a {self.data_manager.autobreak_duration}-minute")
+            self.WINDOW.after(self.data_manager.autobreak_duration * 60 * 1000, try_timer)
+            round(self.timer_manager.break_time, -1)
+        
+        self.WINDOW.after(100, self.auto_break)  # Schedule next iteration
 
 
     def load_history(self):
@@ -869,8 +904,6 @@ class App:
     def save_on_quit(self) -> None:
         self.save_data()
         print("Data saved on exit.")
-
-        self.stop_event.set()
 
         self.workbook.save(self.data_file)
 

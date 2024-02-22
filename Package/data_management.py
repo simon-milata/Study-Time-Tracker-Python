@@ -239,10 +239,35 @@ class DataManager:
         self.worksheet["W8"].value = self.sunday_duration
 
 
-    def save_autobreak(self, frequency: str, duration: str) -> None:
-        frequency = int(frequency)
-        duration = int(duration)
-        print(frequency, duration)
+    def save_autobreak(self, frequency: str, duration: str, switch: str) -> None:
+        self.worksheet["P2"].value = switch
+        self.worksheet["P3"].value = int(frequency)
+        self.worksheet["P4"].value = int(duration)
+
+        self.workbook.save(self.app.data_file)
+
+        self.load_autobreak()
+        
+
+    def load_autobreak(self):
+        self.autobreak_on = self.worksheet["P2"].value
+        self.autobreak_frequency = self.worksheet["P3"].value
+        self.autobreak_duration = self.worksheet["P4"].value
+
+        if self.worksheet["P2"].value == None:
+            self.autobreak_on = "Off"
+
+        if self.autobreak_frequency == None:
+            self.autobreak_frequency = 25
+
+        if self.autobreak_duration == None:
+            self.autobreak_duration = 5
+
+        self.app.frequency_input.configure(placeholder_text=self.autobreak_frequency)
+        self.app.duration_input.configure(placeholder_text=self.autobreak_duration)
+        self.app.autobreak_switch.configure(variable=ctk.StringVar(value=self.autobreak_on))
+
+        self.app.WINDOW.after(0, self.app.auto_break)
 
 
     def set_color(self, color_dropdown) -> None:
@@ -382,4 +407,4 @@ class DataManager:
 
         self.app.eye_care_checkbox.configure(variable=ctk.StringVar(value=checkbox))
 
-        self.app.t1.start()
+        self.app.WINDOW.after(0, self.app.eye_protection)  # Schedule initial iteration for eye_protection

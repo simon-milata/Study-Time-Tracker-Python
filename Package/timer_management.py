@@ -17,6 +17,12 @@ class TimerManager:
     def timer_mechanism(self, timer_button, break_button, time_display_label):
         self.time_display_label = time_display_label
         if not self.timer_running:
+            self.app.frequency_input.configure(state="disabled")
+            self.app.frequency_input.insert("end", self.app.data_manager.autobreak_frequency)
+            self.app.duration_input.configure(state="disabled")
+            self.app.duration_input.insert("end", self.app.data_manager.autobreak_duration)
+            self.app.autobreak_button.configure(state="readonly")
+
             self.timer_running = True
             self.break_running = False
             timer_button.configure(text="Stop")
@@ -32,6 +38,7 @@ class TimerManager:
         if self.timer_running:
             self.timer_time += 1
             self.time_display_label.configure(text=str(datetime.timedelta(seconds=self.timer_time)))
+            self.app.progressbar.set(self.timer_time/60/self.app.goal)
             self.app.reach_goal(self.timer_time)
             self.window.after(1000, self._update_time)
 
