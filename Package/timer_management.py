@@ -21,7 +21,9 @@ class TimerManager:
             self.app.frequency_input.insert("end", self.app.data_manager.autobreak_frequency)
             self.app.duration_input.configure(state="disabled")
             self.app.duration_input.insert("end", self.app.data_manager.autobreak_duration)
-            self.app.autobreak_button.configure(state="readonly")
+            self.app.autobreak_button.configure(state="disabled", fg_color="grey")
+            if self.app.autobreak_switch.get() == "On":
+                break_button.configure(state="disabled", fg_color = "grey", command=None, hover=False)
 
             self.timer_running = True
             self.break_running = False

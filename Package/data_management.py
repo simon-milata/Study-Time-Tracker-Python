@@ -1,9 +1,10 @@
+from collections import Counter
+
 import datetime
 from openpyxl.styles import Font
 
 import customtkinter as ctk
 import darkdetect
-
 from .styles import *
 from .note_management import NotesManager
 
@@ -23,6 +24,11 @@ class DataManager:
         self.date_list = []
         self.duration_list = []
         self.total_duration = 0
+        self.break_list = []
+        self.total_break_duration = 0
+        self.hours_list = []
+        self.subject_list = []
+        self.average_time = "00:00"
         self.graph_color = "#f38064"
         self.graph_bg_color = graph_bg_color
         self.graph_fg_color = graph_fg_color
@@ -67,6 +73,24 @@ class DataManager:
             self.duration_list.append(round(self.worksheet["C" + str(data)].value))
 
         self.total_duration = sum(self.duration_list)
+        
+        self.create_total_data()
+
+
+    def create_total_data(self):
+        def get_sec(time: str) -> int:
+            """Get seconds from time."""
+            h, m = time.split(':')
+            return int(h) * 3600 + int(m) * 60
+        
+        for data in range(2, self.data_amount + 2):
+            self.break_list.append(float(self.worksheet["D" + str(data)].value))
+            self.hours_list.append(get_sec((self.worksheet["A" + str(data)].value.split(" ")[1])))
+            self.subject_list.append(self.worksheet["E" + str(data)].value)
+                                   
+        self.total_break_duration = sum(self.break_list)
+        self.average_time = str(datetime.timedelta(seconds=(round(sum(self.hours_list) / len(self.hours_list)))))[:5]
+        self.most_common_subject = Counter(self.subject_list).most_common(1)[0][0]
 
 
     def save_data(self) -> None:
@@ -162,7 +186,7 @@ class DataManager:
 
 
     def calculate_duration(self) -> float:
-        duration = self.timer_manager.timer_time - self.timer_manager.break_time
+        duration = self.timer_manager.timer_time
         if duration < 0: 
             duration = 0
         else:
@@ -246,6 +270,8 @@ class DataManager:
 
         self.workbook.save(self.app.data_file)
 
+        print("Autobreak saved.")
+
         self.load_autobreak()
         
 
@@ -268,6 +294,8 @@ class DataManager:
         self.app.autobreak_switch.configure(variable=ctk.StringVar(value=self.autobreak_on))
 
         self.app.WINDOW.after(0, self.app.auto_break)
+
+        print("Autobreak loaded.")
 
 
     def set_color(self, color_dropdown) -> None:

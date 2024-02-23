@@ -2,6 +2,7 @@ import os
 import random
 from PIL import Image
 
+import datetime
 import openpyxl as op
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -48,6 +49,7 @@ class App:
         self._streak_gui_setup()
         self._subject_gui_setup()
         self._autobreak_gui_setup()
+        self._statistics_gui_setup()
         self._history_gui_setup()
         self._notes_gui_setup()
         self._settings_gui_setup()
@@ -74,7 +76,7 @@ class App:
             self.collect_data()
             self.update_streak_values()
             self.load_history()
-
+        
             self.data_manager.load_color()
             self.data_manager.load_theme()
 
@@ -90,7 +92,7 @@ class App:
             self.create_widget_list()
 
             self.data_manager.initialize_new_file_variables()
-
+            self.data_manager.load_autobreak()
             self.data_manager.save_eye_care("Off", "Off")
 
 
@@ -116,6 +118,9 @@ class App:
         self.delete_icon = ctk.CTkImage(Image.open("icons/delete_icon_dark.png"), size=(icon_size, icon_size))
         self.open_icon = ctk.CTkImage(Image.open("icons/open_icon_dark.png"), size=(icon_size, icon_size))
         self.back_icon = ctk.CTkImage(Image.open("icons/back_icon_dark.png"), size=(icon_size, icon_size))
+        self.play_icon = ctk.CTkImage(Image.open("icons/play_icon_dark.png"), size=(icon_size, icon_size))
+        self.create_note_icon = ctk.CTkImage(Image.open("icons/create_note_icon_dark.png"), size=(icon_size, icon_size))
+        self.checkmark_icon = ctk.CTkImage(Image.open("icons/checkmark_icon_dark.png"), size=(icon_size, icon_size))
 
 
     def _window_setup(self) -> None:
@@ -277,7 +282,7 @@ class App:
         break_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=(light_font_color, font_color))
         self.break_display_label.place(anchor="center", relx=0.5, rely=0.45)
-        self.break_button = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
+        self.break_button = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color, text_color_disabled=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.break_mechanism)
         self.break_button.place(anchor="s", relx=0.5, rely=0.9)
 
@@ -290,34 +295,46 @@ class App:
         self.save_data_button.place(relx=0.5, anchor="center", rely=0.5)
 
 
+    def _statistics_gui_setup(self):
+        self.statistics_scroll_frame = ctk.CTkScrollableFrame(self.statistics_frame, fg_color="transparent", width=WIDTH, height=HEIGHT+((widget_padding_x+frame_padding)), 
+                                                              orientation="horizontal")
+        self.statistics_scroll_frame.grid(padx=0, pady=0)
+
+        self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH + frame_padding * 4)
+        self.statistics_graph_frame.grid(row=0, column=0, padx=0, pady=0)
+
+        self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH + frame_padding * 4)
+        self.statistics_facts_frame.grid(row=1, column=0, padx=0, pady=0)
+
+
     def _graph_gui_frame(self, row_index: int, column_index: int) -> ctk.CTkFrame:
-        frame = ctk.CTkFrame(self.statistics_frame, fg_color=(light_frame_color, frame_color), corner_radius=10)
+        frame = ctk.CTkFrame(self.statistics_graph_frame, fg_color=(light_frame_color, frame_color), corner_radius=10)
         frame.grid(row=row_index, column=column_index, padx=frame_padding, pady=frame_padding)
         return frame
 
 
     def _history_gui_setup(self) -> None:
-        history_frame_frame = ctk.CTkFrame(self.history_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, height=(HEIGHT+((widget_padding_x)*2)), width=WIDTH-frame_padding*2)
-        history_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
+        history_frame_frame = ctk.CTkFrame(self.history_frame, fg_color="transparent", corner_radius=10, height=(HEIGHT+((widget_padding_x)*4)), width=WIDTH)
+        history_frame_frame.grid(row=0, column=0)
         history_frame_frame.pack_propagate(False)
 
-        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=35)
-        history_label_frame.pack(pady=(frame_padding, 0))
+        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH - frame_padding * 2, corner_radius=10, height=50)
+        history_label_frame.pack(pady=(frame_padding*1.2, frame_padding))
         history_label_frame.grid_propagate(False)
 
-        history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color="transparent", width=WIDTH-(frame_padding*4), height=520+frame_padding*2)
+        history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=500+frame_padding*4, corner_radius=10)
         history_data_frame.pack(padx=frame_padding)
 
-        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        start_label.grid(row=0, column=0)
-        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        end_label.grid(row=0, column=1)
-        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        duration_label.grid(row=0, column=2)
-        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        break_label.grid(row=0, column=3)
-        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        subject_label.grid(row=0, column=4)
+        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
+        start_label.grid(row=0, column=0, pady=widget_padding_y)
+        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
+        end_label.grid(row=0, column=1, pady=widget_padding_y)
+        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
+        duration_label.grid(row=0, column=2, pady=widget_padding_y)
+        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
+        break_label.grid(row=0, column=3, pady=widget_padding_y)
+        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
+        subject_label.grid(row=0, column=4, pady=widget_padding_y)
 
         start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         start_frame.grid(row=1, column=0)
@@ -354,6 +371,9 @@ class App:
         self.color_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
         self.color_frame.grid(column=0)
 
+        self.eye_care_export_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
+        self.eye_care_export_frame.grid(column=1)
+
         self._color_gui_setup()
         self._eye_care_gui_setup()
 
@@ -388,7 +408,7 @@ class App:
         self.theme_button.place(anchor="s", relx=0.5, rely=0.9)
 
     def _eye_care_gui_setup(self):
-        eye_care_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
+        eye_care_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
         eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
         eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=(light_font_color, font_color))
         eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
@@ -453,7 +473,7 @@ class App:
         self.autobreak_switch.pack()
 
         self.autobreak_button = ctk.CTkButton(autobreak_frame, text="Save", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
-                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.save_autobreak)
+                                        border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.save_autobreak, text_color_disabled=button_font_color)
         self.autobreak_button.place(anchor="s", relx=0.5, rely=0.925)
 
 
@@ -470,8 +490,8 @@ class App:
         self.notes_data_frame.pack()
         
         new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                        height=button_height, command=self._create_new_note_gui)
-        new_note_button.grid()
+                                        height=button_height, command=self._create_new_note_gui, width=450)
+        new_note_button.place(anchor="center", relx=0.5, rely=0.5)
 
 
     def _new_note_gui_setup(self):
@@ -486,7 +506,7 @@ class App:
         self.notes_title_entry = ctk.CTkEntry(self.note_title_frame, placeholder_text="Title", font=(font_family, font_size), text_color=(light_font_color, font_color),
                                               border_color=frame_border_color, height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color))
         self.notes_title_entry.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
-        self.create_note_button = ctk.CTkButton(self.note_title_frame, height=button_height, text="Create note", fg_color=self.data_manager.color, 
+        self.create_note_button = ctk.CTkButton(self.note_title_frame, height=button_height, text="Done", fg_color=self.data_manager.color, 
                                                 hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, command=self.create_new_note)
         self.create_note_button.grid(row=0, column=1)
         exit_create_note_button = ctk.CTkButton(self.note_title_frame, height=button_height, text="Cancel", fg_color=self.data_manager.color, 
@@ -530,7 +550,7 @@ class App:
         plt.subplots_adjust(bottom=0.15)
 
         time_spent_graph = time_spent_frame.get_tk_widget()
-        time_spent_graph.pack(padx=widget_padding_x, pady=widget_padding_y)
+        time_spent_graph.pack(padx=3, pady=3)
 
 
     def create_weekday_graph(self, frame) -> None:
@@ -568,7 +588,7 @@ class App:
         weekday_frame = FigureCanvasTkAgg(fig, master=frame)
 
         weekday_graph = weekday_frame.get_tk_widget()
-        weekday_graph.pack(padx=widget_padding_x, pady=widget_padding_y)
+        weekday_graph.pack(padx=3, pady=3)
 
 
     def create_graphs(self) -> None:
@@ -576,6 +596,44 @@ class App:
 
         self.create_time_spent_graph(self._graph_gui_frame(0, 0))
         self.create_weekday_graph(self._graph_gui_frame(0, 1))
+
+        print("Graphs created.")
+
+        if self.data_manager.data_amount == 0:
+            self.create_funfact(0, 0, "Average Study Duration", "0", "Minutes")
+            self.create_funfact(0, 1, "Average Break Duration", "0", "Minutes")
+            self.create_funfact(0, 2, "Average study Start Time", "00:00")
+            self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
+            self.create_funfact(0, 4, "Favorite subject", "")
+
+        else:
+            self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount, 1), "Minutes")
+            self.create_funfact(0, 1, "Average Break Duration", round(self.data_manager.total_break_duration/self.data_manager.data_amount, 1), "Minutes")
+            self.create_funfact(0, 2, "Average study Start Time", self.data_manager.average_time)
+            self.create_funfact(0, 4, "Favorite subject", self.data_manager.most_common_subject, None, 3)
+            if self.data_manager.goal_amount == 0:
+                print("AAA")
+                self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
+            else:
+                self.create_funfact(0, 3, "Goal Met in", str(int(self.data_manager.goal_amount / self.data_manager.data_amount * 100)) + "%", "of Sessions")
+            #self.create_best_day()
+            #self.create_best_subject()
+        print("Fun facts created.")
+
+
+    def create_funfact(self, row_index: int, column_index: int, title: str, text: str, under_text: str = None, text_size: int = 4) -> None:
+        frame = ctk.CTkFrame(self.statistics_facts_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=240, height=200)
+        frame.grid(row=row_index, column=column_index, padx=frame_padding, pady=frame_padding)
+        title = ctk.CTkLabel(frame, text=title, font=(font_family, int(font_size*1.2)), text_color=(light_font_color, font_color))
+        title.place(anchor="n", relx=0.5, rely=0.05)
+        if " " in str(text):
+            text = text.replace(" ", "\n")
+            text_size = 2.7
+        text = ctk.CTkLabel(frame, text=text, font=(font_family, int(font_size*text_size)), text_color=(light_font_color, font_color))
+        text.place(anchor="center", relx=0.5, rely=0.5)
+        if under_text != None:
+            label = ctk.CTkLabel(frame, text=under_text, font=(font_family, int(font_size*1.2)), text_color=(light_font_color, font_color))
+            label.place(anchor="center", relx=0.5, rely=0.8)
 
     
     def forget_and_propagate(self, list: list) -> None:
@@ -709,6 +767,7 @@ class App:
     def collect_data(self) -> None:
         self.data_manager.collect_data()
         self.data_manager.data_to_variable()
+        self.data_manager.create_total_data()
 
 
     def save_data(self) -> None:
@@ -720,7 +779,8 @@ class App:
             self.frequency_input.delete("end")
             self.duration_input.configure(state="normal")
             self.duration_input.delete("end")
-            self.autobreak_button.configure(state="normal")
+            self.autobreak_button.configure(state="normal", fg_color=button_color)
+            self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
 
             if time_in_minutes >= self.goal:
                 self.data_manager.increase_goal_streak()
@@ -741,6 +801,9 @@ class App:
 
     def save_autobreak(self) -> None:
         frequency_input = self.frequency_input.get()[:2]
+        if "." in frequency_input:
+            frequency_input = (frequency_input.split(".")[0]).replace(".", "")
+
         if len(frequency_input) == 0:
             frequency_input = self.data_manager.autobreak_frequency
         else:
@@ -749,8 +812,11 @@ class App:
                     frequency_input = "25"
                 elif not frequency_input.isdigit():
                     return
-        
+    
         duration_input = self.duration_input.get()[:2]
+        if "." in duration_input:
+            duration_input = (duration_input.split(".")[0]).replace(".", "")
+
         if len(duration_input) == 0:
             duration_input = self.data_manager.autobreak_duration
         else:
@@ -771,7 +837,6 @@ class App:
         else:
             switch = "Off"
         
-        print(frequency_input, duration_input)
         self.data_manager.save_autobreak(frequency_input, duration_input, switch)
 
 

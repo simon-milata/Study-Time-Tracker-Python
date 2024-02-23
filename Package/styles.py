@@ -65,8 +65,8 @@ main_frame_pad_y = 0
 main_frame_color = "#2b2b2b"
 light_main_frame_color = "#d4d4d4"
 
-graph_height = HEIGHT / 2
-graph_width = (WIDTH / 2) - frame_padding * 4
+graph_height = (HEIGHT+((widget_padding_x+frame_padding)))/1.6 - frame_padding
+graph_width = int(WIDTH/1.7 - frame_padding)
 
 graph_bg_color = frame_color
 light_graph_bg_color = light_frame_color
@@ -101,5 +101,5 @@ pink_highlight_color = "#f47bdc"
 pink_pie_colors = ["#f263d5", "#ea6cd1", "#e274cc", "#d97dc7", "#d185c2", "#c88dbd", "#c096b8"]
 
 
-icon_size = 24
+icon_size = 20
 tab_icon_size = 20
