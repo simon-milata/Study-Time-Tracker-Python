@@ -8,7 +8,7 @@ class NotesManager:
         self.data_manager = data_manager
 
     def create_task(self, index):
-        self.frame = ctk.CTkFrame(self.app.notes_data_frame, width=WIDTH + frame_padding * 2, fg_color=(light_frame_color, frame_color), height=button_height + frame_padding * 2)
+        self.frame = ctk.CTkFrame(self.app.notes_data_frame, width=WIDTH, fg_color=(light_frame_color, frame_color), height=button_height + frame_padding * 2)
         self.frame.pack(pady=frame_padding/2)
         self.frame.grid_propagate(False)
 

@@ -17,13 +17,7 @@ class TimerManager:
     def timer_mechanism(self, timer_button, break_button, time_display_label):
         self.time_display_label = time_display_label
         if not self.timer_running:
-            self.app.frequency_input.configure(state="disabled")
-            self.app.frequency_input.insert("end", self.app.data_manager.autobreak_frequency)
-            self.app.duration_input.configure(state="disabled")
-            self.app.duration_input.insert("end", self.app.data_manager.autobreak_duration)
-            self.app.autobreak_button.configure(state="disabled", fg_color="grey")
-            if self.app.autobreak_switch.get() == "On":
-                break_button.configure(state="disabled", fg_color = "grey", command=None, hover=False)
+            self.app.lock_widgets()
 
             self.timer_running = True
             self.break_running = False

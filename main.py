@@ -369,13 +369,14 @@ class App:
 
     def _settings_gui_setup(self) -> None:
         self.color_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
-        self.color_frame.grid(column=0)
+        self.color_frame.grid(column=0, row=0)
 
         self.eye_care_export_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
-        self.eye_care_export_frame.grid(column=1)
+        self.eye_care_export_frame.grid(column=1, row=0)
 
         self._color_gui_setup()
         self._eye_care_gui_setup()
+        self._export_gui_setup()
 
         reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_tab_color, tab_color))
         reset_frame.place(anchor="s", relx=0.5, rely=0.985)
@@ -409,7 +410,7 @@ class App:
 
     def _eye_care_gui_setup(self):
         eye_care_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
-        eye_care_frame.grid(column=1, row=0, padx=frame_padding, pady=frame_padding)
+        eye_care_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
         eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=(light_font_color, font_color))
         eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
@@ -423,6 +424,20 @@ class App:
         eye_care_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
+    def _export_gui_setup(self):
+        export_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
+        export_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
+        export_label = ctk.CTkLabel(export_frame, text="Export data", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        export_label.place(anchor="nw", relx=0.05, rely=0.05)
+        export_button = ctk.CTkButton(export_frame, text="Export", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
+                                        hover_color=button_highlight_color, height=button_height, command=self.export_data)
+        export_button.place(anchor="s", relx=0.5, rely=0.9)
+
+    
+    def export_data(self):
+        self.data_manager.export_data()
+
+
     def _subject_gui_setup(self) -> None:
         subject_frame = ctk.CTkFrame(self.subject_autobreak_frame, fg_color=(light_frame_color, frame_color), height=175, width=frame_width, corner_radius=10)
         subject_frame.pack(padx=frame_padding, pady=frame_padding)
@@ -433,9 +448,9 @@ class App:
                                                             state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)), border_color=(light_border_frame_color, border_frame_color),
                                                             font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
         self.subject_selection.place(anchor="center", relx=0.5, rely=0.45)
-        subject_button = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+        self.subject_button = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
                                 height=button_height, command=self.select_subject)
-        subject_button.place(anchor="s", relx=0.5, rely=0.9)
+        self.subject_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
     def _autobreak_gui_setup(self) -> None:
@@ -486,7 +501,7 @@ class App:
         new_note_frame.pack(pady=(frame_padding, 0))
         new_note_frame.grid_propagate(False)
 
-        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH, height=520+frame_padding*2, label_anchor="w")
+        self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH + frame_padding*4, height=520+frame_padding*2, label_anchor="w")
         self.notes_data_frame.pack()
         
         new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
@@ -781,6 +796,8 @@ class App:
             self.duration_input.delete("end")
             self.autobreak_button.configure(state="normal", fg_color=button_color)
             self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
+            self.subject_button.configure(state="normal", fg_color=button_color)
+            self.goal_button.configure(state="normal", fg_color=button_color)
 
             if time_in_minutes >= self.goal:
                 self.data_manager.increase_goal_streak()
@@ -847,7 +864,7 @@ class App:
         if self.eye_care_selection.get() == "On":
             if checkbox == "On" and self.timer_manager.timer_running:
                 self.send_notification("Eye Protection", "It's time for a 20/20/20 break! Look away for 20 seconds at something 20 feet away.")
-            elif checkbox == "Off":
+            else:
                 self.send_notification("Eye Protection", "It's time for a 20/20/20 break! Look away for 20 seconds at something 20 feet away.")
         
         # Schedule the next iteration
@@ -964,6 +981,19 @@ class App:
         for widget in widgets:
             if isinstance(widget, ctk.CTkButton):
                 self.widget_list.append(widget)
+
+
+    def lock_widgets(self):
+        self.frequency_input.configure(state="disabled")
+        self.frequency_input.insert("end", self.data_manager.autobreak_frequency)
+        self.duration_input.configure(state="disabled")
+        self.duration_input.insert("end", self.data_manager.autobreak_duration)
+
+        self.autobreak_button.configure(state="disabled", fg_color="grey")
+        self.subject_button.configure(state="disabled", fg_color="grey")
+        self.goal_button.configure(state="disabled", fg_color="grey")
+        if self.autobreak_switch.get() == "On":
+            self.break_button.configure(state="disabled", fg_color = "grey", command=None, hover=False)
 
 
     def save_on_quit(self) -> None:

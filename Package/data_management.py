@@ -1,7 +1,10 @@
 from collections import Counter
+import os
 
 import datetime
-from openpyxl.styles import Font
+import openpyxl as op
+from openpyxl.styles import Font, Alignment
+from openpyxl.utils import get_column_letter
 
 import customtkinter as ctk
 import darkdetect
@@ -435,4 +438,68 @@ class DataManager:
 
         self.app.eye_care_checkbox.configure(variable=ctk.StringVar(value=checkbox))
 
-        self.app.WINDOW.after(0, self.app.eye_protection)  # Schedule initial iteration for eye_protection
+        self.app.WINDOW.after(60*20*1000, self.app.eye_protection)  # Schedule initial iteration for eye_protection
+
+
+    def export_data(self):
+        def change_cell_width(cell_range: tuple, width: int = 15) -> None:
+            start, end = cell_range
+            for cell in range(start, end + 1):
+                cell_letter = get_column_letter(cell)
+                export_worksheet.column_dimensions[cell_letter].width = width
+
+        def align_cells(cell_range: str):
+            for row in export_worksheet[cell_range]:
+                for cell in row:
+                    cell.alignment = Alignment(horizontal='center', vertical='center')
+            
+        export_workbook = op.Workbook()
+        export_worksheet = export_workbook.active
+
+        export_worksheet.merge_cells("A1:E1")
+        export_worksheet["A1"] = "Timer"
+        export_worksheet["A1"].font = Font(bold=True, size=16)
+        align_cells("A1:E1")
+
+        export_worksheet["A2"].value = "Start:"
+        export_worksheet["A2"].font = Font(bold=True, size=12)
+        export_worksheet["B2"].value = "End:"
+        export_worksheet["B2"].font = Font(bold=True, size=12)
+        export_worksheet["C2"].value = "Duration:"
+        export_worksheet["C2"].font = Font(bold=True, size=12)
+        export_worksheet["D2"].value = "Break Duration:"
+        export_worksheet["D2"].font = Font(bold=True, size=12)
+        export_worksheet["E2"].value = "Subject:"
+        export_worksheet["E2"].font = Font(bold=True, size=12)
+        change_cell_width((1, 5), 20)
+
+        export_worksheet.merge_cells("G1:I1")
+        export_worksheet["G1"] = "Notes"
+        export_worksheet["G1"].font = Font(bold=True, size=16)
+        align_cells("G1:I1")
+
+        export_worksheet["G2"].value = "Date:"
+        export_worksheet["G2"].font = Font(bold=True, size=12)
+        export_worksheet["H2"].value = "Title:"
+        export_worksheet["H2"].font = Font(bold=True, size=12)
+        export_worksheet["I2"].value = "Text:"
+        export_worksheet["I2"].font = Font(bold=True, size=12)
+        change_cell_width((7, 9), 20)
+
+        for data in range(3, self.data_amount + 3):
+            export_worksheet["A" + str(data)].value = self.worksheet["A" + str(data - 1)].value
+            export_worksheet["B" + str(data)].value = self.worksheet["B" + str(data - 1)].value
+            export_worksheet["C" + str(data)].value = str(round(self.worksheet["C" + str(data - 1)].value, 1)) + "m"
+            export_worksheet["D" + str(data)].value = str(round(self.worksheet["D" + str(data - 1)].value, 1)) + "m"
+            export_worksheet["E" + str(data)].value = self.worksheet["E" + str(data - 1)].value
+
+        for note in range(self.notes_amount + 12, 12, -1):
+            if export_worksheet["M" + str(note-data-2)].value != "Yes":
+                export_worksheet["G" + str(note-data-2)].value = self.worksheet["N" + str(note)].value
+                export_worksheet["H" + str(note-data-2)].value = self.worksheet["O" + str(note)].value
+                export_worksheet["I" + str(note-data-2)].value = self.worksheet["P" + str(note)].value
+                export_worksheet["I" + str(note-data-2)].alignment =  Alignment(wrap_text=True)
+
+        export_workbook.save(f"{os.path.join(os.path.expanduser("~"), "Desktop")}/timer_data_{datetime.datetime.now().date().strftime("%d.%m.%Y")}.xlsx")
+
+        print("File exported.")
