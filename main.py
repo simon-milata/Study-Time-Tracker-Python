@@ -97,8 +97,11 @@ class App:
 
 
     def initialize_variables(self) -> None:
+        self.scroll_position = "left"
+        self.scrolling = False
         self.widget_list = []
         self.default_choice = ctk.StringVar(value="1 hour")
+
         self.notification_limit_on = False
         self.goal = 60
 
@@ -121,6 +124,8 @@ class App:
         self.play_icon = ctk.CTkImage(Image.open("icons/play_icon_dark.png"), size=(icon_size, icon_size))
         self.create_note_icon = ctk.CTkImage(Image.open("icons/create_note_icon_dark.png"), size=(icon_size, icon_size))
         self.checkmark_icon = ctk.CTkImage(Image.open("icons/checkmark_icon_dark.png"), size=(icon_size, icon_size))
+        self.left_arrow_icon = ctk.CTkImage(dark_image=Image.open("icons/arrow_left_icon_light.png"), light_image=Image.open("icons/arrow_left_icon_dark.png"), size=(icon_size, icon_size))
+        self.right_arrow_icon = ctk.CTkImage(dark_image=Image.open("icons/arrow_right_icon_light.png"), light_image=Image.open("icons/arrow_right_icon_dark.png"), size=(icon_size, icon_size))
 
 
     def _window_setup(self) -> None:
@@ -142,7 +147,7 @@ class App:
         self.main_frame.grid_propagate(False)
 
         self.statistics_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
-        self.statistics_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+        self.statistics_frame.grid(column=2, row=0)
 
         self.settings_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.settings_frame.grid(column=2, row=0, padx=main_frame_pad_x)
@@ -220,7 +225,7 @@ class App:
         self.goal_dropdown.place(anchor="center", relx=0.5, rely=0.45)
 
         self.goal_button = ctk.CTkButton(goal_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height, command=self.set_goal)
+                                height=button_height, command=self.set_goal, text_color_disabled=button_font_color)
         self.goal_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
@@ -300,11 +305,23 @@ class App:
                                                               orientation="horizontal")
         self.statistics_scroll_frame.grid(padx=0, pady=0)
 
-        self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH + frame_padding * 4)
+        button_frame = ctk.CTkFrame(self.statistics_frame, fg_color="transparent", width=WIDTH)
+        button_frame.place(anchor="s", relx=0.5, rely=1)
+
+        self.left_button = ctk.CTkButton(button_frame, image=self.left_arrow_icon, text="Previous Graph", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll("left"))
+        self.left_button.grid(row=0, column=0)
+        self.right_button = ctk.CTkButton(button_frame, text="Next Graph", image=self.right_arrow_icon, compound="right", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll("right"))
+        self.right_button.grid(row=0, column=1)
+
+        self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
         self.statistics_graph_frame.grid(row=0, column=0, padx=0, pady=0)
 
-        self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH + frame_padding * 4)
+        self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
         self.statistics_facts_frame.grid(row=1, column=0, padx=0, pady=0)
+
+
 
 
     def _graph_gui_frame(self, row_index: int, column_index: int) -> ctk.CTkFrame:
@@ -425,10 +442,13 @@ class App:
 
 
     def _export_gui_setup(self):
-        export_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
+        export_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
         export_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
         export_label = ctk.CTkLabel(export_frame, text="Export data", font=(font_family, font_size), text_color=(light_font_color, font_color))
         export_label.place(anchor="nw", relx=0.05, rely=0.05)
+        export_file_selection = ctk.CTkComboBox(export_frame, values=["Excel"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), variable=ctk.StringVar(value="Excel"),
+                                                fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
+        export_file_selection.place(anchor="center", relx=0.5, rely=0.45)
         export_button = ctk.CTkButton(export_frame, text="Export", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
                                         hover_color=button_highlight_color, height=button_height, command=self.export_data)
         export_button.place(anchor="s", relx=0.5, rely=0.9)
@@ -449,7 +469,7 @@ class App:
                                                             font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
         self.subject_selection.place(anchor="center", relx=0.5, rely=0.45)
         self.subject_button = ctk.CTkButton(subject_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
-                                height=button_height, command=self.select_subject)
+                                height=button_height, command=self.select_subject, text_color_disabled=button_font_color)
         self.subject_button.place(anchor="s", relx=0.5, rely=0.9)
 
 
@@ -552,7 +572,7 @@ class App:
         ax.spines["left"].set_color(self.data_manager.spine_color)
         ax.spines["right"].set_color(self.data_manager.spine_color)
         fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
-        ax.tick_params(axis='x', labelrotation = 45)
+        ax.tick_params(axis="x", labelrotation = 45)
 
         def _format_func(value, tick_number):
             return f"{int(value)} m"
@@ -560,7 +580,7 @@ class App:
         plt.gca().yaxis.set_major_formatter(FuncFormatter(_format_func))
         date_format = mdates.DateFormatter("%d/%m")
         ax.xaxis.set_major_formatter(date_format)
-        ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune='both'))
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune="both"))
         time_spent_frame = FigureCanvasTkAgg(fig, master=frame)
         plt.subplots_adjust(bottom=0.15)
 
@@ -587,7 +607,7 @@ class App:
             return _my_format
 
         fig, ax = plt.subplots()
-        ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), colors=self.data_manager.pie_colors, 
+        ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), colors=self.data_manager.pie_colors, wedgeprops=dict(linewidth=1),
                textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": self.data_manager.font_color}, counterclock=False, startangle=90)
         fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
         ax.set_facecolor(self.data_manager.graph_fg_color)
@@ -600,19 +620,76 @@ class App:
         ax.spines["right"].set_color(self.data_manager.spine_color)
         plt.subplots_adjust(bottom=0.0)
 
+        for wedge in ax.patches:
+            wedge.set_edgecolor(self.data_manager.graph_fg_color)
+
         weekday_frame = FigureCanvasTkAgg(fig, master=frame)
 
         weekday_graph = weekday_frame.get_tk_widget()
         weekday_graph.pack(padx=3, pady=3)
 
 
+    def create_total_time_graph(self, frame):
+        dates = self.data_manager.date_list
+        times = self.data_manager.duration_list
+
+        # Calculate cumulative time
+        cumulative_times = [sum(times[:i+1]) for i in range(len(times))]
+
+        # Create subplot
+        fig, ax = plt.subplots(figsize=(5, 5))
+
+        # Plot
+        ax.plot(dates, cumulative_times, marker='o', color=self.data_manager.color)
+
+        fig, ax = plt.subplots()
+        ax.plot(dates, cumulative_times, color=self.data_manager.graph_color)
+        ax.fill_between(dates, cumulative_times, color=self.data_manager.graph_color)
+        ax.set_title("Cumulative Time By Date", color=self.data_manager.font_color)
+        ax.tick_params(colors=self.data_manager.font_color)
+        ax.set_facecolor(self.data_manager.graph_fg_color)
+        fig.set_facecolor(self.data_manager.graph_bg_color)
+        ax.spines["top"].set_color(self.data_manager.spine_color)
+        ax.spines["bottom"].set_color(self.data_manager.spine_color)
+        ax.spines["left"].set_color(self.data_manager.spine_color)
+        ax.spines["right"].set_color(self.data_manager.spine_color)
+        fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
+        ax.tick_params(axis="x", labelrotation = 45)
+
+        def _format_func(value, tick_number):
+            return f"{int(value)} m"
+        
+        plt.gca().yaxis.set_major_formatter(FuncFormatter(_format_func))
+        date_format = mdates.DateFormatter("%d/%m")
+        ax.xaxis.set_major_formatter(date_format)
+        ax.xaxis.set_major_locator(MaxNLocator(integer=True, prune="both"))
+        plt.subplots_adjust(bottom=0.15)
+
+        total_time_frame = FigureCanvasTkAgg(fig, master=frame)
+
+        total_time_graph = total_time_frame.get_tk_widget()
+        total_time_graph.pack(padx=3, pady=3)
+
+    
+    def clear_frame(self, frame):
+        for widget in frame.winfo_children():
+            widget.destroy()
+
     def create_graphs(self) -> None:
         self.statistics_frame.grid_propagate(False)
+        self.clear_frame(self.statistics_facts_frame)
+        self.clear_frame(self.statistics_graph_frame)
+        #self.WINDOW.after(10, self.statistics_scroll_frame._parent_canvas.yview_moveto, 1.0)
 
         self.create_time_spent_graph(self._graph_gui_frame(0, 0))
         self.create_weekday_graph(self._graph_gui_frame(0, 1))
+        self.create_total_time_graph(self._graph_gui_frame(0, 2))
 
         print("Graphs created.")
+        if self.data_manager.duration_list:
+            self.create_funfact(0, 6, "Longest Session", round(max(self.data_manager.duration_list), 1), "Minutes")
+        else:
+            self.create_funfact(0, 6, "Longest Session", "0", "Minutes")
 
         if self.data_manager.data_amount == 0:
             self.create_funfact(0, 0, "Average Study Duration", "0", "Minutes")
@@ -620,24 +697,24 @@ class App:
             self.create_funfact(0, 2, "Average study Start Time", "00:00")
             self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
             self.create_funfact(0, 4, "Favorite subject", "")
+            self.create_funfact(0, 5, "Most Productive Day", "0")
 
         else:
             self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount, 1), "Minutes")
             self.create_funfact(0, 1, "Average Break Duration", round(self.data_manager.total_break_duration/self.data_manager.data_amount, 1), "Minutes")
             self.create_funfact(0, 2, "Average study Start Time", self.data_manager.average_time)
             self.create_funfact(0, 4, "Favorite subject", self.data_manager.most_common_subject, None, 3)
+            self.create_funfact(0, 5, "Most Productive Day", self.data_manager.best_weekday, None, 2.7)
             if self.data_manager.goal_amount == 0:
-                print("AAA")
                 self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
             else:
                 self.create_funfact(0, 3, "Goal Met in", str(int(self.data_manager.goal_amount / self.data_manager.data_amount * 100)) + "%", "of Sessions")
-            #self.create_best_day()
-            #self.create_best_subject()
+
         print("Fun facts created.")
 
 
     def create_funfact(self, row_index: int, column_index: int, title: str, text: str, under_text: str = None, text_size: int = 4) -> None:
-        frame = ctk.CTkFrame(self.statistics_facts_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=240, height=200)
+        frame = ctk.CTkFrame(self.statistics_facts_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=240, height=180)
         frame.grid(row=row_index, column=column_index, padx=frame_padding, pady=frame_padding)
         title = ctk.CTkLabel(frame, text=title, font=(font_family, int(font_size*1.2)), text_color=(light_font_color, font_color))
         title.place(anchor="n", relx=0.5, rely=0.05)
@@ -684,10 +761,14 @@ class App:
                     frame = self.notes_frame
 
             if frame is not None:
-                frame.grid(column=2, row=0, padx=main_frame_pad_x)
-                frame.grid_propagate(False)
+                if frame == self.statistics_frame:
+                    frame.grid(column=2, row=0)
+                    frame.grid_propagate(False)
+                else:
+                    frame.grid(column=2, row=0, padx=main_frame_pad_x)
+                    frame.grid_propagate(False)
 
-        _show_selected_tab()    
+        _show_selected_tab()
 
 
         def _decolor_tabs() -> None:
@@ -798,6 +879,9 @@ class App:
             self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
             self.subject_button.configure(state="normal", fg_color=button_color)
             self.goal_button.configure(state="normal", fg_color=button_color)
+            self.goal_dropdown.configure(state="normal")
+            self.subject_selection.configure(state="normal")
+            self.autobreak_switch.configure(state="normal")
 
             if time_in_minutes >= self.goal:
                 self.data_manager.increase_goal_streak()
@@ -959,6 +1043,53 @@ class App:
             self._file_setup()
 
 
+    def scroll(self, direction: str) -> None:
+        if self.scrolling:
+            return
+        
+        if direction == "right":
+            if self.scroll_position == "left":
+                self.scroll_smoothly(0.465/2, 0)
+                self.scroll_position = "middle"
+
+            elif self.scroll_position == "middle":
+                self.scroll_smoothly(0.465, 0.465/2)
+                self.scroll_position = "right"
+
+        if direction == "left":
+            if self.scroll_position == "right":
+                self.scroll_smoothly(0.465/2, 0.465)
+                self.scroll_position = "middle"
+
+            elif self.scroll_position == "middle":
+                self.scroll_smoothly(0, 0.465/2)
+                self.scroll_position = "left"
+
+
+    def scroll_smoothly(self, destination: float, position: float):        
+        if position < destination:
+            position += 0.005
+            if position < destination:
+                self.scrolling = True
+                self.WINDOW.after(3, self.scroll_smoothly, destination, position)
+            else:
+                self.WINDOW.after(50, self.enable_scrolling)
+                return
+        elif destination < position:
+            position -= 0.005
+            if destination < position:
+                self.scrolling = True
+                self.WINDOW.after(3, self.scroll_smoothly, destination, position)
+            else:
+                self.WINDOW.after(50, self.enable_scrolling)
+                return
+        self.statistics_scroll_frame._parent_canvas.xview_moveto(position)
+
+
+    def enable_scrolling(self):
+        self.scrolling = False
+
+
     #Get all buttons other than tab buttons
     def create_widget_list(self) -> None:
         frame_list = []
@@ -968,6 +1099,7 @@ class App:
             if isinstance(frame, ctk.CTkFrame):
                 frame_list.append(frame)
         frame_list.pop(0)
+        frame_list.pop(1)
 
         def _get_widgets(frame):
             for child in frame.winfo_children():
@@ -988,6 +1120,10 @@ class App:
         self.frequency_input.insert("end", self.data_manager.autobreak_frequency)
         self.duration_input.configure(state="disabled")
         self.duration_input.insert("end", self.data_manager.autobreak_duration)
+
+        self.goal_dropdown.configure(state="disabled")
+        self.subject_selection.configure(state="disabled")
+        self.autobreak_switch.configure(state="disabled")
 
         self.autobreak_button.configure(state="disabled", fg_color="grey")
         self.subject_button.configure(state="disabled", fg_color="grey")

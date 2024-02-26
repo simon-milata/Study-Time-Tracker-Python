@@ -31,6 +31,7 @@ class DataManager:
         self.total_break_duration = 0
         self.hours_list = []
         self.subject_list = []
+        self.best_weekday = ""
         self.average_time = "00:00"
         self.graph_color = "#f38064"
         self.graph_bg_color = graph_bg_color
@@ -83,7 +84,7 @@ class DataManager:
     def create_total_data(self):
         def get_sec(time: str) -> int:
             """Get seconds from time."""
-            h, m = time.split(':')
+            h, m = time.split(":")
             return int(h) * 3600 + int(m) * 60
         
         for data in range(2, self.data_amount + 2):
@@ -92,8 +93,22 @@ class DataManager:
             self.subject_list.append(self.worksheet["E" + str(data)].value)
                                    
         self.total_break_duration = sum(self.break_list)
-        self.average_time = str(datetime.timedelta(seconds=(round(sum(self.hours_list) / len(self.hours_list)))))[:5]
-        self.most_common_subject = Counter(self.subject_list).most_common(1)[0][0]
+        try:
+            self.average_time = str(datetime.timedelta(seconds=(round(sum(self.hours_list) / len(self.hours_list)))))[:5]
+        except ZeroDivisionError:
+            self.average_time = "00:00"
+        try:
+            self.most_common_subject = Counter(self.subject_list).most_common(1)[0][0]
+        except IndexError:
+            self.most_common_subject = ""
+        def get_weekday():
+            weekdays_dict = {}
+            for i in range(2, 9):
+                if self.worksheet["W" + str(i)].value != 0:
+                    weekdays_dict[self.worksheet["W" + str(i)].value] = self.day_name_list[i-2]
+            self.best_weekday = weekdays_dict[max(weekdays_dict)]
+        get_weekday()
+
 
 
     def save_data(self) -> None:
@@ -442,63 +457,77 @@ class DataManager:
 
 
     def export_data(self):
-        def change_cell_width(cell_range: tuple, width: int = 15) -> None:
+        def change_cell_width(worksheet, cell_range: tuple, width: int = 15) -> None:
             start, end = cell_range
             for cell in range(start, end + 1):
                 cell_letter = get_column_letter(cell)
-                export_worksheet.column_dimensions[cell_letter].width = width
+                worksheet.column_dimensions[cell_letter].width = width
 
-        def align_cells(cell_range: str):
-            for row in export_worksheet[cell_range]:
+        def align_cells(worksheet, cell_range: str):
+            for row in worksheet[cell_range]:
                 for cell in row:
-                    cell.alignment = Alignment(horizontal='center', vertical='center')
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
             
         export_workbook = op.Workbook()
-        export_worksheet = export_workbook.active
+        timer_worksheet = export_workbook.active
+        timer_worksheet.title = "Timer"
+        notes_worksheet = export_workbook.create_sheet("Notes")
 
-        export_worksheet.merge_cells("A1:E1")
-        export_worksheet["A1"] = "Timer"
-        export_worksheet["A1"].font = Font(bold=True, size=16)
-        align_cells("A1:E1")
+        timer_worksheet.merge_cells("A1:E1")
+        timer_worksheet["A1"] = "Timer"
+        timer_worksheet["A1"].font = Font(bold=True, size=16)
+        align_cells(timer_worksheet, "A1:E1")
 
-        export_worksheet["A2"].value = "Start:"
-        export_worksheet["A2"].font = Font(bold=True, size=12)
-        export_worksheet["B2"].value = "End:"
-        export_worksheet["B2"].font = Font(bold=True, size=12)
-        export_worksheet["C2"].value = "Duration:"
-        export_worksheet["C2"].font = Font(bold=True, size=12)
-        export_worksheet["D2"].value = "Break Duration:"
-        export_worksheet["D2"].font = Font(bold=True, size=12)
-        export_worksheet["E2"].value = "Subject:"
-        export_worksheet["E2"].font = Font(bold=True, size=12)
-        change_cell_width((1, 5), 20)
+        timer_worksheet["A2"].value = "Start:"
+        timer_worksheet["A2"].font = Font(bold=True, size=14)
+        timer_worksheet["B2"].value = "End:"
+        timer_worksheet["B2"].font = Font(bold=True, size=14)
+        timer_worksheet["C2"].value = "Duration:"
+        timer_worksheet["C2"].font = Font(bold=True, size=14)
+        timer_worksheet["D2"].value = "Break Duration:"
+        timer_worksheet["D2"].font = Font(bold=True, size=14)
+        timer_worksheet["E2"].value = "Subject:"
+        timer_worksheet["E2"].font = Font(bold=True, size=14)
+        change_cell_width(timer_worksheet, (1, 5), 20)
 
-        export_worksheet.merge_cells("G1:I1")
-        export_worksheet["G1"] = "Notes"
-        export_worksheet["G1"].font = Font(bold=True, size=16)
-        align_cells("G1:I1")
+        notes_worksheet.merge_cells("A1:C1")
+        notes_worksheet["A1"] = "Notes"
+        notes_worksheet["A1"].font = Font(bold=True, size=16)
+        align_cells(notes_worksheet, "A1:C1")
 
-        export_worksheet["G2"].value = "Date:"
-        export_worksheet["G2"].font = Font(bold=True, size=12)
-        export_worksheet["H2"].value = "Title:"
-        export_worksheet["H2"].font = Font(bold=True, size=12)
-        export_worksheet["I2"].value = "Text:"
-        export_worksheet["I2"].font = Font(bold=True, size=12)
-        change_cell_width((7, 9), 20)
+        notes_worksheet["A2"].value = "Date:"
+        notes_worksheet["A2"].font = Font(bold=True, size=14)
+        notes_worksheet["B2"].value = "Title:"
+        notes_worksheet["B2"].font = Font(bold=True, size=14)
+        notes_worksheet["C2"].value = "Text:"
+        notes_worksheet["C2"].font = Font(bold=True, size=14)
+        change_cell_width(notes_worksheet, (1, 3), 20)
 
         for data in range(3, self.data_amount + 3):
-            export_worksheet["A" + str(data)].value = self.worksheet["A" + str(data - 1)].value
-            export_worksheet["B" + str(data)].value = self.worksheet["B" + str(data - 1)].value
-            export_worksheet["C" + str(data)].value = str(round(self.worksheet["C" + str(data - 1)].value, 1)) + "m"
-            export_worksheet["D" + str(data)].value = str(round(self.worksheet["D" + str(data - 1)].value, 1)) + "m"
-            export_worksheet["E" + str(data)].value = self.worksheet["E" + str(data - 1)].value
+            timer_worksheet["A" + str(data)].value = self.worksheet["A" + str(data - 1)].value
+            timer_worksheet["B" + str(data)].value = self.worksheet["B" + str(data - 1)].value
+            timer_worksheet["C" + str(data)].value = str(round(self.worksheet["C" + str(data - 1)].value, 1)) + "m"
+            timer_worksheet["D" + str(data)].value = str(round(self.worksheet["D" + str(data - 1)].value, 1)) + "m"
+            timer_worksheet["E" + str(data)].value = self.worksheet["E" + str(data - 1)].value
 
+        note_list = []
         for note in range(self.notes_amount + 12, 12, -1):
-            if export_worksheet["M" + str(note-data-2)].value != "Yes":
-                export_worksheet["G" + str(note-data-2)].value = self.worksheet["N" + str(note)].value
-                export_worksheet["H" + str(note-data-2)].value = self.worksheet["O" + str(note)].value
-                export_worksheet["I" + str(note-data-2)].value = self.worksheet["P" + str(note)].value
-                export_worksheet["I" + str(note-data-2)].alignment =  Alignment(wrap_text=True)
+            if self.worksheet["M" + str(note)].value == "Yes":
+                continue
+            else:
+                note_list.append(note)
+
+
+        for index, note in enumerate(note_list):
+            notes_worksheet["A" + str(index + 3)].value = self.worksheet["N" + str(note)].value
+            notes_worksheet["A" + str(index + 3)].alignment = Alignment(horizontal="left", vertical="top")
+            notes_worksheet["A" + str(index + 3)].font = Font(size=12)
+            notes_worksheet["B" + str(index + 3)].value = self.worksheet["O" + str(note)].value
+            notes_worksheet["B" + str(index + 3)].alignment = Alignment(horizontal="left", vertical="top")
+            notes_worksheet["B" + str(index + 3)].font = Font(size=12)
+            notes_worksheet["C" + str(index + 3)].value = self.worksheet["P" + str(note)].value
+            notes_worksheet["C" + str(index + 3)].alignment =  Alignment(horizontal="left", vertical="top", wrap_text=True)
+            notes_worksheet.column_dimensions["C"].width = 107
 
         export_workbook.save(f"{os.path.join(os.path.expanduser("~"), "Desktop")}/timer_data_{datetime.datetime.now().date().strftime("%d.%m.%Y")}.xlsx")
 

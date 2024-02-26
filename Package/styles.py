@@ -44,7 +44,7 @@ tab_padding_y = 2
 tab_frame_color = "#222222"
 light_tab_frame_color = "#dedede"
 
-tab_highlight_color = "#333333"
+tab_highlight_color = "#444444"
 light_tab_highlight_color = "#cccccc"
 
 tab_selected_color = "#343434"
@@ -65,7 +65,7 @@ main_frame_pad_y = 0
 main_frame_color = "#2b2b2b"
 light_main_frame_color = "#d4d4d4"
 
-graph_height = (HEIGHT+((widget_padding_x+frame_padding)))/1.6 - frame_padding
+graph_height = (HEIGHT+((widget_padding_x+frame_padding)))/1.60 - frame_padding * 2
 graph_width = int(WIDTH/1.7 - frame_padding)
 
 graph_bg_color = frame_color
