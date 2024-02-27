@@ -10,6 +10,7 @@ import customtkinter as ctk
 import darkdetect
 from .styles import *
 from .note_management import NotesManager
+from .achievement import Achievement
 
 class DataManager:
     def __init__(self, App, timer_manager, workbook, worksheet):
@@ -27,10 +28,7 @@ class DataManager:
         self.date_list = []
         self.duration_list = []
         self.total_duration = 0
-        self.break_list = []
         self.total_break_duration = 0
-        self.hours_list = []
-        self.subject_list = []
         self.best_weekday = ""
         self.average_time = "00:00"
         self.graph_color = "#f38064"
@@ -45,12 +43,12 @@ class DataManager:
         self.data_amount = 0
         self.notes_amount = 0
         self.monday_duration = self.tuesday_duration = self.wednesday_duration = self.thursday_duration = self.friday_duration = self.saturday_duration = self.sunday_duration = 0
+        self.achievements = []
         self.color_name = "Orange"
         if darkdetect.isDark():
             self.theme_name = "Dark"
         else:
             self.theme_name = "Light"
-
         self.customize_excel()
         self.save_color()
         self.save_theme()
@@ -82,6 +80,9 @@ class DataManager:
 
 
     def create_total_data(self):
+        self.break_list = []
+        self.hours_list = []
+        self.subject_list = []
         def get_sec(time: str) -> int:
             """Get seconds from time."""
             h, m = time.split(":")
@@ -91,8 +92,10 @@ class DataManager:
             self.break_list.append(float(self.worksheet["D" + str(data)].value))
             self.hours_list.append(get_sec((self.worksheet["A" + str(data)].value.split(" ")[1])))
             self.subject_list.append(self.worksheet["E" + str(data)].value)
-                                   
-        self.total_break_duration = sum(self.break_list)
+        try:           
+            self.total_break_duration = round(sum(self.break_list))
+        except:
+            self.total_break_duration = 0
         try:
             self.average_time = str(datetime.timedelta(seconds=(round(sum(self.hours_list) / len(self.hours_list)))))[:5]
         except ZeroDivisionError:
@@ -101,6 +104,23 @@ class DataManager:
             self.most_common_subject = Counter(self.subject_list).most_common(1)[0][0]
         except IndexError:
             self.most_common_subject = ""
+        try:
+            self.most_common_subject_amount = Counter(self.subject_list).most_common(1)[0][1]
+        except:
+            self.most_common_subject_amount = 0
+        try:
+            self.unique_subjects = set(self.subject_list)
+        except:
+            self.unique_subjects = []
+        try:
+            self.longest_session = round(max(self.duration_list))
+        except:
+            self.longest_session = 0
+        
+
+        self.create_achievements()
+        
+
         def get_weekday():
             weekdays_dict = {}
             for i in range(2, 9):
@@ -309,8 +329,9 @@ class DataManager:
 
     def set_color(self, color_dropdown) -> None:
         self.color_name = color_dropdown.get()
-        print("Color set.")
-        self.save_color()
+        if self.color_name != self.worksheet["T2"].value:
+            print("Color set.")
+            self.save_color()
 
 
     def save_color(self) -> None:
@@ -336,10 +357,18 @@ class DataManager:
 
     def change_color(self) -> None:
         for widget in self.app.widget_list:
-            widget.configure(fg_color=self.color, hover_color=self.highlight_color)
-        self.app.progressbar.configure(progress_color = self.color)
+            if isinstance(widget, ctk.CTkButton):
+                widget.configure(fg_color=self.color, hover_color=self.highlight_color)
+            else:
+                if widget.get() != 0:
+                    widget.configure(progress_color = self.color)
+                else:
+                    widget.configure(progress_color=(light_border_frame_color, border_frame_color))
+        #self.app.progressbar.configure(progress_color = self.color)
         self.app.eye_care_checkbox.configure(fg_color=self.color)
         self.app.create_graphs()
+
+        self.app.create_achievements()
 
         self.load_notes()
         print("Color changed.")
@@ -347,8 +376,9 @@ class DataManager:
 
     def set_theme(self, theme_dropdown) -> None:
         self.theme_name = theme_dropdown.get()
-        print("Theme set.")
-        self.save_theme()
+        if self.theme_name != self.worksheet["U2"].value:
+            print("Theme set.")
+            self.save_theme()
 
 
     def save_theme(self) -> None:
@@ -407,6 +437,8 @@ class DataManager:
 
         print("New note created.")
 
+        self.create_achievements()
+        self.app.create_achievements()
         self.load_notes()
 
 
@@ -523,3 +555,14 @@ class DataManager:
         export_workbook.save(f"{os.path.join(os.path.expanduser("~"), "Desktop")}/timer_data_{datetime.datetime.now().date().strftime("%d.%m.%Y")}.xlsx")
 
         print("File exported.")
+
+
+    def create_achievements(self):
+        self.achievements = [Achievement(name="Time Titan", title="Clock in 1000 minutes of study, mastering the art of time management.", max_value=1000, value=self.total_duration),
+                             Achievement(name="Goal Getter", title="Reach 30 goals, proving dedication to progress.", max_value=30, value=self.goal_amount),
+                             Achievement(name="Subject Explorer", title="Dive into 7 different subjects, broadening your knowledge horizons.", max_value=7, value=len(self.unique_subjects)),
+                             Achievement(name="Focus Maestro", title="Master concentration in a 5-hour session, demonstrating exceptional focus.", max_value=5, value=round(self.longest_session/60, 2)),
+                             Achievement(name="Subject Savant", title="Study one subject 30 times, becoming a savant in its intricacies.", max_value=30, value=self.most_common_subject_amount),
+                             Achievement(name="Restful Respite", title="Accumulate 200 minutes of break time, rejuvenating your mind and body.", max_value=200, value=self.total_break_duration), 
+                             Achievement(name="Daily Discipline", title="Exhibit discipline through diligent study for 30 days.", max_value=30, value=len(set(self.date_list))),
+                             Achievement(name="Note Scribbler", title="Scribble down 10 notes, capturing key insights and ideas.", max_value=10, value=self.notes_amount)]

@@ -3,7 +3,6 @@ import random
 from PIL import Image
 import sys
 
-import datetime
 import openpyxl as op
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -53,6 +52,7 @@ class App:
         self._statistics_gui_setup()
         self._history_gui_setup()
         self._notes_gui_setup()
+        self._achievement_gui_setup()
         self._settings_gui_setup()
 
 
@@ -98,7 +98,8 @@ class App:
 
 
     def initialize_variables(self) -> None:
-        self.scroll_position = "left"
+        self.statistics_scroll_position = "left"
+        self.achievements_scroll_position = "left"
         self.scrolling = False
         self.widget_list = []
         self.default_choice = ctk.StringVar(value="1 hour")
@@ -310,10 +311,10 @@ class App:
         button_frame.place(anchor="s", relx=0.5, rely=1)
 
         self.left_button = ctk.CTkButton(button_frame, image=self.left_arrow_icon, text="Previous Graph", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
-                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll("left"))
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll_statistics("left"))
         self.left_button.grid(row=0, column=0)
         self.right_button = ctk.CTkButton(button_frame, text="Next Graph", image=self.right_arrow_icon, compound="right", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
-                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll("right"))
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll_statistics("right"))
         self.right_button.grid(row=0, column=1)
 
         self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
@@ -321,8 +322,6 @@ class App:
 
         self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
         self.statistics_facts_frame.grid(row=1, column=0, padx=0, pady=0)
-
-
 
 
     def _graph_gui_frame(self, row_index: int, column_index: int) -> ctk.CTkFrame:
@@ -557,6 +556,72 @@ class App:
                                             width=WIDTH - frame_padding * 4, height=HEIGHT - frame_padding * 8, fg_color=(light_frame_color, frame_color), border_width=2, bg_color="black")
         self.notes_textbox.grid(row=1, column=0, padx=widget_padding_x, pady=widget_padding_y)
 
+    
+    def _achievement_gui_setup(self):
+        self.achievements_scroll_frame = ctk.CTkScrollableFrame(self.achievements_frame, fg_color="transparent", height=HEIGHT+((widget_padding_x+frame_padding)), width=WIDTH, corner_radius=0, orientation="horizontal")
+        self.achievements_scroll_frame.grid(padx=0, pady=0)
+
+        button_frame = ctk.CTkFrame(self.achievements_frame, fg_color="transparent", width=WIDTH)
+        button_frame.place(anchor="s", relx=0.5, rely=1)
+
+        self.left_button = ctk.CTkButton(button_frame, image=self.left_arrow_icon, text="Previous Page", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll_achievements("left"))
+        self.left_button.grid(row=0, column=0)
+        self.right_button = ctk.CTkButton(button_frame, text="Next Page", image=self.right_arrow_icon, compound="right", font=(font_family, font_size), fg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color),
+                                         border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll_achievements("right"))
+        self.right_button.grid(row=0, column=1)
+
+
+    def create_achievements(self):
+        self.clear_frame(self.achievements_scroll_frame)
+
+        row = 0
+        column = -1
+        index = 0
+        for achievement in self.data_manager.achievements:
+            column += 1
+            if column % 3 == 0 and column != 0:
+                column = 0
+                row += 1
+                if row % 2 == 0 and column % 2 == 0:
+                    index += 3
+                    row = 0
+                    column = index
+            self.create_achievement(row, column, achievement.name, achievement.title, achievement.value, achievement.max_value)
+
+
+    def create_achievement(self, row, column, name, title, value, max_value):
+        def split_sentence(sentence):
+            midpoint = len(sentence) // 2
+            space_index = sentence.rfind(' ', 0, midpoint)
+            
+            first_half = sentence[:space_index]
+            second_half = sentence[space_index + 1:]
+            
+            return first_half, second_half
+        
+        
+        if len(title) > 20:
+            first_half, second_half = split_sentence(title)
+            title = f"{first_half}\n{second_half}"
+
+        if len(name) > 20:
+            name = name.replace(" ", "\n")
+
+        frame = ctk.CTkFrame(self.achievements_scroll_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH / 3 - frame_padding * 2, height=(HEIGHT+((widget_padding_x+frame_padding)*2))/2 - frame_padding * 4)
+        frame.grid(row=row, column=column, padx=frame_padding, pady=frame_padding)
+        name = ctk.CTkLabel(frame, text=name, font=(font_family, int(font_size*1.9)), text_color=(light_font_color, font_color))
+        name.place(anchor="n", relx=0.5, rely=0.1)
+        title = ctk.CTkLabel(frame, text=title, font=(font_family, int(font_size*0.9)), text_color=(light_font_color, font_color))
+        title.place(anchor="center", relx=0.5, rely=0.45)
+        value_text = ctk.CTkLabel(frame, text=f"{value}/{max_value}", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        value_text.place(anchor="center", relx=0.5, rely=0.7)
+        progress_bar = ctk.CTkProgressBar(frame, height=25, width=WIDTH/5, progress_color=self.data_manager.color, fg_color=(light_border_frame_color, border_frame_color), corner_radius=25)
+        progress_bar.place(anchor="center", relx=0.5, rely=0.8)
+        progress_bar.set(value / max_value)
+        if value == 0:
+            progress_bar.configure(progress_color=(light_border_frame_color, border_frame_color))
+
 
     def create_time_spent_graph(self, frame) -> None:
         data = {"Date": self.data_manager.date_list, "Duration": self.data_manager.duration_list}
@@ -591,7 +656,6 @@ class App:
 
     def create_weekday_graph(self, frame) -> None:
         self.data_manager.collect_day_data()
-        print(self.data_manager.day_duration_list)
         if self.data_manager.day_duration_list:
             non_zero_durations = [duration for duration in self.data_manager.day_duration_list if duration != 0]
             non_zero_names = [name for name, duration in zip(self.data_manager.day_name_list, self.data_manager.day_duration_list) if duration != 0]
@@ -703,8 +767,8 @@ class App:
         else:
             self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount, 1), "Minutes")
             self.create_funfact(0, 1, "Average Break Duration", round(self.data_manager.total_break_duration/self.data_manager.data_amount, 1), "Minutes")
-            self.create_funfact(0, 2, "Average study Start Time", self.data_manager.average_time)
-            self.create_funfact(0, 4, "Favorite subject", self.data_manager.most_common_subject, None, 3)
+            self.create_funfact(0, 2, "Average Study Start Time", self.data_manager.average_time)
+            self.create_funfact(0, 4, "Favorite Subject", self.data_manager.most_common_subject, None, 3)
             self.create_funfact(0, 5, "Most Productive Day", self.data_manager.best_weekday, None, 2.7)
             if self.data_manager.goal_amount == 0:
                 self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
@@ -887,6 +951,8 @@ class App:
             self.data_manager.load_theme()
             
             self.notification_limit_on = False
+
+            self.create_achievements()
         else:
             print("No data to save. (time less than 1m)")
 
@@ -1032,35 +1098,50 @@ class App:
             print("Data reset.")
 
 
-    def scroll(self, direction: str) -> None:
+    def scroll_statistics(self, direction: str) -> None:
         if self.scrolling:
             return
         
         if direction == "right":
-            if self.scroll_position == "left":
-                self.scroll_smoothly(0.465/2, 0)
-                self.scroll_position = "middle"
+            if self.statistics_scroll_position == "left":
+                self.scroll_smoothly(0.465/2, 0-0.05, self.statistics_scroll_frame)
+                self.statistics_scroll_position = "middle"
 
-            elif self.scroll_position == "middle":
-                self.scroll_smoothly(0.465, 0.465/2)
-                self.scroll_position = "right"
+            elif self.statistics_scroll_position == "middle":
+                self.scroll_smoothly(0.465+0.05, 0.465/2, self.statistics_scroll_frame)
+                self.statistics_scroll_position = "right"
 
         if direction == "left":
-            if self.scroll_position == "right":
-                self.scroll_smoothly(0.465/2, 0.465)
-                self.scroll_position = "middle"
+            if self.statistics_scroll_position == "right":
+                self.scroll_smoothly(0.465/2, 0.465+0.05, self.statistics_scroll_frame)
+                self.statistics_scroll_position = "middle"
 
-            elif self.scroll_position == "middle":
-                self.scroll_smoothly(0, 0.465/2)
-                self.scroll_position = "left"
+            elif self.statistics_scroll_position == "middle":
+                self.scroll_smoothly(0-0.05, 0.465/2, self.statistics_scroll_frame)
+                self.statistics_scroll_position = "left"
+
+    
+    def scroll_achievements(self, direction: str) -> None:
+        if self.scrolling:
+            return
+        
+        if direction == "right":
+            if self.achievements_scroll_position  == "left":
+                self.scroll_smoothly(0.465, 0, self.achievements_scroll_frame)
+                self.achievements_scroll_position = "right"
+
+        elif direction == "left":
+            if self.achievements_scroll_position  == "right":
+                self.scroll_smoothly(-0.005, 0.465, self.achievements_scroll_frame)
+                self.achievements_scroll_position = "left"
 
 
-    def scroll_smoothly(self, destination: float, position: float):        
+    def scroll_smoothly(self, destination: float, position: float, frame: ctk.CTkScrollableFrame):        
         if position < destination:
             position += 0.005
             if position < destination:
                 self.scrolling = True
-                self.WINDOW.after(3, self.scroll_smoothly, destination, position)
+                self.WINDOW.after(3, self.scroll_smoothly, destination, position, frame)
             else:
                 self.WINDOW.after(50, self.enable_scrolling)
                 return
@@ -1068,11 +1149,12 @@ class App:
             position -= 0.005
             if destination < position:
                 self.scrolling = True
-                self.WINDOW.after(3, self.scroll_smoothly, destination, position)
+                self.WINDOW.after(3, self.scroll_smoothly, destination, position, frame)
             else:
                 self.WINDOW.after(50, self.enable_scrolling)
                 return
-        self.statistics_scroll_frame._parent_canvas.xview_moveto(position)
+        frame._parent_canvas.xview_moveto(position)
+
 
 
     def enable_scrolling(self):
@@ -1087,6 +1169,7 @@ class App:
         for frame in self.WINDOW.winfo_children():
             if isinstance(frame, ctk.CTkFrame):
                 frame_list.append(frame)
+                
         frame_list.pop(0)
         frame_list.pop(1)
 
@@ -1100,11 +1183,15 @@ class App:
             _get_widgets(frame)
 
         for widget in widgets:
-            if isinstance(widget, ctk.CTkButton):
-                self.widget_list.append(widget)
+            if isinstance(widget, ctk.CTkButton) or isinstance(widget, ctk.CTkProgressBar):
+                if ".!ctkframe5" in str(widget) and isinstance(widget, ctk.CTkButton):
+                    pass
+                else:
+                    self.widget_list.append(widget)
 
 
     def lock_widgets(self):
+        self.progressbar.configure(progress_color=self.data_manager.color)
         self.frequency_input.configure(state="disabled")
         self.frequency_input.insert("end", self.data_manager.autobreak_frequency)
         self.duration_input.configure(state="disabled")
@@ -1122,6 +1209,7 @@ class App:
 
 
     def unlock_widgets(self):
+        self.progressbar.configure(progress_color=(light_border_frame_color, border_frame_color))
         self.frequency_input.configure(state="normal")
         self.frequency_input.delete("end")
         self.duration_input.configure(state="normal")
