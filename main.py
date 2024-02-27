@@ -1,6 +1,7 @@
 import os
 import random
 from PIL import Image
+import sys
 
 import datetime
 import openpyxl as op
@@ -590,7 +591,7 @@ class App:
 
     def create_weekday_graph(self, frame) -> None:
         self.data_manager.collect_day_data()
-
+        print(self.data_manager.day_duration_list)
         if self.data_manager.day_duration_list:
             non_zero_durations = [duration for duration in self.data_manager.day_duration_list if duration != 0]
             non_zero_names = [name for name, duration in zip(self.data_manager.day_name_list, self.data_manager.day_duration_list) if duration != 0]
@@ -1026,19 +1027,9 @@ class App:
                                          button_hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=self.data_manager.font_color, button_text_color="black")
         if reset_messagebox.get() == "Yes":
             os.remove(self.data_file)
-            self.timer_manager.timer_running = False
-            self.timer_manager.break_running = False
-            self.reset_gui_values()
-            self.clear_hisotry()
-
-            self._file_setup()
+            self.restart_program()
 
             print("Data reset.")
-
-
-    def clear_hisotry(self):
-        for widget in self.history_data_frame.winfo_children():
-            widget.destroy()
 
 
     def scroll(self, direction: str) -> None:
@@ -1159,6 +1150,11 @@ class App:
 
     def run(self) -> None:
         self.WINDOW.mainloop()
+
+    
+    def restart_program(self) -> None:
+        python = sys.executable
+        os.execl(python, python, *sys.argv)
 
 
 if __name__ == "__main__":

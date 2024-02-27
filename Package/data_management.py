@@ -225,13 +225,13 @@ class DataManager:
 
 
     def collect_day_data(self) -> None:
-        self.monday_duration = int(self.worksheet["W2"].value)
-        self.tuesday_duration = int(self.worksheet["W3"].value)
-        self.wednesday_duration = int(self.worksheet["W4"].value)
-        self.thursday_duration = int(self.worksheet["W5"].value)
-        self.friday_duration = int(self.worksheet["W6"].value)
-        self.saturday_duration = int(self.worksheet["W7"].value)
-        self.sunday_duration = int(self.worksheet["W8"].value)
+        self.monday_duration = round(self.worksheet["W2"].value)
+        self.tuesday_duration = round(self.worksheet["W3"].value)
+        self.wednesday_duration = round(self.worksheet["W4"].value)
+        self.thursday_duration = round(self.worksheet["W5"].value)
+        self.friday_duration = round(self.worksheet["W6"].value)
+        self.saturday_duration = round(self.worksheet["W7"].value)
+        self.sunday_duration = round(self.worksheet["W8"].value)
 
         self.day_duration_list = [self.monday_duration, self.tuesday_duration, self.wednesday_duration, self.thursday_duration, self.friday_duration, self.saturday_duration, self.sunday_duration]
     
