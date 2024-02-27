@@ -8,6 +8,8 @@ class TimerManager:
 
 
     def initialize_variables(self):
+        self.timer_start_cooldown = False
+        self.break_start_cooldown = False
         self.timer_running = False
         self.break_running = False
         self.timer_time = 0
@@ -15,6 +17,12 @@ class TimerManager:
 
 
     def timer_mechanism(self, timer_button, break_button, time_display_label):
+        if self.timer_start_cooldown:
+            return
+        self.timer_start_cooldown = True
+
+        self.window.after(1000, self.enable_timer_start)
+
         self.time_display_label = time_display_label
         if not self.timer_running:
             self.app.lock_widgets()
@@ -40,6 +48,13 @@ class TimerManager:
 
 
     def break_mechanism(self, break_button, timer_button, break_display_label):
+        if self.timer_time < 1 or self.break_start_cooldown:
+            return
+
+        self.break_start_cooldown = True
+
+        self.window.after(1000, self.enable_break_start)
+
         self.break_display_label = break_display_label
         if not self.break_running:
             self.break_running = True
@@ -49,7 +64,7 @@ class TimerManager:
             self._update_break_time()
         elif self.break_running:
             self.break_running = False
-            self.break_button.configure(text="Start")
+            break_button.configure(text="Start")
 
 
     def _update_break_time(self):
@@ -57,3 +72,11 @@ class TimerManager:
             self.break_time += 1
             self.break_display_label.configure(text=str(datetime.timedelta(seconds=self.break_time)))
             self.window.after(1000, self._update_break_time)
+
+
+    def enable_timer_start(self):
+        self.timer_start_cooldown = False
+
+
+    def enable_break_start(self):
+        self.break_start_cooldown = False

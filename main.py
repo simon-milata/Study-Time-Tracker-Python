@@ -218,7 +218,7 @@ class App:
         goal_label = ctk.CTkLabel(goal_frame, text="Goal", font=(font_family, font_size), text_color=(light_font_color, font_color))
         goal_label.place(anchor="nw", relx=0.05, rely=0.05)
 
-        self.goal_dropdown = ctk.CTkComboBox(goal_frame, values=["1 minutes", "30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
+        self.goal_dropdown = ctk.CTkComboBox(goal_frame, values=["30 minutes", "1 hour", "1 hour, 30 minutes", "2 hours", "2 hours, 30 minutes", "3 hours", "3 hours, 30 minutes",
                                                             "4 hours", "4 hours, 30 minutes", "5 hours", "5 hours, 30 minutes", "6 hours"], variable=self.default_choice, 
                                                             state="readonly", width=200, height=30, dropdown_font=(font_family, int(font_size*0.75)), border_color=(light_border_frame_color, border_frame_color),
                                                             font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color))
@@ -339,8 +339,8 @@ class App:
         history_label_frame.pack(pady=(frame_padding*1.2, frame_padding))
         history_label_frame.grid_propagate(False)
 
-        history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=500+frame_padding*4, corner_radius=10)
-        history_data_frame.pack(padx=frame_padding)
+        self.history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=500+frame_padding*4, corner_radius=10)
+        self.history_data_frame.pack(padx=frame_padding)
 
         start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
         start_label.grid(row=0, column=0, pady=widget_padding_y)
@@ -353,31 +353,31 @@ class App:
         subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
         subject_label.grid(row=0, column=4, pady=widget_padding_y)
 
-        start_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        start_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         start_frame.grid(row=1, column=0)
         start_frame.pack_propagate(False)
         self.start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.start_text.pack()
 
-        end_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        end_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         end_frame.grid(row=1, column=1)
         end_frame.pack_propagate(False)
         self.end_text = ctk.CTkLabel(end_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.end_text.pack()
 
-        duration_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        duration_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         duration_frame.grid(row=1, column=2)
         duration_frame.pack_propagate(False)
         self.duration_text = ctk.CTkLabel(duration_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.duration_text.pack()
 
-        break_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        break_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         break_frame.grid(row=1, column=3)
         break_frame.pack_propagate(False)
         self.break_text = ctk.CTkLabel(break_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
         self.break_text.pack()
 
-        subject_frame = ctk.CTkFrame(history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        subject_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
         subject_frame.grid(row=1, column=4)
         subject_frame.pack_propagate(False)
         self.subject_text = ctk.CTkLabel(subject_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
@@ -640,7 +640,7 @@ class App:
         fig, ax = plt.subplots(figsize=(5, 5))
 
         # Plot
-        ax.plot(dates, cumulative_times, marker='o', color=self.data_manager.color)
+        ax.plot(dates, cumulative_times, color=self.data_manager.color)
 
         fig, ax = plt.subplots()
         ax.plot(dates, cumulative_times, color=self.data_manager.graph_color)
@@ -677,9 +677,9 @@ class App:
 
     def create_graphs(self) -> None:
         self.statistics_frame.grid_propagate(False)
+        plt.close("all")
         self.clear_frame(self.statistics_facts_frame)
         self.clear_frame(self.statistics_graph_frame)
-        #self.WINDOW.after(10, self.statistics_scroll_frame._parent_canvas.yview_moveto, 1.0)
 
         self.create_time_spent_graph(self._graph_gui_frame(0, 0))
         self.create_weekday_graph(self._graph_gui_frame(0, 1))
@@ -697,7 +697,7 @@ class App:
             self.create_funfact(0, 2, "Average study Start Time", "00:00")
             self.create_funfact(0, 3, "Goal Met in", "0%", "of Sessions")
             self.create_funfact(0, 4, "Favorite subject", "")
-            self.create_funfact(0, 5, "Most Productive Day", "0")
+            self.create_funfact(0, 5, "Most Productive Day", "")
 
         else:
             self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount, 1), "Minutes")
@@ -871,17 +871,7 @@ class App:
 
         #Only be able to save if time is higher than 1m
         if time_in_minutes >= 1:
-            self.frequency_input.configure(state="normal")
-            self.frequency_input.delete("end")
-            self.duration_input.configure(state="normal")
-            self.duration_input.delete("end")
-            self.autobreak_button.configure(state="normal", fg_color=button_color)
-            self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
-            self.subject_button.configure(state="normal", fg_color=button_color)
-            self.goal_button.configure(state="normal", fg_color=button_color)
-            self.goal_dropdown.configure(state="normal")
-            self.subject_selection.configure(state="normal")
-            self.autobreak_switch.configure(state="normal")
+            self.unlock_widgets()
 
             if time_in_minutes >= self.goal:
                 self.data_manager.increase_goal_streak()
@@ -905,7 +895,7 @@ class App:
         if "." in frequency_input:
             frequency_input = (frequency_input.split(".")[0]).replace(".", "")
 
-        if len(frequency_input) == 0:
+        if len(frequency_input) == 0 or int(frequency_input) == 0:
             frequency_input = self.data_manager.autobreak_frequency
         else:
             if self.data_manager.autobreak_frequency != self.frequency_input.cget("placeholder_text"):
@@ -918,7 +908,7 @@ class App:
         if "." in duration_input:
             duration_input = (duration_input.split(".")[0]).replace(".", "")
 
-        if len(duration_input) == 0:
+        if len(duration_input) == 0 or int(duration_input) == 0:
             duration_input = self.data_manager.autobreak_duration
         else:
             if self.data_manager.autobreak_duration != self.duration_input.cget("placeholder_text"):
@@ -1039,8 +1029,16 @@ class App:
             self.timer_manager.timer_running = False
             self.timer_manager.break_running = False
             self.reset_gui_values()
+            self.clear_hisotry()
 
             self._file_setup()
+
+            print("Data reset.")
+
+
+    def clear_hisotry(self):
+        for widget in self.history_data_frame.winfo_children():
+            widget.destroy()
 
 
     def scroll(self, direction: str) -> None:
@@ -1130,6 +1128,20 @@ class App:
         self.goal_button.configure(state="disabled", fg_color="grey")
         if self.autobreak_switch.get() == "On":
             self.break_button.configure(state="disabled", fg_color = "grey", command=None, hover=False)
+
+
+    def unlock_widgets(self):
+        self.frequency_input.configure(state="normal")
+        self.frequency_input.delete("end")
+        self.duration_input.configure(state="normal")
+        self.duration_input.delete("end")
+        self.autobreak_button.configure(state="normal", fg_color=button_color)
+        self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
+        self.subject_button.configure(state="normal", fg_color=button_color)
+        self.goal_button.configure(state="normal", fg_color=button_color)
+        self.goal_dropdown.configure(state="normal")
+        self.subject_selection.configure(state="normal")
+        self.autobreak_switch.configure(state="normal")
 
 
     def save_on_quit(self) -> None:

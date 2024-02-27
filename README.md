@@ -10,7 +10,8 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 - **History**: Review past study sessions in the history tab to track your productivity.
 - **Eye Care Setting**: Enable the 20/20/20 setting to take breaks and care for your eyes during long study sessions.
 - **Color Settings**: Customize the app's color theme to suit your preferences.
-
+- **Notes**: Keep track of important information, ideas, or reminders related to your study sessions.
+- **And More**
 ## Installation
 
 1. Clone the repository:
@@ -44,8 +45,6 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 
 ## Upcoming Features
 
-- **Pomodoro Timer**: Introduce a Pomodoro technique timer to help users study with intervals of focused work and short breaks.
-- **Notes**: Allow users to take notes during their study sessions to jot down important points or ideas.
 - **Achievements**: Implement an achievement system to reward users for meeting study goals and maintaining consistent study habits.
 
 ## Contributing

@@ -106,7 +106,10 @@ class DataManager:
             for i in range(2, 9):
                 if self.worksheet["W" + str(i)].value != 0:
                     weekdays_dict[self.worksheet["W" + str(i)].value] = self.day_name_list[i-2]
-            self.best_weekday = weekdays_dict[max(weekdays_dict)]
+            if weekdays_dict:
+                self.best_weekday = weekdays_dict[max(weekdays_dict)]
+            else:
+                self.best_weekday = ""
         get_weekday()
 
 
@@ -214,18 +217,6 @@ class DataManager:
 
     def increase_goal_streak(self) -> None:
         self.goal_amount += 1
-
-    
-    def reset_data(self, workbook, worksheet) -> None:
-        self.workbook = workbook
-        self.worksheet = worksheet
-
-        self.initialize_new_file_variables()
-        self.customize_excel()
-
-        self.workbook.save(self.app.data_file)
-
-        print("Data reset.")
 
 
     def clear_graph_lists(self) -> None:
