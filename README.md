@@ -41,7 +41,9 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 
 ## Screenshots
 
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/ac7da226-35e4-4580-8047-c102ee8c3f2f" width="800">
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/9fd871c5-4d71-4287-a456-625f2f36c0c7" width="800">
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/201ea8a4-3e62-4c82-9d17-4aefbf87bc6c" width="500">
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/dffab627-5803-4985-b62a-e1b6bde3b5f3" width="500">
 
 ## Upcoming Features
 
