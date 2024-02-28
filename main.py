@@ -2,6 +2,7 @@ import os
 import random
 from PIL import Image
 import sys
+import pstats
 
 import openpyxl as op
 import pandas as pd
@@ -12,6 +13,7 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 import customtkinter as ctk
 from winotify import Notification
 from CTkMessagebox import CTkMessagebox
+import datetime
 
 from Package import *
 
@@ -95,6 +97,9 @@ class App:
             self.data_manager.initialize_new_file_variables()
             self.data_manager.load_autobreak()
             self.data_manager.save_eye_care("Off", "Off")
+
+            self.data_manager.create_total_data()
+            self.create_achievements()
 
 
     def initialize_variables(self) -> None:
@@ -239,7 +244,7 @@ class App:
         progress_label = ctk.CTkLabel(progress_frame, text="Progress", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
         progress_label.place(anchor="nw", relx=0.05, rely=0.05)
 
-        self.progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_color=button_color, fg_color=(light_border_frame_color, border_frame_color), corner_radius=10)
+        self.progressbar = ctk.CTkProgressBar(progress_frame, height=20, width=220, progress_color=(light_border_frame_color, border_frame_color), fg_color=(light_border_frame_color, border_frame_color), corner_radius=10)
         self.progressbar.place(anchor="center", relx=0.5, rely=0.65)
         self.progressbar.set(0)
 
@@ -695,8 +700,13 @@ class App:
 
 
     def create_total_time_graph(self, frame):
-        dates = self.data_manager.date_list
-        times = self.data_manager.duration_list
+        dates = self.data_manager.date_list.copy()
+        times = self.data_manager.duration_list.copy()
+
+        if times:
+            dates.insert(0, (dates[0] - datetime.timedelta(days=1)))
+            times.insert(0, 0)
+
 
         # Calculate cumulative time
         cumulative_times = [sum(times[:i+1]) for i in range(len(times))]
@@ -765,8 +775,8 @@ class App:
             self.create_funfact(0, 5, "Most Productive Day", "")
 
         else:
-            self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount, 1), "Minutes")
-            self.create_funfact(0, 1, "Average Break Duration", round(self.data_manager.total_break_duration/self.data_manager.data_amount, 1), "Minutes")
+            self.create_funfact(0, 0, "Average Study Duration", round(self.data_manager.total_duration/self.data_manager.data_amount), "Minutes")
+            self.create_funfact(0, 1, "Average Break Duration", round(self.data_manager.total_break_duration/self.data_manager.data_amount), "Minutes")
             self.create_funfact(0, 2, "Average Study Start Time", self.data_manager.average_time)
             self.create_funfact(0, 4, "Favorite Subject", self.data_manager.most_common_subject, None, 3)
             self.create_funfact(0, 5, "Most Productive Day", self.data_manager.best_weekday, None, 2.7)
@@ -859,7 +869,6 @@ class App:
         self.times_goal_reached.configure(text=0)
         self.streak_duration.configure(text=0)
         self.progressbar.set(0)
-        self.progressbar.configure(progress_color = self.data_manager.color)
         self.reset_timers()
 
 
@@ -948,7 +957,7 @@ class App:
             self.update_streak_values()
             self.load_history()
 
-            self.data_manager.load_theme()
+            self.create_graphs()
             
             self.notification_limit_on = False
 
@@ -1186,6 +1195,8 @@ class App:
             if isinstance(widget, ctk.CTkButton) or isinstance(widget, ctk.CTkProgressBar):
                 if ".!ctkframe5" in str(widget) and isinstance(widget, ctk.CTkButton):
                     pass
+                elif ".!ctkframe2" in str(widget) and isinstance(widget, ctk.CTkProgressBar):
+                    pass
                 else:
                     self.widget_list.append(widget)
 
@@ -1214,13 +1225,13 @@ class App:
         self.frequency_input.delete("end")
         self.duration_input.configure(state="normal")
         self.duration_input.delete("end")
-        self.autobreak_button.configure(state="normal", fg_color=button_color)
-        self.break_button.configure(state="normal", fg_color=button_color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
-        self.subject_button.configure(state="normal", fg_color=button_color)
-        self.goal_button.configure(state="normal", fg_color=button_color)
-        self.goal_dropdown.configure(state="normal")
-        self.subject_selection.configure(state="normal")
-        self.autobreak_switch.configure(state="normal")
+        self.autobreak_button.configure(state="normal", fg_color=self.data_manager.color)
+        self.break_button.configure(state="normal", fg_color=self.data_manager.color, command=lambda: self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label), hover=True)
+        self.subject_button.configure(state="normal", fg_color=self.data_manager.color)
+        self.goal_button.configure(state="normal", fg_color=self.data_manager.color)
+        self.goal_dropdown.configure(state="readonly")
+        self.subject_selection.configure(state="readonly")
+        self.autobreak_switch.configure(state="readonly")
 
 
     def save_on_quit(self) -> None:
@@ -1229,17 +1240,20 @@ class App:
 
         self.workbook.save(self.data_file)
 
-        self.WINDOW.destroy()
+        self.WINDOW.quit()
 
 
     def change_focus(self, event) -> None:
-        event.widget.focus_set()
+        try:
+            event.widget.focus_set()
+        except AttributeError:
+            pass
 
 
     def run(self) -> None:
         self.WINDOW.mainloop()
 
-    
+
     def restart_program(self) -> None:
         python = sys.executable
         os.execl(python, python, *sys.argv)

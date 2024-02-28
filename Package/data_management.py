@@ -1,5 +1,6 @@
 from collections import Counter
 import os
+import cProfile
 
 import datetime
 import openpyxl as op
@@ -19,8 +20,19 @@ class DataManager:
         self.workbook = workbook
         self.worksheet = worksheet
         self.initialize_variables()
+        self._initialize_once()
 
         self.notes_manager = NotesManager(self.app, self)
+
+    
+    def _initialize_once(self) -> None:
+        self.theme_changed = True
+        self.color_changed = True
+        self.graph_color = "#f38064"
+        self.graph_bg_color = graph_bg_color
+        self.graph_fg_color = graph_fg_color
+        self.font_color = font_color
+        self.spine_color = border_frame_color
 
 
     def initialize_variables(self) -> None:
@@ -31,11 +43,6 @@ class DataManager:
         self.total_break_duration = 0
         self.best_weekday = ""
         self.average_time = "00:00"
-        self.graph_color = "#f38064"
-        self.graph_bg_color = graph_bg_color
-        self.graph_fg_color = graph_fg_color
-        self.font_color = font_color
-        self.spine_color = border_frame_color
         
 
     def initialize_new_file_variables(self) -> None:
@@ -328,9 +335,12 @@ class DataManager:
 
 
     def set_color(self, color_dropdown) -> None:
+        self.color_changed = True
         self.color_name = color_dropdown.get()
         if self.color_name != self.worksheet["T2"].value:
+
             print("Color set.")
+
             self.save_color()
 
 
@@ -342,6 +352,10 @@ class DataManager:
     def load_color(self) -> None:
         self.color_name = self.worksheet["T2"].value
         self.app.color_dropdown.configure(variable=ctk.StringVar(value=self.color_name))
+
+        if self.color_changed == False:
+            return
+
         colors = {"Orange": [orange_button_color, orange_highlight_color, orange_pie_colors], 
                     "Green": [green_button_color, green_highlight_color, green_pie_colors], 
                     "Blue": [blue_button_color, blue_highlight_color, blue_pie_colors],
@@ -352,7 +366,10 @@ class DataManager:
         self.pie_colors = colors[self.color_name][2]
         self.graph_color = self.color
         print("Color loaded.")
+
         self.change_color()
+
+        self.color_changed = False
 
 
     def change_color(self) -> None:
@@ -364,8 +381,10 @@ class DataManager:
                     widget.configure(progress_color = self.color)
                 else:
                     widget.configure(progress_color=(light_border_frame_color, border_frame_color))
-        #self.app.progressbar.configure(progress_color = self.color)
+
         self.app.eye_care_checkbox.configure(fg_color=self.color)
+        if self.app.progressbar.get() != 0:
+            self.app.progressbar.configure(progress_color = self.color)
         self.app.create_graphs()
 
         self.app.create_achievements()
@@ -375,6 +394,7 @@ class DataManager:
 
 
     def set_theme(self, theme_dropdown) -> None:
+        self.theme_changed = True
         self.theme_name = theme_dropdown.get()
         if self.theme_name != self.worksheet["U2"].value:
             print("Theme set.")
@@ -390,6 +410,9 @@ class DataManager:
         self.theme_name = self.worksheet["U2"].value
         self.app.theme_dropdown.configure(variable=ctk.StringVar(value=self.theme_name))
 
+        if self.theme_changed == False:
+            return
+
         if self.theme_name == "Dark":
             ctk.set_appearance_mode("dark")
             self.graph_bg_color = graph_bg_color
@@ -404,6 +427,8 @@ class DataManager:
             self.font_color = "black"
 
         self.app.create_graphs()
+
+        self.theme_changed = False
 
         print("Theme loaded.")
 
