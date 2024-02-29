@@ -13,7 +13,13 @@ class NotesManager:
         self.frame.grid_propagate(False)
 
         def title_text(title: str) -> str:
-            max_letters = 50
+            max_letters = 40
+
+            for letter in title:
+                if letter.isupper():
+                    max_letters -= 0.35
+
+            max_letters = int(max_letters)
 
             display_title = title
 
@@ -22,12 +28,13 @@ class NotesManager:
                 
             return display_title
 
-        title = ctk.CTkLabel(self.frame, text=title_text(str(self.data_manager.worksheet["O" + str(index)].value)), font=(font_family, font_size*1.25),
+        title = ctk.CTkLabel(self.frame, text=title_text(str(self.data_manager.worksheet["O" + str(index)].value)), font=(font_family, font_size*1.2),
                              text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
         title.grid(row=0, column=0, padx=widget_padding_x)
-        date = ctk.CTkLabel(self.frame, text=str(self.data_manager.worksheet["N" + str(index)].value), font=(font_family, font_size*1.25),
-                            text_color=(light_font_color, font_color), anchor="center", height=button_height + frame_padding * 2)
-        date.place(anchor="center", relx=0.5, rely=0.5)
+
+        date = ctk.CTkLabel(self.frame, text=str(self.data_manager.worksheet["N" + str(index)].value), font=(font_family, font_size*1),
+                            text_color=(light_off_font_color, off_font_color), anchor="center", height=button_height + frame_padding * 2)
+        date.place(anchor="center", relx=0.575, rely=0.5)
 
         button_frame = ctk.CTkFrame(self.frame, fg_color="transparent")
         button_frame.place(anchor="center", rely=0.5, relx=0.825)
@@ -58,12 +65,26 @@ class NotesManager:
         header_frame.grid(row=0, column=0, pady=(0, frame_padding))
         header_frame.grid_propagate(False)
 
-        title_label = ctk.CTkLabel(header_frame, text=title, font=(font_family, font_size*1.5), text_color=(light_font_color, font_color),
+        def title_text(title: str) -> str:
+            max_letters = 45
+
+            for letter in title:
+                if letter.isupper():
+                    max_letters -= 0.4
+            
+
+            max_letters = int(max_letters)
+
+            display_title = title
+
+            if len(title) > max_letters:
+                display_title = title[:max_letters] + "..."
+                
+            return display_title
+
+        title_label = ctk.CTkLabel(header_frame, text=title_text(title), font=(font_family, font_size*1.5), text_color=(light_font_color, font_color),
                                    height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color), anchor="w")
         title_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
-        #date_label = ctk.CTkLabel(header_frame, text=date, font=(font_family, font_size), text_color=(light_font_color, font_color),
-                                  #height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color))
-        #date_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
 
         button_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
         button_frame.place(anchor="center", rely=0.5, relx=0.825)

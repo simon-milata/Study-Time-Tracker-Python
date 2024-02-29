@@ -2,7 +2,7 @@ import os
 import random
 from PIL import Image
 import sys
-import pstats
+import ctypes
 
 import openpyxl as op
 import pandas as pd
@@ -18,9 +18,9 @@ import datetime
 from Package import *
 
 
-
 class App:
     def __init__(self):
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
         self.APPNAME = "Timer App"
         self.FILENAME = "Timer Data.xlsx"
 
@@ -103,6 +103,7 @@ class App:
 
 
     def initialize_variables(self) -> None:
+        self.history_height = 0
         self.graph_limit = True
         self.statistics_scroll_position = "left"
         self.achievements_scroll_position = "left"
@@ -273,7 +274,7 @@ class App:
 
 
     def _timer_gui_setup(self) -> None:
-        timer_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
+        timer_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=250)
         timer_frame.pack(padx=frame_padding, pady=frame_padding)
         timer_frame.pack_propagate(False)
 
@@ -287,7 +288,7 @@ class App:
         
     
     def _break_gui_setup(self) -> None:
-        break_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=220)
+        break_frame = ctk.CTkFrame(self.timer_break_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=250)
         break_frame.pack(padx=frame_padding, pady=frame_padding)
         break_frame.pack_propagate(False)
 
@@ -300,7 +301,7 @@ class App:
         self.break_button.place(anchor="s", relx=0.5, rely=0.9)
 
     def _save_data_gui(self) -> None:
-        self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-10, height=button_height*2)
+        self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-frame_padding*2, height=button_height*2)
         self.data_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.data_frame.grid_propagate(False)
         self.save_data_button = ctk.CTkButton(self.data_frame, text="Save Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
@@ -341,53 +342,41 @@ class App:
         history_frame_frame.grid(row=0, column=0)
         history_frame_frame.pack_propagate(False)
 
-        history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH - frame_padding * 2, corner_radius=10, height=50)
-        history_label_frame.pack(pady=(frame_padding*1.2, frame_padding))
-        history_label_frame.grid_propagate(False)
+        self.history_label_frame = ctk.CTkFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH - frame_padding * 2, corner_radius=10, height=50)
+        self.history_label_frame.pack(pady=(frame_padding*1.2, frame_padding))
+        self.history_label_frame.grid_propagate(False)
 
         self.history_data_frame = ctk.CTkScrollableFrame(history_frame_frame, fg_color=(light_frame_color, frame_color), width=WIDTH-(frame_padding*4), height=500+frame_padding*4, corner_radius=10)
         self.history_data_frame.pack(padx=frame_padding)
 
-        start_label = ctk.CTkLabel(history_label_frame, text="Start", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
-        start_label.grid(row=0, column=0, pady=widget_padding_y)
-        end_label = ctk.CTkLabel(history_label_frame, text="End", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
-        end_label.grid(row=0, column=1, pady=widget_padding_y)
-        duration_label = ctk.CTkLabel(history_label_frame, text="Duration", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
-        duration_label.grid(row=0, column=2, pady=widget_padding_y)
-        break_label = ctk.CTkLabel(history_label_frame, text="Break", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
-        break_label.grid(row=0, column=3, pady=widget_padding_y)
-        subject_label = ctk.CTkLabel(history_label_frame, text="Subject", font=(font_family, int(font_size*1.25)), text_color=(light_font_color, font_color), fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=30)
-        subject_label.grid(row=0, column=4, pady=widget_padding_y)
+        history_labels = ["Start", "End", "Duration", "Break", "Subject"]
 
-        start_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        start_frame.grid(row=1, column=0)
-        start_frame.pack_propagate(False)
-        self.start_text = ctk.CTkLabel(start_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
-        self.start_text.pack()
+        for index in range(len(history_labels)):
+            history_label_frame = ctk.CTkFrame(self.history_label_frame, fg_color="transparent", width=WIDTH / 5 - frame_padding / 2, height=50)
+            history_label_frame.grid(row=1, column=index)
+            label = ctk.CTkLabel(history_label_frame, text=history_labels[index], font=(font_family, int(font_size*1.5)), text_color=(light_font_color, font_color))
+            label.place(anchor="center", relx=0.5, rely=0.5)
 
-        end_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        end_frame.grid(row=1, column=1)
-        end_frame.pack_propagate(False)
-        self.end_text = ctk.CTkLabel(end_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
-        self.end_text.pack()
 
-        duration_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        duration_frame.grid(row=1, column=2)
-        duration_frame.pack_propagate(False)
-        self.duration_text = ctk.CTkLabel(duration_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
-        self.duration_text.pack()
+        self.start_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.start_frame.grid(row=1, column=0)
+        self.start_frame.pack_propagate(False)
 
-        break_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        break_frame.grid(row=1, column=3)
-        break_frame.pack_propagate(False)
-        self.break_text = ctk.CTkLabel(break_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
-        self.break_text.pack()
+        self.end_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.end_frame.grid(row=1, column=1)
+        self.end_frame.pack_propagate(False)
 
-        subject_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
-        subject_frame.grid(row=1, column=4)
-        subject_frame.pack_propagate(False)
-        self.subject_text = ctk.CTkLabel(subject_frame, font=(font_family, font_size), text_color=(light_font_color, font_color), text="-")
-        self.subject_text.pack()
+        self.duration_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.duration_frame.grid(row=1, column=2)
+        self.duration_frame.pack_propagate(False)
+
+        self.break_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.break_frame.grid(row=1, column=3)
+        self.break_frame.pack_propagate(False)
+
+        self.subject_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.subject_frame.grid(row=1, column=4)
+        self.subject_frame.pack_propagate(False)
 
 
     def _settings_gui_setup(self) -> None:
@@ -440,7 +429,7 @@ class App:
                                              font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
         self.eye_care_selection.place(anchor="center", relx=0.5, rely=0.35)
         self.eye_care_checkbox = ctk.CTkCheckBox(eye_care_frame, text="Only on when timer running", fg_color=button_color, hover=False, offvalue="Off",
-                                                 font=(font_family, font_size*0.8), text_color=(light_font_color, font_color), checkmark_color=button_font_color, onvalue="On", border_color=(light_frame_border_color, border_frame_color))
+                                                 font=(font_family, font_size*0.8), text_color=(light_off_font_color, off_font_color), checkmark_color=button_font_color, onvalue="On", border_color=(light_frame_border_color, border_frame_color))
         self.eye_care_checkbox.place(anchor="center", relx=0.5, rely=0.55)
         eye_care_button = ctk.CTkButton(eye_care_frame, text="Save", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, 
                                         hover_color=button_highlight_color, height=button_height, command=self.select_eye_care)
@@ -483,7 +472,7 @@ class App:
         autobreak_frame = ctk.CTkFrame(self.subject_autobreak_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=frame_width, height=400)
         autobreak_frame.pack(padx=frame_padding, pady=frame_padding)
         autobreak_frame.pack_propagate(False)
-        autobreak_label = ctk.CTkLabel(autobreak_frame, text="Auto-start break", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        autobreak_label = ctk.CTkLabel(autobreak_frame, text="Auto-start Break", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
         autobreak_label.place(anchor="nw", relx=0.05, rely=0.05)
 
         frequency_duration_frame = ctk.CTkFrame(autobreak_frame, fg_color="transparent")
@@ -530,7 +519,7 @@ class App:
         self.notes_data_frame = ctk.CTkScrollableFrame(self.notes_frame_frame, fg_color="transparent", width=WIDTH + frame_padding*4, height=520+frame_padding*2, label_anchor="w")
         self.notes_data_frame.pack()
         
-        new_note_button = ctk.CTkButton(new_note_frame, text="New note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
+        new_note_button = ctk.CTkButton(new_note_frame, text="New Note", font=(font_family, font_size), text_color=button_font_color, fg_color=button_color, hover_color=button_highlight_color,
                                         height=button_height, command=self._create_new_note_gui, width=450)
         new_note_button.place(anchor="center", relx=0.5, rely=0.5)
 
@@ -616,11 +605,11 @@ class App:
 
         frame = ctk.CTkFrame(self.achievements_scroll_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH / 3 - frame_padding * 2, height=(HEIGHT+((widget_padding_x+frame_padding)*2))/2 - frame_padding * 4)
         frame.grid(row=row, column=column, padx=frame_padding, pady=frame_padding)
-        name = ctk.CTkLabel(frame, text=name, font=(font_family, int(font_size*1.9)), text_color=(light_font_color, font_color))
+        name = ctk.CTkLabel(frame, text=name, font=(font_family, int(font_size*2)), text_color=(light_font_color, font_color))
         name.place(anchor="n", relx=0.5, rely=0.1)
-        title = ctk.CTkLabel(frame, text=title, font=(font_family, int(font_size*0.9)), text_color=(light_font_color, font_color))
+        title = ctk.CTkLabel(frame, text=title, font=(font_family, int(font_size*0.9)), text_color=(light_off_font_color, off_font_color))
         title.place(anchor="center", relx=0.5, rely=0.45)
-        value_text = ctk.CTkLabel(frame, text=f"{value}/{max_value}", font=(font_family, int(font_size)), text_color=(light_font_color, font_color))
+        value_text = ctk.CTkLabel(frame, text=f"{value}/{max_value}", font=(font_family, int(font_size)), text_color=(light_off_font_color, off_font_color))
         value_text.place(anchor="center", relx=0.5, rely=0.7)
         progress_bar = ctk.CTkProgressBar(frame, height=25, width=WIDTH/5, progress_color=self.data_manager.color, fg_color=(light_border_frame_color, border_frame_color), corner_radius=25)
         progress_bar.place(anchor="center", relx=0.5, rely=0.8)
@@ -976,7 +965,10 @@ class App:
 
             self.create_achievements()
         else:
-            print("No data to save. (time less than 1m)")
+            if not self.quitting:
+                print("No data to save. (time less than 1m)")
+                CTkMessagebox(title="Save Data", message="Can not save data if time is less than 1 minute.", icon="warning", button_color=self.data_manager.color,
+                            button_hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=self.data_manager.font_color, button_text_color="black")
 
 
     def save_autobreak(self) -> None:
@@ -1056,30 +1048,26 @@ class App:
 
 
     def load_history(self):
-        start_history = ""
-        end_history = ""
-        duration_history = ""
-        break_history = ""
-        subject_history = ""
-
         if self.data_manager.data_amount > 0:
-            for data in range(self.data_manager.data_amount+1, 1, -1):
-                start_history += str(self.worksheet["A" + str(data)].value)
-                start_history += "\n"
-                end_history += str(self.worksheet["B" + str(data)].value)
-                end_history += "\n"
-                duration_history += str(round(self.worksheet["C" + str(data)].value)) + "m"
-                duration_history += "\n"
-                break_history += str(round(self.worksheet["D" + str(data)].value)) + "m"
-                break_history += "\n"
-                subject_history += str(self.worksheet["E" + str(data)].value)
-                subject_history += "\n"
+            self.clear_frame(self.start_frame)
+            self.clear_frame(self.end_frame)
+            self.clear_frame(self.duration_frame)
+            self.clear_frame(self.break_frame)
+            self.clear_frame(self.subject_frame)
 
-            self.start_text.configure(text=start_history)
-            self.end_text.configure(text=end_history)
-            self.duration_text.configure(text=duration_history)
-            self.break_text.configure(text=break_history)
-            self.subject_text.configure(text=subject_history)
+            for data in range(self.data_manager.data_amount+1, 1, -1):
+                self.history_height += 30
+                self.start_frame.configure(height=self.history_height)
+                self.end_frame.configure(height=self.history_height)
+                self.duration_frame.configure(height=self.history_height)
+                self.break_frame.configure(height=self.history_height)
+                self.subject_frame.configure(height=self.history_height)
+
+                ctk.CTkLabel(self.start_frame, text=str(self.worksheet["A" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.end_frame, text=str(self.worksheet["B" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.duration_frame, text=f"{round(self.worksheet["C" + str(data)].value)} Minutes", font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.break_frame, text=f"{round(self.worksheet["D" + str(data)].value)} Minutes", font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.subject_frame, text=str(self.worksheet["E" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
 
 
     def _create_new_note_gui(self):
@@ -1248,6 +1236,7 @@ class App:
 
 
     def save_on_quit(self) -> None:
+        self.quitting = True
         self.save_data()
         print("Data saved on exit.")
 

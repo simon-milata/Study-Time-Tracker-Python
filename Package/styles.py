@@ -10,12 +10,15 @@ font_size = 16
 font_color = "#e6e6e6"
 light_font_color = "#262626"
 
+off_font_color = "#d9d9d9"
+light_off_font_color = "#404040"
+
 window_color = "#2b2b2b"
 light_window_color = "#d4d4d4"
 
 
 frame_padding = 10
-frame_width = 300
+frame_width = 325
 
 frame_color = "#383838"
 light_frame_color = "#c7c7c7"

@@ -1,6 +1,5 @@
 from collections import Counter
 import os
-import cProfile
 
 import datetime
 import openpyxl as op

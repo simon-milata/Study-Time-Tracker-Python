@@ -19,6 +19,7 @@ class TimerManager:
     def timer_mechanism(self, timer_button, break_button, time_display_label):
         if self.timer_start_cooldown:
             return
+        
         self.timer_start_cooldown = True
 
         self.window.after(1000, self.enable_timer_start)
