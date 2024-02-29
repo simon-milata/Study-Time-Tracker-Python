@@ -103,6 +103,7 @@ class App:
 
 
     def initialize_variables(self) -> None:
+        self.graph_limit = True
         self.statistics_scroll_position = "left"
         self.achievements_scroll_position = "left"
         self.scrolling = False
@@ -700,26 +701,34 @@ class App:
 
 
     def create_total_time_graph(self, frame):
+        def group_lists(list_of_dates, list_of_durations):
+            date_list = []
+            duration_list = []
+            index = 0
+            cumulative_duration = 0
+            while index < len(list_of_dates):
+                current_date = list_of_dates[index]
+                while index < len(list_of_dates) and list_of_dates[index] == current_date:
+                    cumulative_duration += list_of_durations[index]
+                    index += 1
+                date_list.append(current_date)
+                duration_list.append(cumulative_duration)
+
+            return date_list, duration_list
+        
+
         dates = self.data_manager.date_list.copy()
         times = self.data_manager.duration_list.copy()
+
+        dates, times = group_lists(dates, times)
 
         if times:
             dates.insert(0, (dates[0] - datetime.timedelta(days=1)))
             times.insert(0, 0)
 
-
-        # Calculate cumulative time
-        cumulative_times = [sum(times[:i+1]) for i in range(len(times))]
-
-        # Create subplot
-        fig, ax = plt.subplots(figsize=(5, 5))
-
-        # Plot
-        ax.plot(dates, cumulative_times, color=self.data_manager.color)
-
         fig, ax = plt.subplots()
-        ax.plot(dates, cumulative_times, color=self.data_manager.graph_color)
-        ax.fill_between(dates, cumulative_times, color=self.data_manager.graph_color)
+        ax.plot(dates, times, color=self.data_manager.graph_color)
+        ax.fill_between(dates, times, color=self.data_manager.graph_color)
         ax.set_title("Cumulative Time By Date", color=self.data_manager.font_color)
         ax.tick_params(colors=self.data_manager.font_color)
         ax.set_facecolor(self.data_manager.graph_fg_color)
@@ -751,6 +760,10 @@ class App:
             widget.destroy()
 
     def create_graphs(self) -> None:
+        if self.graph_limit == True:
+            self.graph_limit = False
+            return
+        
         self.statistics_frame.grid_propagate(False)
         plt.close("all")
         self.clear_frame(self.statistics_facts_frame)
