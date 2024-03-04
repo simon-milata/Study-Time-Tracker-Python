@@ -3,6 +3,8 @@ import random
 from PIL import Image
 import sys
 import ctypes
+import datetime
+import webbrowser
 
 import openpyxl as op
 import pandas as pd
@@ -13,7 +15,6 @@ from matplotlib.ticker import MaxNLocator, FuncFormatter
 import customtkinter as ctk
 from winotify import Notification
 from CTkMessagebox import CTkMessagebox
-import datetime
 
 from Package import *
 
@@ -55,6 +56,7 @@ class App:
         self._history_gui_setup()
         self._notes_gui_setup()
         self._achievement_gui_setup()
+        self._about_gui_setup()
         self._settings_gui_setup()
 
 
@@ -123,18 +125,14 @@ class App:
         self.achievements_icon = ctk.CTkImage(light_image=Image.open("icons/achievements_icon_dark.png"), dark_image=Image.open("icons/achievements_icon_light.png"), size=(tab_icon_size, tab_icon_size))
         self.history_icon = ctk.CTkImage(light_image=Image.open("icons/history_icon_dark.png"), dark_image=Image.open("icons/history_icon_light.png"), size=(tab_icon_size, tab_icon_size))
         self.notes_icon = ctk.CTkImage(light_image=Image.open("icons/notes_icon_dark.png"), dark_image=Image.open("icons/notes_icon_light.png"), size=(tab_icon_size, tab_icon_size))
+        self.info_icon = ctk.CTkImage(light_image=Image.open("icons/info_icon_dark.png"), dark_image=Image.open("icons/info_icon_light.png"), size=(tab_icon_size, tab_icon_size))
         self.settings_icon = ctk.CTkImage(light_image=Image.open("icons/settings_icon_dark.png"), dark_image=Image.open("icons/settings_icon_light.png"), size=(tab_icon_size, tab_icon_size))
 
-        self.save_icon = ctk.CTkImage(Image.open("icons/save_icon_dark.png"), size=(icon_size, icon_size))
-        self.edit_icon = ctk.CTkImage(Image.open("icons/edit_icon_dark.png"), size=(icon_size, icon_size))
-        self.delete_icon = ctk.CTkImage(Image.open("icons/delete_icon_dark.png"), size=(icon_size, icon_size))
-        self.open_icon = ctk.CTkImage(Image.open("icons/open_icon_dark.png"), size=(icon_size, icon_size))
-        self.back_icon = ctk.CTkImage(Image.open("icons/back_icon_dark.png"), size=(icon_size, icon_size))
-        self.play_icon = ctk.CTkImage(Image.open("icons/play_icon_dark.png"), size=(icon_size, icon_size))
-        self.create_note_icon = ctk.CTkImage(Image.open("icons/create_note_icon_dark.png"), size=(icon_size, icon_size))
-        self.checkmark_icon = ctk.CTkImage(Image.open("icons/checkmark_icon_dark.png"), size=(icon_size, icon_size))
         self.left_arrow_icon = ctk.CTkImage(dark_image=Image.open("icons/arrow_left_icon_light.png"), light_image=Image.open("icons/arrow_left_icon_dark.png"), size=(icon_size, icon_size))
         self.right_arrow_icon = ctk.CTkImage(dark_image=Image.open("icons/arrow_right_icon_light.png"), light_image=Image.open("icons/arrow_right_icon_dark.png"), size=(icon_size, icon_size))
+
+        self.linkedin_icon = ctk.CTkImage(Image.open("icons/linkedin_icon_dark.png"), size=(icon_size*2, icon_size*2))
+        self.github_icon = ctk.CTkImage(Image.open("icons/github_icon_dark.png"), size=(icon_size*2, icon_size*2))
 
 
     def _window_setup(self) -> None:
@@ -171,7 +169,10 @@ class App:
         self.notes_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
         self.notes_frame.grid(column=2, row=0, padx=main_frame_pad_x)
 
-        self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame])
+        self.about_frame = ctk.CTkFrame(self.WINDOW, fg_color=(light_main_frame_color, main_frame_color), height=HEIGHT+((widget_padding_x+frame_padding)*2), width=WIDTH, corner_radius=0)
+        self.about_frame.grid(column=2, row=0, padx=main_frame_pad_x)
+
+        self.forget_and_propagate([self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame, self.about_frame])
 
 
     def _tab_frames_gui_setup(self) -> None:
@@ -188,6 +189,8 @@ class App:
             #Place settings tab frame on the bottom of tab frame
             if tab_name == "Settings":
                 tab.place(relx=0.5, rely=0.995, anchor="s")
+            elif tab_name == "About":
+                tab.place(relx=0.5, rely=0.936, anchor="s")
             else:
                 tab.pack(pady=tab_padding_y)
             tab_button.place(relx=0.5, rely=0.5, anchor="center")
@@ -195,8 +198,8 @@ class App:
             #Append each button to tab_buttons list for future manipulation
             tab_buttons.append(tab_button)
 
-        tab_list = ["Timer", "Statistics", "History", "Notes", "Achievements", "Settings"]
-        tab_icons = [self.clock_icon, self.statistics_icon, self.history_icon, self.notes_icon, self.achievements_icon, self.settings_icon]
+        tab_list = ["Timer", "Statistics", "History", "Notes", "Achievements", "About", "Settings"]
+        tab_icons = [self.clock_icon, self.statistics_icon, self.history_icon, self.notes_icon, self.achievements_icon, self.info_icon, self.settings_icon]
 
         for icon, tab in enumerate(tab_list):
             _initialize_tab(tab, tab_icons[icon])
@@ -280,7 +283,7 @@ class App:
 
         timer_label = ctk.CTkLabel(timer_frame, text="Timer", font=(font_family, font_size), text_color=(light_font_color, font_color))
         timer_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=(light_font_color, font_color))
+        self.time_display_label = ctk.CTkLabel(timer_frame, text="0:00:00", font=(font_family, int(font_size*3.5)), text_color=(light_font_color, font_color))
         self.time_display_label.place(anchor="center", relx=0.5, rely=0.45)
         self.timer_button = ctk.CTkButton(timer_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.timer_mechanism)
@@ -294,7 +297,7 @@ class App:
 
         break_label = ctk.CTkLabel(break_frame, text="Break", font=(font_family, font_size), text_color=(light_font_color, font_color))
         break_label.place(anchor="nw", relx=0.05, rely=0.05)
-        self.break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3)), text_color=(light_font_color, font_color))
+        self.break_display_label = ctk.CTkLabel(break_frame, text="0:00:00", font=(font_family, int(font_size*3.5)), text_color=(light_font_color, font_color))
         self.break_display_label.place(anchor="center", relx=0.5, rely=0.45)
         self.break_button = ctk.CTkButton(break_frame, text="Start", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color, text_color_disabled=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.break_mechanism)
@@ -303,9 +306,8 @@ class App:
     def _save_data_gui(self) -> None:
         self.data_frame = ctk.CTkFrame(self.main_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-frame_padding*2, height=button_height*2)
         self.data_frame.place(anchor="s", relx=0.5, rely=0.985)
-        self.data_frame.grid_propagate(False)
         self.save_data_button = ctk.CTkButton(self.data_frame, text="Save Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
-                                    border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, width=450, command=self.save_data)
+                                              border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, width=450, command=self.save_data)
         self.save_data_button.place(relx=0.5, anchor="center", rely=0.5)
 
 
@@ -324,10 +326,10 @@ class App:
                                          border_color=frame_border_color, hover_color=(light_tab_highlight_color, tab_highlight_color), height=30, width=WIDTH/2, command=lambda: self.scroll_statistics("right"))
         self.right_button.grid(row=0, column=1)
 
-        self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
+        self.statistics_graph_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent")
         self.statistics_graph_frame.grid(row=0, column=0, padx=0, pady=0)
 
-        self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent", width=WIDTH)
+        self.statistics_facts_frame = ctk.CTkFrame(self.statistics_scroll_frame, fg_color="transparent")
         self.statistics_facts_frame.grid(row=1, column=0, padx=0, pady=0)
 
 
@@ -352,8 +354,8 @@ class App:
         history_labels = ["Start", "End", "Duration", "Break", "Subject"]
 
         for index in range(len(history_labels)):
-            history_label_frame = ctk.CTkFrame(self.history_label_frame, fg_color="transparent", width=WIDTH / 5 - frame_padding / 2, height=50)
-            history_label_frame.grid(row=1, column=index)
+            history_label_frame = ctk.CTkFrame(self.history_label_frame, fg_color="transparent", width=WIDTH / 5 - frame_padding * 2.5, height=50)
+            history_label_frame.grid(row=1, column=index, padx=widget_padding_x)
             label = ctk.CTkLabel(history_label_frame, text=history_labels[index], font=(font_family, int(font_size*1.5)), text_color=(light_font_color, font_color))
             label.place(anchor="center", relx=0.5, rely=0.5)
 
@@ -380,26 +382,30 @@ class App:
 
 
     def _settings_gui_setup(self) -> None:
-        self.color_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
-        self.color_frame.grid(column=0, row=0)
+        self.color_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent", corner_radius=10, width=frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2))
+        self.color_frame.grid(row=0, column=0)
+        self.color_frame.pack_propagate(False)
 
-        self.eye_care_export_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent")
-        self.eye_care_export_frame.grid(column=1, row=0)
+        self.eye_care_export_frame = ctk.CTkFrame(self.settings_frame, fg_color="transparent", corner_radius=10, width=frame_width, height=HEIGHT+((widget_padding_x+frame_padding)*2))
+        self.eye_care_export_frame.grid(row=0, column=1)
+        self.eye_care_export_frame.pack_propagate(False)
 
         self._color_gui_setup()
         self._eye_care_gui_setup()
         self._export_gui_setup()
 
-        reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_tab_color, tab_color))
+        reset_frame = ctk.CTkFrame(self.settings_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-frame_padding*2, height=button_height*2)
         reset_frame.place(anchor="s", relx=0.5, rely=0.985)
         self.reset_data_button = ctk.CTkButton(reset_frame, text="Reset Data", font=(font_family, font_size), fg_color=button_color, text_color=button_font_color,
                                         border_color=frame_border_color, hover_color=button_highlight_color, height=button_height, command=self.reset_data, width=450)
-        self.reset_data_button.pack()
+        self.reset_data_button.place(relx=0.5, anchor="center", rely=0.5)
 
     
     def _color_gui_setup(self) -> None:
-        color_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
-        color_select_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
+        color_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=frame_width, corner_radius=10)
+        color_select_frame.pack(padx=frame_padding, pady=frame_padding)
+        color_select_frame.pack_propagate(False)
+
         color_label = ctk.CTkLabel(color_select_frame, text="Color", font=(font_family, font_size), text_color=(light_font_color, font_color))
         color_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.color_dropdown = ctk.CTkComboBox(color_select_frame, values=["Orange", "Green", "Blue", "Pink"], state="readonly", width=150, height=30, border_color=(light_border_frame_color, border_frame_color),
@@ -409,8 +415,9 @@ class App:
                                      height=button_height, command=lambda: self.data_manager.set_color(self.color_dropdown))
         self.color_button.place(anchor="s", relx=0.5, rely=0.9)
 
-        theme_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
-        theme_select_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
+        theme_select_frame = ctk.CTkFrame(self.color_frame, fg_color=(light_frame_color, frame_color), height=200, width=frame_width, corner_radius=10)
+        theme_select_frame.pack(padx=frame_padding, pady=frame_padding)
+        theme_select_frame.pack_propagate(False)
         theme_label = ctk.CTkLabel(theme_select_frame, text="Theme", font=(font_family, font_size), text_color=(light_font_color, font_color))
         theme_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.theme_dropdown = ctk.CTkComboBox(theme_select_frame, values=["Dark", "Light"], state="readonly", width=150, height=30, border_color=(light_border_frame_color, border_frame_color),
@@ -421,9 +428,10 @@ class App:
         self.theme_button.place(anchor="s", relx=0.5, rely=0.9)
 
     def _eye_care_gui_setup(self):
-        eye_care_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=int(frame_width/1.25), corner_radius=10)
-        eye_care_frame.grid(column=0, row=0, padx=frame_padding, pady=frame_padding)
-        eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye care", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        eye_care_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=250, width=frame_width, corner_radius=10)
+        eye_care_frame.pack(padx=frame_padding, pady=frame_padding)
+        eye_care_frame.pack_propagate(False)
+        eye_care_label = ctk.CTkLabel(eye_care_frame, text="Eye Care", font=(font_family, font_size), text_color=(light_font_color, font_color))
         eye_care_label.place(anchor="nw", relx=0.05, rely=0.05)
         self.eye_care_selection = ctk.CTkComboBox(eye_care_frame, values=["On", "Off"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), 
                                              font=(font_family, int(font_size)), fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
@@ -437,9 +445,10 @@ class App:
 
 
     def _export_gui_setup(self):
-        export_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=200, width=int(frame_width/1.25), corner_radius=10)
-        export_frame.grid(row=1, column=0, padx=frame_padding, pady=frame_padding)
-        export_label = ctk.CTkLabel(export_frame, text="Export data", font=(font_family, font_size), text_color=(light_font_color, font_color))
+        export_frame = ctk.CTkFrame(self.eye_care_export_frame, fg_color=(light_frame_color, frame_color), height=200, width=frame_width, corner_radius=10)
+        export_frame.pack(padx=frame_padding, pady=frame_padding)
+        export_frame.pack_propagate(False)
+        export_label = ctk.CTkLabel(export_frame, text="Export Data", font=(font_family, font_size), text_color=(light_font_color, font_color))
         export_label.place(anchor="nw", relx=0.05, rely=0.05)
         export_file_selection = ctk.CTkComboBox(export_frame, values=["Excel"], state="readonly", width=100, height=30, dropdown_font=(font_family, int(font_size*0.75)), font=(font_family, int(font_size)), variable=ctk.StringVar(value="Excel"),
                                                 fg_color=(light_border_frame_color, border_frame_color), button_color=(light_border_frame_color, border_frame_color), border_color=(light_border_frame_color, border_frame_color))
@@ -451,6 +460,27 @@ class App:
     
     def export_data(self):
         self.data_manager.export_data()
+
+
+    def _about_gui_setup(self):
+        about_frame = ctk.CTkFrame(self.about_frame, fg_color=(light_frame_color, frame_color), height=200, width=WIDTH-frame_padding*2, corner_radius=10)
+        about_frame.grid(padx=frame_padding, pady=frame_padding)
+        about_frame.pack_propagate(False)
+        about_label = ctk.CTkLabel(about_frame, text="About Me", font=(font_family, font_size*1.5), text_color=(light_font_color, font_color), anchor="w", width=WIDTH-frame_padding*2)
+        about_label.pack(padx=widget_padding_x*2, pady=(widget_padding_y*2, 0))
+        about_me_text = ctk.CTkTextbox(about_frame, font=(font_family, font_size), text_color=(light_off_font_color, off_font_color), fg_color="transparent",
+                                       width=WIDTH - frame_padding * 4, height=150, scrollbar_button_color=(light_frame_color, frame_color))
+        about_me_text.pack(padx=widget_padding_x*2, pady=(0, widget_padding_y))
+        about_me_text.insert("0.0", "Hello! My name is Simon, and I am the developer of Study Time Tracker.\nBeing a dedicated student myself, I understand the struggles of managing study time effectively.\nThat's why I created this app to help not only myself but also fellow students in optimizing their study routines.\nMy goal with Study Time Tracker is to provide a simple yet powerful tool that empowers learners to make the most out of\ntheir study sessions.")
+        about_me_text.configure(state="disabled")
+
+        socials_frame = ctk.CTkFrame(self.about_frame, fg_color=(light_frame_color, frame_color), corner_radius=10, width=WIDTH-frame_padding*2, height=button_height*2)
+        socials_frame.place(anchor="s", relx=0.5, rely=0.985)
+        socials_frame.grid_propagate(False)
+        github_button = ctk.CTkButton(socials_frame, text="", image=self.github_icon, command=lambda: self.open_link("https://github.com/Tamzuu"))
+        github_button.place(anchor="center", relx=0.6, rely=0.5)
+        linkedin_button = ctk.CTkButton(socials_frame, text="", image=self.linkedin_icon, command=lambda: self.open_link("https://www.linkedin.com/in/simon-milata"))
+        linkedin_button.place(anchor="center", relx=0.4, rely=0.5)
 
 
     def _subject_gui_setup(self) -> None:
@@ -668,7 +698,7 @@ class App:
 
         fig, ax = plt.subplots()
         ax.pie(non_zero_durations, labels=non_zero_names, autopct=_autopct_format(non_zero_durations), colors=self.data_manager.pie_colors, wedgeprops=dict(linewidth=1),
-               textprops={"fontsize": pie_font_size, "family": pie_font_family, "color": self.data_manager.font_color}, counterclock=False, startangle=90)
+               textprops={"fontsize": pie_font_size, "color": self.data_manager.font_color}, counterclock=False, startangle=90)
         fig.set_size_inches(graph_width/100, graph_height/100, forward=True)
         ax.set_facecolor(self.data_manager.graph_fg_color)
         fig.set_facecolor(self.data_manager.graph_bg_color)
@@ -818,9 +848,6 @@ class App:
 
         #Change the color of all buttons to unselected color
 
-        self.forget_and_propagate([self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame])
-
-
         def _show_selected_tab():
             frame = None
             match selected_tab_button.cget("text").replace(" ", ""):
@@ -836,27 +863,31 @@ class App:
                     frame = self.history_frame
                 case "Notes":
                     frame = self.notes_frame
+                case "About":
+                    frame = self.about_frame
+
+            list_to_propagate = [self.main_frame, self.statistics_frame, self.settings_frame, self.achievements_frame, self.history_frame, self.notes_frame, self.about_frame]
+            list_to_propagate.remove(frame)
+            self.forget_and_propagate(list_to_propagate)
 
             if frame is not None:
-                if frame == self.statistics_frame:
+                if frame == self.statistics_frame or frame == self.about_frame:
                     frame.grid(column=2, row=0)
                     frame.grid_propagate(False)
                 else:
                     frame.grid(column=2, row=0, padx=main_frame_pad_x)
                     frame.grid_propagate(False)
 
-        _show_selected_tab()
-
 
         def _decolor_tabs() -> None:
             for button in tab_buttons:
-                button.configure(fg_color=(light_tab_color, tab_color), hover_color=(light_tab_highlight_color, tab_highlight_color))
+                button.configure(fg_color=(light_tab_color, tab_color), hover_color=(light_tab_highlight_color, tab_highlight_color), hover=True)
 
+        _show_selected_tab()
         _decolor_tabs()
 
         #Change color of pressed button to selected color
         selected_tab_button.configure(fg_color=(light_tab_selected_color, tab_selected_color), hover=False)
-
 
 
     def timer_mechanism(self) -> None:
@@ -1063,11 +1094,11 @@ class App:
                 self.break_frame.configure(height=self.history_height)
                 self.subject_frame.configure(height=self.history_height)
 
-                ctk.CTkLabel(self.start_frame, text=str(self.worksheet["A" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.end_frame, text=str(self.worksheet["B" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.duration_frame, text=f"{round(self.worksheet["C" + str(data)].value)} Minutes", font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.break_frame, text=f"{round(self.worksheet["D" + str(data)].value)} Minutes", font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.subject_frame, text=str(self.worksheet["E" + str(data)].value), font=(font_family, font_size*1.1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.start_frame, text=str(self.worksheet["A" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.end_frame, text=str(self.worksheet["B" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.duration_frame, text=f"{round(self.worksheet["C" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.break_frame, text=f"{round(self.worksheet["D" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.subject_frame, text=str(self.worksheet["E" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
 
 
     def _create_new_note_gui(self):
@@ -1233,6 +1264,10 @@ class App:
         self.goal_dropdown.configure(state="readonly")
         self.subject_selection.configure(state="readonly")
         self.autobreak_switch.configure(state="readonly")
+
+
+    def open_link(self, url: str) -> None:
+        webbrowser.open_new(url)
 
 
     def save_on_quit(self) -> None:

@@ -1,7 +1,7 @@
 from collections import Counter
 import os
-
 import datetime
+
 import openpyxl as op
 from openpyxl.styles import Font, Alignment
 from openpyxl.utils import get_column_letter
@@ -389,6 +389,11 @@ class DataManager:
         self.app.create_achievements()
 
         self.load_notes()
+        
+        try:
+            self.app.lock_widgets()
+        except AttributeError:
+            pass
         print("Color changed.")
 
 
@@ -582,11 +587,11 @@ class DataManager:
 
 
     def create_achievements(self):
-        self.achievements = [Achievement(name="Time Titan", title="Clock in 1000 minutes of study, mastering the art of time management.", max_value=1000, value=self.total_duration),
+        self.achievements = [Achievement(name="Time Titan", title="Clock in 5000 minutes of study, mastering the art of time management.", max_value=5000, value=self.total_duration),
                              Achievement(name="Goal Getter", title="Reach 30 goals, proving dedication to progress.", max_value=30, value=self.goal_amount),
                              Achievement(name="Subject Explorer", title="Dive into 7 different subjects, broadening your knowledge horizons.", max_value=7, value=len(self.unique_subjects)),
                              Achievement(name="Focus Maestro", title="Master concentration in a 5-hour session, demonstrating exceptional focus.", max_value=5, value=round(self.longest_session/60, 2)),
                              Achievement(name="Subject Savant", title="Study one subject 30 times, becoming a savant in its intricacies.", max_value=30, value=self.most_common_subject_amount),
-                             Achievement(name="Restful Respite", title="Accumulate 200 minutes of break time, rejuvenating your mind and body.", max_value=200, value=self.total_break_duration), 
+                             Achievement(name="Restful Respite", title="Accumulate 500 minutes of break time, rejuvenating your mind and body.", max_value=500, value=self.total_break_duration), 
                              Achievement(name="Daily Discipline", title="Exhibit discipline through diligent study for 30 days.", max_value=30, value=len(set(self.date_list))),
                              Achievement(name="Note Scribbler", title="Scribble down 10 notes, capturing key insights and ideas.", max_value=10, value=self.notes_amount)]

@@ -65,29 +65,14 @@ class NotesManager:
         header_frame.grid(row=0, column=0, pady=(0, frame_padding))
         header_frame.grid_propagate(False)
 
-        def title_text(title: str) -> str:
-            max_letters = 45
+        title_frame = ctk.CTkScrollableFrame(header_frame, fg_color="transparent", bg_color="transparent", orientation="horizontal", height=40, width=WIDTH - 280 - frame_padding * 7)
+        title_frame.grid(row=0, column=0, padx=widget_padding_x)
 
-            for letter in title:
-                if letter.isupper():
-                    max_letters -= 0.4
-            
-
-            max_letters = int(max_letters)
-
-            display_title = title
-
-            if len(title) > max_letters:
-                display_title = title[:max_letters] + "..."
-                
-            return display_title
-
-        title_label = ctk.CTkLabel(header_frame, text=title_text(title), font=(font_family, font_size*1.5), text_color=(light_font_color, font_color),
-                                   height=40, width=WIDTH - 280 - frame_padding * 6, fg_color=(light_frame_color, frame_color), anchor="w")
-        title_label.grid(row=0, column=0, padx=widget_padding_x, pady=widget_padding_y)
+        title_label = ctk.CTkLabel(title_frame, text=title, font=(font_family, font_size*1.2), text_color=(light_font_color, font_color), fg_color=(light_frame_color, frame_color), anchor="w")
+        title_label.pack(pady=(10, 0))
 
         button_frame = ctk.CTkFrame(header_frame, fg_color="transparent")
-        button_frame.place(anchor="center", rely=0.5, relx=0.825)
+        button_frame.place(anchor="center", rely=0.5, relx=0.84)
 
         textbox = ctk.CTkTextbox(frame, font=(font_family, font_size), text_color=(light_font_color, font_color), fg_color="transparent", width=WIDTH - frame_padding * 2, height=HEIGHT + frame_padding * 2 - 60)
         textbox.grid(row=1, column=0)
@@ -95,7 +80,7 @@ class NotesManager:
         textbox.configure(state="disabled")
         
         edit_button = ctk.CTkButton(button_frame, height=button_height, text="Edit", fg_color=self.data_manager.color, anchor="center",
-                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, command=lambda: self.edit_note(index, textbox, edit_button, frame))
+                                                hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, command=lambda: self.edit_note(index, textbox, edit_button, frame, title_label, title_frame))
         edit_button.grid(row=0, column=1)
         exit_button = ctk.CTkButton(button_frame, height=button_height, text="Exit", fg_color=self.data_manager.color, command=lambda: self._exit_note(frame), 
                                                 hover_color=self.data_manager.highlight_color, font=(font_family, font_size), text_color=button_font_color, anchor="center")
@@ -107,13 +92,20 @@ class NotesManager:
         self.app.notes_frame_frame.grid(row=0, column=0, padx=frame_padding, pady=(frame_padding, 0))
 
 
-    def edit_note(self, index, textbox, edit_button, frame):
+    def edit_note(self, index, textbox, edit_button, frame, title_label, title_frame):
         def save_note(index, frame):
+            self.data_manager.worksheet["O" + str(index)].value = title_entry.get()
             self.data_manager.worksheet["P" + str(index)].value = textbox.get("0.0", "end")
             self._exit_note(frame)
             self.data_manager.workbook.save(self.app.data_file)
+            self.data_manager.load_notes()
 
         textbox.configure(state="normal", fg_color=(light_frame_color, frame_color))
+        title_label.update()
+        title_entry = ctk.CTkEntry(title_frame, fg_color="transparent", font=(font_family, font_size*1.2), bg_color=(light_frame_color, frame_color), text_color=(light_font_color, font_color), width=WIDTH - 280 - frame_padding * 7, height=40)
+        title_entry.pack(pady=(10, 0))
+        title_entry.insert(0, title_label.cget("text"))
+        title_label.pack_forget()
         edit_button.configure(command=lambda: save_note(index, frame), text="Save")
 
 
