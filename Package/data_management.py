@@ -391,7 +391,7 @@ class DataManager:
         self.load_notes()
         
         try:
-            self.app.lock_widgets()
+            self.app.unlock_widgets()
         except AttributeError:
             pass
         print("Color changed.")

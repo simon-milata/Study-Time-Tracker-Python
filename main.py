@@ -105,6 +105,7 @@ class App:
 
 
     def initialize_variables(self) -> None:
+        self.quitting = False
         self.history_height = 0
         self.graph_limit = True
         self.statistics_scroll_position = "left"
@@ -978,6 +979,8 @@ class App:
 
         #Only be able to save if time is higher than 1m
         if time_in_minutes >= 1:
+            self.timer_manager.timer_running = False
+            self.timer_manager.break_running = False
             self.unlock_widgets()
 
             if time_in_minutes >= self.goal:
@@ -1064,7 +1067,9 @@ class App:
         time_between = self.data_manager.autobreak_frequency * 60
 
         def try_timer():
-            if self.timer_manager.break_time % self.data_manager.autobreak_duration == 0: 
+            if self.timer_manager.break_time % self.data_manager.autobreak_duration == 0:
+                if self.timer_manager.timer_running == False:
+                    return
                 self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
             else:
                 self.WINDOW.after(1000, try_timer)
