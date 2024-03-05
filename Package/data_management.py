@@ -324,8 +324,8 @@ class DataManager:
         if self.autobreak_duration == None:
             self.autobreak_duration = 5
 
-        self.app.frequency_input.configure(placeholder_text=self.autobreak_frequency)
-        self.app.duration_input.configure(placeholder_text=self.autobreak_duration)
+        self.app.frequency_input.configure(placeholder_text=self.autobreak_frequency, state="normal")
+        self.app.duration_input.configure(placeholder_text=self.autobreak_duration, state="normal")
         self.app.autobreak_switch.configure(variable=ctk.StringVar(value=self.autobreak_on))
 
         self.app.WINDOW.after(0, self.app.auto_break)
