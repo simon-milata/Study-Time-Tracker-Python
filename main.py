@@ -105,6 +105,7 @@ class App:
 
 
     def initialize_variables(self) -> None:
+        self.can_autobreak = True
         self.quitting = False
         self.history_height = 0
         self.graph_limit = True
@@ -896,6 +897,7 @@ class App:
         
         #Get start time only at the start of timer
         if self.timer_manager.timer_time <= 1:
+            self.can_autobreak = True
             self.data_manager.get_start_time()
 
 
@@ -979,6 +981,7 @@ class App:
 
         #Only be able to save if time is higher than 1m
         if time_in_minutes >= 1:
+            self.can_autobreak = False
             self.timer_manager.timer_running = False
             self.timer_manager.break_running = False
             self.unlock_widgets()
@@ -1068,7 +1071,7 @@ class App:
 
         def try_timer():
             if self.timer_manager.break_time % self.data_manager.autobreak_duration == 0:
-                if self.timer_manager.timer_running == False:
+                if self.can_autobreak == False:
                     return
                 self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
             else:
