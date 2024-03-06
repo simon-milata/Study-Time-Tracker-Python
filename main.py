@@ -1,6 +1,6 @@
 import os
 import random
-from PIL import Image
+from PIL import Image, ImageTk
 import sys
 import ctypes
 import datetime
@@ -141,6 +141,7 @@ class App:
         self.WINDOW = ctk.CTk()
         self.WINDOW.geometry(str(WIDTH + main_frame_pad_x + tab_frame_width) + "x" + str(HEIGHT+((widget_padding_x+frame_padding)*2)))
         self.WINDOW.title(self.APPNAME)
+        self.WINDOW.iconbitmap("app_icon.ico")
         self.WINDOW.configure(fg_color=(light_window_color, window_color))
         self.WINDOW.resizable(False, False)
         self.WINDOW.grid_propagate(False)
