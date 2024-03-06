@@ -391,7 +391,10 @@ class DataManager:
         self.load_notes()
         
         try:
-            self.app.unlock_widgets()
+            if self.timer_manager.timer_running:
+                self.app.lock_widgets()
+            else:
+                self.app.unlock_widgets()
         except AttributeError:
             pass
         print("Color changed.")
