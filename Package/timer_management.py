@@ -41,12 +41,12 @@ class TimerManager:
 
     def _update_time(self):
         if self.timer_running:
+            self.window.after(1000, self._update_time)
             self.timer_time += 1
             self.time_display_label.configure(text=str(datetime.timedelta(seconds=self.timer_time)))
             self.app.progressbar.set(self.timer_time/60/self.app.goal)
             self.app.reach_goal(self.timer_time)
-            self.window.after(1000, self._update_time)
-
+            
 
     def break_mechanism(self, break_button, timer_button, break_display_label):
         if self.timer_time < 1 or self.break_start_cooldown:

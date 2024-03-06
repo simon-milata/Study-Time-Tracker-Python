@@ -362,23 +362,23 @@ class App:
             label.place(anchor="center", relx=0.5, rely=0.5)
 
 
-        self.start_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.start_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=0)
         self.start_frame.grid(row=1, column=0)
         self.start_frame.pack_propagate(False)
 
-        self.end_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.end_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=0)
         self.end_frame.grid(row=1, column=1)
         self.end_frame.pack_propagate(False)
 
-        self.duration_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.duration_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=0)
         self.duration_frame.grid(row=1, column=2)
         self.duration_frame.pack_propagate(False)
 
-        self.break_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.break_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=0)
         self.break_frame.grid(row=1, column=3)
         self.break_frame.pack_propagate(False)
 
-        self.subject_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5)
+        self.subject_frame = ctk.CTkFrame(self.history_data_frame, fg_color="transparent", width=(WIDTH-(frame_padding*4))/5, height=0)
         self.subject_frame.grid(row=1, column=4)
         self.subject_frame.pack_propagate(False)
 
@@ -1071,7 +1071,7 @@ class App:
 
         def try_timer():
             if self.timer_manager.break_time % self.data_manager.autobreak_duration == 0:
-                if self.can_autobreak == False:
+                if self.can_autobreak == False or self.timer_manager.timer_time != prev_time:
                     return
                 self.timer_manager.timer_mechanism(self.timer_button, self.break_button, self.time_display_label)
             else:
@@ -1080,6 +1080,7 @@ class App:
         if self.autobreak_switch.get() == "On" and self.timer_manager.timer_running and self.timer_manager.timer_time % time_between == 0:
             self.timer_manager.break_mechanism(self.break_button, self.timer_button, self.break_display_label)
             self.send_notification("Auto-break", f"Time for a {self.data_manager.autobreak_duration}-minute")
+            prev_time = self.timer_manager.timer_time
             self.WINDOW.after(self.data_manager.autobreak_duration * 60 * 1000, try_timer)
             round(self.timer_manager.break_time, -1)
         
@@ -1102,11 +1103,11 @@ class App:
                 self.break_frame.configure(height=self.history_height)
                 self.subject_frame.configure(height=self.history_height)
 
-                ctk.CTkLabel(self.start_frame, text=str(self.worksheet["A" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.end_frame, text=str(self.worksheet["B" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.duration_frame, text=f"{round(self.worksheet["C" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.break_frame, text=f"{round(self.worksheet["D" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
-                ctk.CTkLabel(self.subject_frame, text=str(self.worksheet["E" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color)).pack()
+                ctk.CTkLabel(self.start_frame, text=str(self.worksheet["A" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color), height=30).pack()
+                ctk.CTkLabel(self.end_frame, text=str(self.worksheet["B" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color), height=30).pack()
+                ctk.CTkLabel(self.duration_frame, text=f"{round(self.worksheet["C" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color), height=30).pack()
+                ctk.CTkLabel(self.break_frame, text=f"{round(self.worksheet["D" + str(data)].value)} Minutes", font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color), height=30).pack()
+                ctk.CTkLabel(self.subject_frame, text=str(self.worksheet["E" + str(data)].value), font=(font_family, font_size*1), text_color=(light_off_font_color, off_font_color), height=30).pack()
 
 
     def _create_new_note_gui(self):
