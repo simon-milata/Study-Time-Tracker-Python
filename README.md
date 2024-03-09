@@ -1,4 +1,5 @@
-# Study Time Tracker
+# Study Time Tracker 
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/f25ded72-6f79-44b7-8517-bba7c3c7b036" width="100">
 
 Welcome to Study Time Tracker, an application designed to help you manage your study sessions effectively!
 
@@ -12,8 +13,12 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 - **Color Settings**: Customize the app's color theme to suit your preferences.
 - **Notes**: Keep track of important information, ideas, or reminders related to your study sessions.
 - **And More**
+
 ## Installation
 
+Open StudyTimeTrackerInstaller.exe
+
+**Or**:
 1. Clone the repository:
     ```bash
     git clone https://github.com/Tamzuu/Study-Time-Tracker-Python.git
@@ -41,13 +46,9 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 
 ## Screenshots
 
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/9fd871c5-4d71-4287-a456-625f2f36c0c7" width="800">
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/201ea8a4-3e62-4c82-9d17-4aefbf87bc6c" width="500">
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/dffab627-5803-4985-b62a-e1b6bde3b5f3" width="500">
-
-## Upcoming Features
-
-- **Achievements**: Implement an achievement system to reward users for meeting study goals and maintaining consistent study habits.
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/232ad055-4a95-4c72-a8d5-7fe6540e9676" width="1000">
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/e175cc29-ce19-4537-814c-e89d125d211a" width="500">
+<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/97e57c8a-0779-40b8-9462-45a2955e8fce" width="500">
 
 ## Contributing
 
