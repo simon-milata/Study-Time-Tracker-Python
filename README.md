@@ -1,9 +1,9 @@
-# Study Time Tracker 
+# 🕒 Study Time Tracker 
 <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/f25ded72-6f79-44b7-8517-bba7c3c7b036" width="100">
 
 Welcome to Study Time Tracker, an application designed to help you manage your study sessions effectively!
 
-## Features
+## 🚀 Features
 
 - **Timer**: Start the timer to begin a study session. Pause and resume as needed.
 - **Subject Selection**: Choose a subject for your study session to keep your study sessions organized.
@@ -14,7 +14,7 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 - **Notes**: Keep track of important information, ideas, or reminders related to your study sessions.
 - **And More**
 
-## Installation
+## 📥 Installation
 
 Open StudyTimeTrackerInstaller.exe
 
@@ -34,7 +34,7 @@ Open StudyTimeTrackerInstaller.exe
     pip install -r requirements.txt
     ```
 
-## Usage
+## 📝 Usage
 
 1. Run the application:
     ```bash
@@ -44,13 +44,15 @@ Open StudyTimeTrackerInstaller.exe
 2. Start a study session by setting a timer and selecting a subject.
 3. Use the app's features to track your progress and maintain a productive study routine.
 
-## Screenshots
+## 🖼️ Screenshots
 
 <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/232ad055-4a95-4c72-a8d5-7fe6540e9676" width="1000">
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/e175cc29-ce19-4537-814c-e89d125d211a" width="500">
-<img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/97e57c8a-0779-40b8-9462-45a2955e8fce" width="500">
+<p float="left">
+    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/e175cc29-ce19-4537-814c-e89d125d211a" width="500">
+    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/97e57c8a-0779-40b8-9462-45a2955e8fce" width="500">
+</p>
 
-## Contributing
+## 👥 Contributing
 
 Contributions are welcome! If you'd like to contribute to this project, please follow these steps:
 
@@ -60,6 +62,6 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 4. Push to the branch (`git push origin feature/improvement`).
 5. Create a new Pull Request.
 
-## License
+## ⚖️ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
