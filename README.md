@@ -48,8 +48,8 @@ Open StudyTimeTrackerInstaller.exe
 
 <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/232ad055-4a95-4c72-a8d5-7fe6540e9676" width="1000">
 <p float="left">
-    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/e175cc29-ce19-4537-814c-e89d125d211a" width="500">
-    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/97e57c8a-0779-40b8-9462-45a2955e8fce" width="500">
+    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/e175cc29-ce19-4537-814c-e89d125d211a" width="400">
+    <img src="https://github.com/Tamzuu/Study-Time-Tracker-Python/assets/10380019/97e57c8a-0779-40b8-9462-45a2955e8fce" width="400">
 </p>
 
 ## 👥 Contributing
