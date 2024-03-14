@@ -16,7 +16,7 @@ Welcome to Study Time Tracker, an application designed to help you manage your s
 
 ## 📥 Installation
 
-Open StudyTimeTrackerInstaller.exe
+1. Open StudyTimeTrackerInstaller.exe
 
 **Or**:
 1. Clone the repository:
