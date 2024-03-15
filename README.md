@@ -62,6 +62,8 @@ Contributions are welcome! If you'd like to contribute to this project, please f
 4. Push to the branch (`git push origin feature/improvement`).
 5. Create a new Pull Request.
 
+**Disclaimer**: Code is not very clean as this is my first bigger project. 
+
 ## ⚖️ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
